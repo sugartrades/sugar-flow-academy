@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
@@ -30,6 +29,14 @@ export function Header({ showAuth = true }: HeaderProps) {
     navigate('/');
   };
 
+  const handleCommunityClick = () => {
+    if (user) {
+      navigate('/community');
+    } else {
+      navigate('/auth');
+    }
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -51,9 +58,12 @@ export function Header({ showAuth = true }: HeaderProps) {
           <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
             Pricing
           </a>
-          <a href="#community" className="text-sm font-medium hover:text-primary transition-colors">
+          <button 
+            onClick={handleCommunityClick}
+            className="text-sm font-medium hover:text-primary transition-colors"
+          >
             Community
-          </a>
+          </button>
         </nav>
 
         <div className="flex items-center space-x-4">
