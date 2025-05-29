@@ -78,7 +78,7 @@ export default function Landing() {
               Start Learning Free
             </Button>
             <Button size="lg" variant="outline" className="text-lg px-8">
-              Watch Demo
+              Browse Courses
             </Button>
           </div>
           
