@@ -181,7 +181,7 @@ export default function Landing() {
           <Card className="border-primary">
             <CardContent className="p-6">
               <Badge className="mb-2">Most Popular</Badge>
-              <h3 className="font-semibold text-lg mb-2">Pro</h3>
+              <h3 className="font-semibold text-lg mb-2">Advanced</h3>
               <div className="mb-4">
                 <span className="text-3xl font-bold">$29</span>
                 <span className="text-muted-foreground">/month</span>
@@ -207,7 +207,7 @@ export default function Landing() {
                 <span className="text-muted-foreground">/month</span>
               </div>
               <ul className="space-y-2 text-sm mb-6">
-                <li>✓ Everything in Pro</li>
+                <li>✓ Everything in Advanced</li>
                 <li>✓ 1-on-1 mentoring</li>
                 <li>✓ Custom learning paths</li>
                 <li>✓ API access</li>
