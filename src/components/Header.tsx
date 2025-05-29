@@ -41,10 +41,10 @@ export function Header({ showAuth = true }: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
+      <div className="container mx-auto flex h-16 items-center justify-between max-w-7xl px-4">
         <Logo size="sm" />
         
-        <nav className="hidden md:flex items-center space-x-6">
+        <nav className="hidden md:flex items-center justify-center space-x-6 flex-1">
           <a href="#features" className="text-sm font-medium hover:text-primary transition-colors">
             Features
           </a>
