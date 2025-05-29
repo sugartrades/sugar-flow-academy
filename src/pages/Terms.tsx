@@ -9,49 +9,75 @@ export default function Terms() {
       <Header />
       <div className="container max-w-4xl mx-auto py-16 px-4">
         <div className="prose prose-lg max-w-none">
-          <h1 className="text-4xl font-bold mb-8">Terms of Service</h1>
+          <h1 className="text-4xl font-bold mb-8">SugarTrades.io Terms of Service</h1>
           
           <p className="text-muted-foreground mb-8">
-            <strong>Effective Date:</strong> [Insert Date]
+            <strong>Effective Date:</strong> May 29, 2025
           </p>
           
           <p className="mb-6">
-            By using SugarTrades.io, you agree to the following terms. Please read them carefully.
+            Welcome to SugarTrades.io ("we," "our," or "us"). By accessing or using our website and services, you agree to the following Terms of Service. If you do not agree with these terms, please do not use the platform.
           </p>
           
-          <h2 className="text-2xl font-semibold mt-8 mb-4">1. Use of Platform</h2>
+          <h2 className="text-2xl font-semibold mt-8 mb-4">1. Eligibility</h2>
           <p className="mb-6">
-            You must be at least 18 years old to use this site. You agree not to misuse our platform or attempt unauthorized access.
+            You must be at least 18 years old to use SugarTrades.io. By using the platform, you represent that you meet this requirement.
           </p>
           
-          <h2 className="text-2xl font-semibold mt-8 mb-4">2. Educational Purpose Only</h2>
+          <h2 className="text-2xl font-semibold mt-8 mb-4">2. Account Registration</h2>
           <p className="mb-6">
-            All content is for educational purposes only and does not constitute investment advice. You are solely responsible for your trading decisions.
+            You agree to provide accurate and complete information when creating an account. You are responsible for maintaining the confidentiality of your account credentials and all activities under your account.
           </p>
           
-          <h2 className="text-2xl font-semibold mt-8 mb-4">3. Account Security</h2>
+          <h2 className="text-2xl font-semibold mt-8 mb-4">3. Educational Purpose Only</h2>
           <p className="mb-6">
-            Keep your login credentials secure. You're responsible for any activity that occurs under your account.
+            All content on SugarTrades.io is provided for educational purposes only. Nothing on the site constitutes investment advice or a recommendation to buy or sell any financial asset.
           </p>
           
-          <h2 className="text-2xl font-semibold mt-8 mb-4">4. Payments & Refunds</h2>
+          <h2 className="text-2xl font-semibold mt-8 mb-4">4. Payments and Subscriptions</h2>
           <p className="mb-6">
-            Free trials are available. For paid plans, billing is monthly or annually. You may cancel anytime. Refunds are not guaranteed and are issued at our discretion.
+            Some features require a paid subscription. All payments are processed securely by third-party providers. Subscriptions may renew automatically unless canceled. Refunds are not guaranteed and will be considered on a case-by-case basis.
           </p>
           
-          <h2 className="text-2xl font-semibold mt-8 mb-4">5. Intellectual Property</h2>
+          <h2 className="text-2xl font-semibold mt-8 mb-4">5. Acceptable Use</h2>
+          <p className="mb-4">You agree not to:</p>
+          <ul className="list-disc pl-6 mb-6 space-y-2">
+            <li>Use the platform for any unlawful or fraudulent purpose</li>
+            <li>Attempt to gain unauthorized access to any systems or data</li>
+            <li>Share, distribute, or resell content without permission</li>
+          </ul>
+          
+          <h2 className="text-2xl font-semibold mt-8 mb-4">6. Intellectual Property</h2>
           <p className="mb-6">
-            All platform content—including text, videos, and tools—is owned by SugarTrades.io and may not be reused or distributed without permission.
+            All content, including courses, branding, and software, is the property of SugarTrades.io or its licensors. You may not reproduce, copy, or exploit any part of the site without express permission.
           </p>
           
-          <h2 className="text-2xl font-semibold mt-8 mb-4">6. Termination</h2>
+          <h2 className="text-2xl font-semibold mt-8 mb-4">7. Termination</h2>
           <p className="mb-6">
-            We may suspend or terminate your account if you violate these terms.
+            We reserve the right to suspend or terminate your account at our discretion, particularly for violations of these terms.
           </p>
           
-          <h2 className="text-2xl font-semibold mt-8 mb-4">7. Limitation of Liability</h2>
+          <h2 className="text-2xl font-semibold mt-8 mb-4">8. Disclaimers and Limitation of Liability</h2>
           <p className="mb-6">
-            SugarTrades.io is not liable for any loss incurred as a result of trading decisions made using information or tools from the platform.
+            SugarTrades.io is provided "as is" and "as available." We do not guarantee that the platform will be error-free or uninterrupted. We are not liable for any losses arising from the use of our services or content.
+          </p>
+          
+          <h2 className="text-2xl font-semibold mt-8 mb-4">9. Changes to These Terms</h2>
+          <p className="mb-6">
+            We may update these Terms of Service from time to time. Continued use of the platform after changes constitutes your acceptance of the revised terms.
+          </p>
+          
+          <h2 className="text-2xl font-semibold mt-8 mb-4">10. Governing Law</h2>
+          <p className="mb-6">
+            These terms are governed by the laws of the United States. Any disputes shall be resolved in the appropriate jurisdiction.
+          </p>
+          
+          <h2 className="text-2xl font-semibold mt-8 mb-4">11. Contact Us</h2>
+          <p className="mb-6">
+            For questions or concerns about these Terms, contact:{' '}
+            <a href="mailto:hello@sugartrades.io" className="text-primary hover:underline font-semibold">
+              hello@sugartrades.io
+            </a>
           </p>
         </div>
       </div>
