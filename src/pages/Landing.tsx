@@ -65,8 +65,8 @@ export default function Landing() {
           </Badge>
           
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-            Learn Crypto Trading the{' '}
-            <span className="text-primary">Smart Way</span>
+            Master Crypto Trading From Scratch—The{' '}
+            <span className="text-primary">Smart, Sweet, and Simple Way</span>
           </h1>
           
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
