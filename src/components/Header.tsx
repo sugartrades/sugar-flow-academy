@@ -3,8 +3,17 @@ import React from 'react';
 import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
 import { Button } from '@/components/ui/button';
-import { Menu } from 'lucide-react';
+import { Menu, LogOut, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 interface HeaderProps {
   showAuth?: boolean;
@@ -12,6 +21,21 @@ interface HeaderProps {
 
 export function Header({ showAuth = true }: HeaderProps) {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/');
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -32,16 +56,55 @@ export function Header({ showAuth = true }: HeaderProps) {
 
         <div className="flex items-center space-x-4">
           <ThemeToggle />
-          {showAuth && (
-            <>
-              <Button variant="ghost" onClick={() => navigate('/login')}>
-                Login
-              </Button>
-              <Button onClick={() => navigate('/signup')}>
-                Get Started Free
-              </Button>
-            </>
+          
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarFallback className="bg-emerald-500 text-white">
+                      {getInitials(user.user_metadata?.full_name || user.email || 'U')}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <div className="flex items-center justify-start gap-2 p-2">
+                  <div className="flex flex-col space-y-1 leading-none">
+                    <p className="font-medium">{user.user_metadata?.full_name || 'User'}</p>
+                    <p className="w-[200px] truncate text-sm text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                  <User className="mr-2 h-4 w-4" />
+                  Dashboard
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            showAuth && (
+              <>
+                <Button variant="ghost" onClick={() => navigate('/auth')}>
+                  Login
+                </Button>
+                <Button 
+                  onClick={() => navigate('/auth')}
+                  className="bg-emerald-500 hover:bg-emerald-600"
+                >
+                  Get Started Free
+                </Button>
+              </>
+            )
           )}
+          
           <Button variant="ghost" size="icon" className="md:hidden">
             <Menu className="h-5 w-5" />
           </Button>
