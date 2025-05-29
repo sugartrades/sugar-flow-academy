@@ -1,12 +1,14 @@
-
 import React from 'react';
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 export default function Dashboard() {
+  const { getDisplayName, loading } = useUserProfile();
+
   const courses = [
     {
       title: "Crypto Basics",
@@ -49,7 +51,9 @@ export default function Dashboard() {
       
       <div className="container py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Welcome back, Trader! 👋</h1>
+          <h1 className="text-3xl font-bold mb-2">
+            Welcome back, {loading ? 'Trader' : getDisplayName()}! 👋
+          </h1>
           <p className="text-muted-foreground">Ready to continue your crypto trading journey?</p>
         </div>
 
