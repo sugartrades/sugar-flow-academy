@@ -33,7 +33,7 @@ export function Logo({ className = '', size = 'md', showText = true }: LogoProps
       onClick={handleLogoClick}
     >
       <img 
-        src="/lovable-uploads/3fdf9f5c-7897-4148-a211-2ef2e3a67ebc.png" 
+        src="/lovable-uploads/a86d5539-0e0f-4f8c-9a9f-68f2c4b0e57c.png" 
         alt="SugarTrades.io"
         className={sizeClasses[size]}
       />
