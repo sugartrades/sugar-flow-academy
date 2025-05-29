@@ -8,9 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
-import { Shield, Users, Settings } from 'lucide-react';
+import { Shield, Users, Settings, Crown } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type AppRole = 'super_admin' | 'admin' | 'moderator' | 'user';
+type MembershipTier = 'free' | 'advanced' | 'pro';
 
 interface UserWithRole {
   id: string;
@@ -20,19 +22,31 @@ interface UserWithRole {
   role: AppRole;
 }
 
+interface UserMembership {
+  id: string;
+  user_id: string;
+  tier: MembershipTier;
+  granted_at: string;
+  granted_by: string | null;
+  expires_at: string | null;
+  is_purchased: boolean;
+  user_name: string;
+}
+
 export default function Admin() {
   const [users, setUsers] = useState<UserWithRole[]>([]);
+  const [memberships, setMemberships] = useState<UserMembership[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { hasRole } = useUserRole();
 
   useEffect(() => {
     fetchUsers();
+    fetchMemberships();
   }, []);
 
   const fetchUsers = async () => {
     try {
-      // Fetch users with their roles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select(`
@@ -51,10 +65,9 @@ export default function Admin() {
         return;
       }
 
-      // Transform the data to include role information
       const usersWithRoles = profiles?.map(profile => ({
         id: profile.id,
-        email: '', // We can't access auth.users directly, so email will be empty
+        email: '',
         full_name: profile.full_name || 'Unknown',
         created_at: '',
         role: (profile.user_roles as any)[0]?.role as AppRole || 'user'
@@ -68,6 +81,41 @@ export default function Admin() {
         description: "Failed to fetch users",
         variant: "destructive"
       });
+    }
+  };
+
+  const fetchMemberships = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_memberships')
+        .select(`
+          *,
+          profiles!user_memberships_user_id_fkey(full_name)
+        `);
+
+      if (error) {
+        console.error('Error fetching memberships:', error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch memberships",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      const formattedMemberships = data?.map(membership => ({
+        ...membership,
+        user_name: (membership.profiles as any)?.full_name || 'Unknown User'
+      })) || [];
+
+      setMemberships(formattedMemberships);
+    } catch (error) {
+      console.error('Error fetching memberships:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch memberships",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
@@ -75,16 +123,13 @@ export default function Admin() {
 
   const updateUserRole = async (userId: string, newRole: string) => {
     try {
-      // Type the newRole as AppRole
       const roleToAssign = newRole as AppRole;
       
-      // Delete existing role
       await supabase
         .from('user_roles')
         .delete()
         .eq('user_id', userId);
 
-      // Insert new role
       const { error } = await supabase
         .from('user_roles')
         .insert({ 
@@ -107,12 +152,49 @@ export default function Admin() {
         description: "User role updated successfully"
       });
 
-      fetchUsers(); // Refresh the list
+      fetchUsers();
     } catch (error) {
       console.error('Error updating user role:', error);
       toast({
         title: "Error",
         description: "Failed to update user role",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const updateMembershipTier = async (userId: string, newTier: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_memberships')
+        .update({ 
+          tier: newTier as MembershipTier,
+          granted_at: new Date().toISOString(),
+          is_purchased: false // Since admin is granting it
+        })
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('Error updating membership:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update membership tier",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "Success",
+        description: "Membership tier updated successfully"
+      });
+
+      fetchMemberships();
+    } catch (error) {
+      console.error('Error updating membership:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update membership tier",
         variant: "destructive"
       });
     }
@@ -126,6 +208,17 @@ export default function Admin() {
         return 'bg-orange-500 text-white';
       case 'moderator':
         return 'bg-blue-500 text-white';
+      default:
+        return 'bg-gray-500 text-white';
+    }
+  };
+
+  const getMembershipBadgeColor = (tier: string) => {
+    switch (tier) {
+      case 'pro':
+        return 'bg-purple-500 text-white';
+      case 'advanced':
+        return 'bg-emerald-500 text-white';
       default:
         return 'bg-gray-500 text-white';
     }
@@ -155,11 +248,11 @@ export default function Admin() {
             <Shield className="h-6 w-6 text-emerald-500" />
             <h1 className="text-3xl font-bold">Admin Dashboard</h1>
           </div>
-          <p className="text-muted-foreground">Manage users and their roles</p>
+          <p className="text-muted-foreground">Manage users, roles, and memberships</p>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardContent className="p-6 text-center">
               <Users className="h-8 w-8 text-emerald-500 mx-auto mb-2" />
@@ -185,57 +278,128 @@ export default function Admin() {
               <p className="text-sm text-muted-foreground">Moderators</p>
             </CardContent>
           </Card>
+          <Card>
+            <CardContent className="p-6 text-center">
+              <Crown className="h-8 w-8 text-purple-500 mx-auto mb-2" />
+              <div className="text-2xl font-bold">
+                {memberships.filter(m => m.tier === 'pro' || m.tier === 'advanced').length}
+              </div>
+              <p className="text-sm text-muted-foreground">Premium Members</p>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Users Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>User Management</CardTitle>
-            <CardDescription>
-              Manage user roles and permissions
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {users.map((user) => (
-                <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-semibold">
-                      {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
+        {/* Management Tabs */}
+        <Tabs defaultValue="roles" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="roles">User Roles</TabsTrigger>
+            <TabsTrigger value="memberships">Memberships</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="roles">
+            <Card>
+              <CardHeader>
+                <CardTitle>User Role Management</CardTitle>
+                <CardDescription>
+                  Manage user roles and permissions
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {users.map((user) => (
+                    <div key={user.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-semibold">
+                          {user.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">{user.full_name || 'Unknown User'}</h3>
+                          <p className="text-sm text-muted-foreground">ID: {user.id}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-4">
+                        <Badge className={getRoleBadgeColor(user.role)}>
+                          {user.role.replace('_', ' ').toUpperCase()}
+                        </Badge>
+                        
+                        {hasRole('super_admin') && (
+                          <Select
+                            value={user.role}
+                            onValueChange={(newRole) => updateUserRole(user.id, newRole)}
+                          >
+                            <SelectTrigger className="w-40">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="user">User</SelectItem>
+                              <SelectItem value="moderator">Moderator</SelectItem>
+                              <SelectItem value="admin">Admin</SelectItem>
+                              <SelectItem value="super_admin">Super Admin</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="font-semibold">{user.full_name || 'Unknown User'}</h3>
-                      <p className="text-sm text-muted-foreground">ID: {user.id}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-4">
-                    <Badge className={getRoleBadgeColor(user.role)}>
-                      {user.role.replace('_', ' ').toUpperCase()}
-                    </Badge>
-                    
-                    {hasRole('super_admin') && (
-                      <Select
-                        value={user.role}
-                        onValueChange={(newRole) => updateUserRole(user.id, newRole)}
-                      >
-                        <SelectTrigger className="w-40">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="user">User</SelectItem>
-                          <SelectItem value="moderator">Moderator</SelectItem>
-                          <SelectItem value="admin">Admin</SelectItem>
-                          <SelectItem value="super_admin">Super Admin</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="memberships">
+            <Card>
+              <CardHeader>
+                <CardTitle>Membership Management</CardTitle>
+                <CardDescription>
+                  Grant membership tiers to users as perks for early adopters
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {memberships.map((membership) => (
+                    <div key={membership.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center text-white font-semibold">
+                          {membership.user_name?.charAt(0)?.toUpperCase() || 'U'}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold">{membership.user_name}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            {membership.is_purchased ? 'Purchased' : 'Granted'} • 
+                            {new Date(membership.granted_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-4">
+                        <Badge className={getMembershipBadgeColor(membership.tier)}>
+                          {membership.tier.toUpperCase()}
+                        </Badge>
+                        
+                        {hasRole('admin') && (
+                          <Select
+                            value={membership.tier}
+                            onValueChange={(newTier) => updateMembershipTier(membership.user_id, newTier)}
+                          >
+                            <SelectTrigger className="w-32">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="free">Free</SelectItem>
+                              <SelectItem value="advanced">Advanced</SelectItem>
+                              <SelectItem value="pro">Pro</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
