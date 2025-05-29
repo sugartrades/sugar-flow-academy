@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -11,17 +12,17 @@ export default function Landing() {
 
   const features = [
     {
-      title: "Beginner-Friendly Courses",
+      title: "Beginner: Crypto Basics & Wallets",
       description: "Step-by-step lessons that break down complex trading concepts into digestible, actionable insights.",
       icon: "📚"
     },
     {
-      title: "Interactive Learning",
+      title: "Intermediate: Technical Analysis Foundations",
       description: "Hands-on exercises, quizzes, and simulations to practice without risking real money.",
       icon: "🎮"
     },
     {
-      title: "Real-time Charts",
+      title: "Advanced: Trade Like a Pro",
       description: "Integrated charting tools to analyze markets and apply what you've learned immediately.",
       icon: "📊"
     },
@@ -92,7 +93,7 @@ export default function Landing() {
       <section id="features" className="container py-24">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Everything You Need to Start Trading
+            Choose Your Learning Path
           </h2>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             We've built the most comprehensive yet beginner-friendly crypto trading education platform.
