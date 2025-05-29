@@ -10,12 +10,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Shield, Users, Settings } from 'lucide-react';
 
+type AppRole = 'super_admin' | 'admin' | 'moderator' | 'user';
+
 interface UserWithRole {
   id: string;
   email: string;
   full_name: string;
   created_at: string;
-  role: string;
+  role: AppRole;
 }
 
 export default function Admin() {
@@ -55,7 +57,7 @@ export default function Admin() {
         email: '', // We can't access auth.users directly, so email will be empty
         full_name: profile.full_name || 'Unknown',
         created_at: '',
-        role: profile.user_roles[0]?.role || 'user'
+        role: (profile.user_roles as any)[0]?.role as AppRole || 'user'
       })) || [];
 
       setUsers(usersWithRoles);
@@ -73,6 +75,9 @@ export default function Admin() {
 
   const updateUserRole = async (userId: string, newRole: string) => {
     try {
+      // Type the newRole as AppRole
+      const roleToAssign = newRole as AppRole;
+      
       // Delete existing role
       await supabase
         .from('user_roles')
@@ -82,7 +87,10 @@ export default function Admin() {
       // Insert new role
       const { error } = await supabase
         .from('user_roles')
-        .insert({ user_id: userId, role: newRole });
+        .insert({ 
+          user_id: userId, 
+          role: roleToAssign 
+        });
 
       if (error) {
         console.error('Error updating user role:', error);
