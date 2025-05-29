@@ -70,7 +70,7 @@ export default function Landing() {
           </h1>
           
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            From complete beginner to confident trader. Our gamified platform makes cryptocurrency trading education fun, safe, and incredibly effective.
+            Turn confusion into confidence with our step-by-step, beginner-friendly crypto trading platform—backed by expert insights and gamified learning.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
