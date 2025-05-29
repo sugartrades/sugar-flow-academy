@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -62,7 +61,7 @@ export default function Landing() {
       <section className="container py-24 text-center">
         <div className="mx-auto max-w-4xl space-y-8">
           <Badge variant="secondary" className="mb-4">
-            🚀 Now in Beta - Join 10,000+ Learners
+            🧪 Now in Beta – Join Our First 500 Founding Learners
           </Badge>
           
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
