@@ -64,7 +64,7 @@ export function Header({ showAuth = true }: HeaderProps) {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-emerald-500 text-white">
+                    <AvatarFallback className="bg-primary text-white">
                       {getInitials(user.user_metadata?.full_name || user.email || 'U')}
                     </AvatarFallback>
                   </Avatar>
@@ -105,7 +105,7 @@ export function Header({ showAuth = true }: HeaderProps) {
                 </Button>
                 <Button 
                   onClick={() => navigate('/auth')}
-                  className="bg-emerald-500 hover:bg-emerald-600"
+                  className="bg-primary hover:bg-primary/90"
                 >
                   Get Started Free
                 </Button>
