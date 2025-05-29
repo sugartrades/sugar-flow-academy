@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -201,7 +200,7 @@ export default function Landing() {
           
           <Card>
             <CardContent className="p-6">
-              <h3 className="font-semibold text-lg mb-2">Enterprise</h3>
+              <h3 className="font-semibold text-lg mb-2">Pro</h3>
               <div className="mb-4">
                 <span className="text-3xl font-bold">$99</span>
                 <span className="text-muted-foreground">/month</span>
