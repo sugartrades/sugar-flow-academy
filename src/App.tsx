@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminRoute } from "@/components/AdminRoute";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -16,6 +17,7 @@ import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
 import Lesson from "./pages/Lesson";
 import Community from "./pages/Community";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -63,6 +65,16 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Community />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin" 
+                element={
+                  <ProtectedRoute>
+                    <AdminRoute requiredRole="admin">
+                      <Admin />
+                    </AdminRoute>
                   </ProtectedRoute>
                 } 
               />

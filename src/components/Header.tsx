@@ -3,9 +3,10 @@ import React from 'react';
 import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
 import { Button } from '@/components/ui/button';
-import { Menu, LogOut, User } from 'lucide-react';
+import { Menu, LogOut, User, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +23,7 @@ interface HeaderProps {
 export function Header({ showAuth = true }: HeaderProps) {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { hasRole } = useUserRole();
 
   const handleLogout = async () => {
     await signOut();
@@ -82,6 +84,12 @@ export function Header({ showAuth = true }: HeaderProps) {
                   <User className="mr-2 h-4 w-4" />
                   Dashboard
                 </DropdownMenuItem>
+                {hasRole('admin') && (
+                  <DropdownMenuItem onClick={() => navigate('/admin')}>
+                    <Shield className="mr-2 h-4 w-4" />
+                    Admin
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
