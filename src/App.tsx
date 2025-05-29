@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -20,6 +19,7 @@ import Community from "./pages/Community";
 import Admin from "./pages/Admin";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import RiskDisclosure from "./pages/RiskDisclosure";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +40,7 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
+              <Route path="/risk-disclosure" element={<RiskDisclosure />} />
               <Route 
                 path="/dashboard" 
                 element={

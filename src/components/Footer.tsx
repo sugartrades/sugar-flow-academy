@@ -56,7 +56,14 @@ export function Footer() {
                   Terms
                 </button>
               </li>
-              <li><a href="#" className="hover:text-foreground transition-colors">Security</a></li>
+              <li>
+                <button 
+                  onClick={() => navigate('/risk-disclosure')}
+                  className="hover:text-foreground transition-colors text-left"
+                >
+                  Risk Disclosure
+                </button>
+              </li>
             </ul>
           </div>
         </div>
