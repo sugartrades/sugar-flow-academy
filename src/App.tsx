@@ -18,6 +18,7 @@ import Courses from "./pages/Courses";
 import Lesson from "./pages/Lesson";
 import Community from "./pages/Community";
 import Admin from "./pages/Admin";
+import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/signup" element={<Signup />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/privacy" element={<Privacy />} />
               <Route 
                 path="/dashboard" 
                 element={

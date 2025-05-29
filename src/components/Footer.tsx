@@ -1,8 +1,11 @@
 
 import React from 'react';
 import { Logo } from './Logo';
+import { useNavigate } from 'react-router-dom';
 
 export function Footer() {
+  const navigate = useNavigate();
+
   return (
     <footer className="bg-muted/30 border-t">
       <div className="container py-12">
@@ -37,7 +40,14 @@ export function Footer() {
           <div>
             <h3 className="font-semibold mb-4">Legal</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-foreground transition-colors">Privacy</a></li>
+              <li>
+                <button 
+                  onClick={() => navigate('/privacy')}
+                  className="hover:text-foreground transition-colors text-left"
+                >
+                  Privacy
+                </button>
+              </li>
               <li><a href="#" className="hover:text-foreground transition-colors">Terms</a></li>
               <li><a href="#" className="hover:text-foreground transition-colors">Security</a></li>
             </ul>
