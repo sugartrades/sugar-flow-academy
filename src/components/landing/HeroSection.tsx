@@ -24,10 +24,10 @@ export function HeroSection() {
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button size="lg" onClick={() => navigate('/signup')} className="text-lg px-8">
+          <Button size="lg" onClick={() => navigate('/auth')} className="text-lg px-8">
             Start Learning Free
           </Button>
-          <Button size="lg" variant="outline" className="text-lg px-8">
+          <Button size="lg" variant="outline" className="text-lg px-8" onClick={() => navigate('/courses')}>
             Browse Courses
           </Button>
         </div>

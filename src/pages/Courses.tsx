@@ -6,10 +6,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { Lock } from 'lucide-react';
 
 export default function Courses() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState('all');
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const courses = [
     {
@@ -96,26 +101,44 @@ export default function Courses() {
     }
   };
 
+  const handleCourseAction = (course: any) => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    // Authenticated user action - would navigate to course content
+    console.log('Starting course:', course.title);
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      <Header showAuth={false} />
+      <Header />
       
       <div className="container py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Course Directory</h1>
           <p className="text-muted-foreground">Choose your path to crypto trading mastery</p>
+          {!user && (
+            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-center gap-2 text-amber-800">
+                <Lock className="h-4 w-4" />
+                <p className="font-medium">Sign up to access full course content and track your progress!</p>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Filters */}
+        {/* Filters - disabled for non-authenticated users */}
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <div className="flex-1">
             <Input
               placeholder="Search courses..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              disabled={!user}
             />
           </div>
-          <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
+          <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty} disabled={!user}>
             <SelectTrigger className="w-full sm:w-48">
               <SelectValue placeholder="Difficulty Level" />
             </SelectTrigger>
@@ -131,7 +154,7 @@ export default function Courses() {
         {/* Course Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCourses.map((course) => (
-            <Card key={course.id} className="hover:shadow-lg transition-shadow">
+            <Card key={course.id} className={`hover:shadow-lg transition-shadow ${!user ? 'opacity-75' : ''}`}>
               <CardHeader>
                 <div className="flex items-start justify-between mb-2">
                   <Badge className={getDifficultyColor(course.difficulty)}>
@@ -157,8 +180,19 @@ export default function Courses() {
                     <span>⭐ {course.rating}</span>
                   </div>
                   
-                  <Button className="w-full">
-                    {course.price === 'Free' ? 'Start Course' : 'Enroll Now'}
+                  <Button 
+                    className="w-full" 
+                    onClick={() => handleCourseAction(course)}
+                    variant={!user ? "outline" : "default"}
+                  >
+                    {!user ? (
+                      <div className="flex items-center gap-2">
+                        <Lock className="h-4 w-4" />
+                        Sign up to Access
+                      </div>
+                    ) : (
+                      course.price === 'Free' ? 'Start Course' : 'Enroll Now'
+                    )}
                   </Button>
                 </div>
               </CardContent>
