@@ -82,14 +82,13 @@ export default function Courses() {
                 </p>
                 <p className="text-sm font-medium mb-2">Includes:</p>
                 <ul className="text-sm text-gray-600 space-y-1 mb-3">
-                  <li>• DeFi and Yield Farming</li>
                   <li>• Mastering Market Sentiment</li>
                   <li>• Tokenomics & Project Due Diligence</li>
                   <li>• Reading the Blockchain: On-Chain Insights</li>
                   <li>• Advanced Trading Psychology</li>
                   <li>• Crypto in the Real World</li>
                 </ul>
-                <div className="text-yellow-700 font-bold">🟡 6 Total Courses</div>
+                <div className="text-yellow-700 font-bold">🟡 5 Total Courses</div>
               </div>
 
               {/* Pro Tier */}
@@ -101,9 +100,10 @@ export default function Courses() {
                 <p className="text-sm font-medium mb-2">Includes:</p>
                 <ul className="text-sm text-gray-600 space-y-1 mb-3">
                   <li>• Technical Analysis Mastery</li>
+                  <li>• DeFi and Yield Farming</li>
                   <li>• Intro to Crypto Bots & Algorithmic Trading</li>
                 </ul>
-                <div className="text-purple-700 font-bold">🟣 2 Total Courses (expandable)</div>
+                <div className="text-purple-700 font-bold">🟣 3 Total Courses (expandable)</div>
               </div>
             </div>
           </div>
