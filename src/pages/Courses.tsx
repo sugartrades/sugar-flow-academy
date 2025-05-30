@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -122,7 +121,15 @@ export default function Courses() {
             <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
               <div className="flex items-center gap-2 text-amber-800">
                 <Lock className="h-4 w-4" />
-                <p className="font-medium">Sign up to access full course content and track your progress!</p>
+                <p className="font-medium">
+                  <button 
+                    onClick={() => navigate('/auth')}
+                    className="underline hover:no-underline font-semibold text-amber-900"
+                  >
+                    Sign up
+                  </button>
+                  {' '}to access full course content and track your progress!
+                </p>
               </div>
             </div>
           )}
