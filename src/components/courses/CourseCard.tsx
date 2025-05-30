@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Lock, Crown } from 'lucide-react';
 import { Course } from '@/data/coursesData';
@@ -12,9 +13,23 @@ interface CourseCardProps {
 }
 
 export function CourseCard({ course, isAuthenticated, onCourseAction }: CourseCardProps) {
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty.toLowerCase()) {
+      case 'free': return 'bg-green-100 text-green-800';
+      case 'advanced': return 'bg-yellow-100 text-yellow-800';
+      case 'pro': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
     <Card className={`hover:shadow-lg transition-shadow ${!isAuthenticated ? 'opacity-75' : ''}`}>
       <CardHeader>
+        <div className="flex items-start justify-start mb-2">
+          <Badge className={getDifficultyColor(course.difficulty)}>
+            {course.difficulty}
+          </Badge>
+        </div>
         <CardTitle className="text-lg">{course.title}</CardTitle>
         <CardDescription>{course.description}</CardDescription>
       </CardHeader>
