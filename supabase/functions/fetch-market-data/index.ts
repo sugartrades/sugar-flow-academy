@@ -1,12 +1,20 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.8';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+interface CryptoData {
+  symbol: string;
+  name: string;
+  price: number;
+  change24h: number;
+  marketCap: number;
+  sentiment: string;
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -15,11 +23,11 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Fetching market data from CoinGecko API...');
+    console.log('Fetching market data for BTC, ETH, and XRP from CoinGecko API...');
     
-    // Fetch Bitcoin data from CoinGecko API
+    // Fetch Bitcoin, Ethereum, and XRP data from CoinGecko API
     const response = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd&include_24hr_change=true&include_market_cap=true',
+      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,ripple&vs_currencies=usd&include_24hr_change=true&include_market_cap=true',
       {
         headers: {
           'Accept': 'application/json',
@@ -34,38 +42,56 @@ serve(async (req) => {
     const data = await response.json();
     console.log('CoinGecko response:', data);
 
-    const bitcoin = data.bitcoin;
-    if (!bitcoin) {
-      throw new Error('Bitcoin data not found in response');
+    const cryptos: CryptoData[] = [];
+
+    // Process Bitcoin data
+    if (data.bitcoin) {
+      const btc = data.bitcoin;
+      const sentiment = getSentiment(btc.usd_24h_change);
+      cryptos.push({
+        symbol: 'BTC',
+        name: 'Bitcoin',
+        price: btc.usd,
+        change24h: btc.usd_24h_change,
+        marketCap: btc.usd_market_cap,
+        sentiment
+      });
     }
 
-    const price = bitcoin.usd;
-    const change24h = bitcoin.usd_24h_change;
-    const marketCap = bitcoin.usd_market_cap;
-
-    // Determine market sentiment based on 24h change
-    let sentiment = 'Neutral';
-    if (change24h > 2) {
-      sentiment = 'Bullish - Strong upward momentum';
-    } else if (change24h > 0) {
-      sentiment = 'Slightly Bullish - Modest gains';
-    } else if (change24h < -2) {
-      sentiment = 'Bearish - Significant decline';
-    } else if (change24h < 0) {
-      sentiment = 'Slightly Bearish - Minor losses';
+    // Process Ethereum data
+    if (data.ethereum) {
+      const eth = data.ethereum;
+      const sentiment = getSentiment(eth.usd_24h_change);
+      cryptos.push({
+        symbol: 'ETH',
+        name: 'Ethereum',
+        price: eth.usd,
+        change24h: eth.usd_24h_change,
+        marketCap: eth.usd_market_cap,
+        sentiment
+      });
     }
 
-    // Create market update content
-    const title = `Bitcoin Market Update`;
-    const content = `BTC: $${price.toLocaleString()} (${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}%) - ${sentiment}`;
+    // Process XRP data
+    if (data.ripple) {
+      const xrp = data.ripple;
+      const sentiment = getSentiment(xrp.usd_24h_change);
+      cryptos.push({
+        symbol: 'XRP',
+        name: 'XRP',
+        price: xrp.usd,
+        change24h: xrp.usd_24h_change,
+        marketCap: xrp.usd_market_cap,
+        sentiment
+      });
+    }
+
+    if (cryptos.length === 0) {
+      throw new Error('No cryptocurrency data found in response');
+    }
 
     const marketData = {
-      title,
-      content,
-      price,
-      change24h,
-      marketCap,
-      sentiment,
+      cryptos,
       lastUpdated: new Date().toISOString()
     };
 
@@ -80,8 +106,17 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error.message,
-        title: 'Market Update',
-        content: 'Unable to fetch live market data at this time. Please try again later.',
+        cryptos: [
+          {
+            symbol: 'BTC',
+            name: 'Bitcoin',
+            price: 42000,
+            change24h: 0,
+            marketCap: 800000000000,
+            sentiment: 'Neutral'
+          }
+        ],
+        lastUpdated: new Date().toISOString()
       }), 
       {
         status: 500,
@@ -90,3 +125,16 @@ serve(async (req) => {
     );
   }
 });
+
+function getSentiment(change24h: number): string {
+  if (change24h > 2) {
+    return 'Bullish - Strong upward momentum';
+  } else if (change24h > 0) {
+    return 'Slightly Bullish - Modest gains';
+  } else if (change24h < -2) {
+    return 'Bearish - Significant decline';
+  } else if (change24h < 0) {
+    return 'Slightly Bearish - Minor losses';
+  }
+  return 'Neutral - Stable price action';
+}
