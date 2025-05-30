@@ -5,15 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { MarketUpdate } from '@/components/MarketUpdate';
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useDailyTip } from '@/hooks/useDailyTip';
-import { useMarketUpdate } from '@/hooks/useMarketUpdate';
 import { useUserProgress } from '@/hooks/useUserProgress';
 
 export default function Dashboard() {
   const { getDisplayName, loading: profileLoading } = useUserProfile();
   const { tip, loading: tipLoading } = useDailyTip();
-  const { update, loading: updateLoading } = useMarketUpdate();
   const { stats, loading: statsLoading } = useUserProgress();
 
   const courses = [
@@ -123,21 +122,8 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* Market Update */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">📊 {updateLoading ? 'Market Update' : update?.title || 'Market Update'}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {updateLoading ? (
-                  <p className="text-sm">Loading market update...</p>
-                ) : update ? (
-                  <p className="text-sm">{update.content}</p>
-                ) : (
-                  <p className="text-sm">Bitcoin is showing strong support at $42,000. Consider this level for your analysis.</p>
-                )}
-              </CardContent>
-            </Card>
+            {/* Real-time Market Update */}
+            <MarketUpdate />
 
             {/* Today's Goal */}
             <Card>
