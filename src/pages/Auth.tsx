@@ -166,7 +166,7 @@ export default function Auth() {
                     />
                   </div>
                   
-                  <Button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-600" disabled={loading}>
+                  <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? 'Signing in...' : 'Sign In'}
                   </Button>
                 </form>
@@ -228,7 +228,7 @@ export default function Auth() {
                     />
                   </div>
                   
-                  <Button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-600" disabled={loading}>
+                  <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? 'Creating account...' : 'Create Account'}
                   </Button>
                 </form>
@@ -258,7 +258,7 @@ export default function Auth() {
                     />
                   </div>
                   
-                  <Button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-600" disabled={loading}>
+                  <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? 'Sending...' : 'Send Reset Email'}
                   </Button>
                 </form>
