@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Header } from '@/components/Header';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,8 +17,7 @@ export default function Courses() {
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          course.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDifficulty = selectedDifficulty === 'all' || 
-                             course.difficulty.toLowerCase() === selectedDifficulty ||
-                             (selectedDifficulty === 'all levels' && course.difficulty === 'All Levels');
+                             course.difficulty.toLowerCase() === selectedDifficulty;
     return matchesSearch && matchesDifficulty;
   });
 
