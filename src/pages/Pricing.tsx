@@ -168,7 +168,7 @@ export default function Pricing() {
                   className="w-full"
                   variant={plan.buttonVariant}
                   onClick={() => handleUpgrade(plan.id)}
-                  disabled={plan.id === 'starter' && user}
+                  disabled={plan.id === 'starter' && !!user}
                 >
                   {plan.buttonText}
                 </Button>
