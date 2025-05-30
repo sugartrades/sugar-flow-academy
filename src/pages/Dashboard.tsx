@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -5,9 +6,15 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useDailyTip } from '@/hooks/useDailyTip';
+import { useMarketUpdate } from '@/hooks/useMarketUpdate';
+import { useUserProgress } from '@/hooks/useUserProgress';
 
 export default function Dashboard() {
-  const { getDisplayName, loading } = useUserProfile();
+  const { getDisplayName, loading: profileLoading } = useUserProfile();
+  const { tip, loading: tipLoading } = useDailyTip();
+  const { update, loading: updateLoading } = useMarketUpdate();
+  const { stats, loading: statsLoading } = useUserProgress();
 
   const courses = [
     {
@@ -30,21 +37,6 @@ export default function Dashboard() {
     }
   ];
 
-  const dailyTips = [
-    {
-      title: "💡 Daily Tip",
-      content: "Always set stop-losses before entering any trade. This simple rule can save you from major losses."
-    },
-    {
-      title: "📊 Market Update",
-      content: "Bitcoin is showing strong support at $42,000. Consider this level for your analysis."
-    },
-    {
-      title: "🎯 Today's Goal",
-      content: "Complete the 'Support and Resistance' lesson to earn 50 XP points!"
-    }
-  ];
-
   return (
     <div className="min-h-screen bg-background">
       <Header showAuth={false} />
@@ -52,7 +44,7 @@ export default function Dashboard() {
       <div className="container py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">
-            Welcome back, {loading ? 'Trader' : getDisplayName()}! 👋
+            Welcome back, {profileLoading ? 'Trader' : getDisplayName()}! 👋
           </h1>
           <p className="text-muted-foreground">Ready to continue your crypto trading journey?</p>
         </div>
@@ -88,37 +80,76 @@ export default function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card>
                 <CardContent className="p-6 text-center">
-                  <div className="text-2xl font-bold text-primary mb-2">1,250</div>
+                  <div className="text-2xl font-bold text-primary mb-2">
+                    {statsLoading ? '...' : stats.totalXP.toLocaleString()}
+                  </div>
                   <p className="text-sm text-muted-foreground">XP Points</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-6 text-center">
-                  <div className="text-2xl font-bold text-primary mb-2">12</div>
+                  <div className="text-2xl font-bold text-primary mb-2">
+                    {statsLoading ? '...' : stats.completedLessons}
+                  </div>
                   <p className="text-sm text-muted-foreground">Lessons Completed</p>
                 </CardContent>
               </Card>
               <Card>
                 <CardContent className="p-6 text-center">
-                  <div className="text-2xl font-bold text-primary mb-2">7</div>
+                  <div className="text-2xl font-bold text-primary mb-2">
+                    {statsLoading ? '...' : stats.dayStreak}
+                  </div>
                   <p className="text-sm text-muted-foreground">Day Streak</p>
                 </CardContent>
               </Card>
             </div>
           </div>
 
-          {/* Daily Tips Sidebar */}
+          {/* Dynamic Tips and Updates Sidebar */}
           <div className="space-y-4">
-            {dailyTips.map((tip, index) => (
-              <Card key={index}>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">{tip.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
+            {/* Daily Tip */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">💡 Daily Tip</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {tipLoading ? (
+                  <p className="text-sm">Loading tip...</p>
+                ) : tip ? (
                   <p className="text-sm">{tip.content}</p>
-                </CardContent>
-              </Card>
-            ))}
+                ) : (
+                  <p className="text-sm">Always set stop-losses before entering any trade. This simple rule can save you from major losses.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Market Update */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">📊 {updateLoading ? 'Market Update' : update?.title || 'Market Update'}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {updateLoading ? (
+                  <p className="text-sm">Loading market update...</p>
+                ) : update ? (
+                  <p className="text-sm">{update.content}</p>
+                ) : (
+                  <p className="text-sm">Bitcoin is showing strong support at $42,000. Consider this level for your analysis.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Today's Goal */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">🎯 Today's Goal</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm mb-4">
+                  Complete the 'Support and Resistance' lesson to earn 50 XP points!
+                </p>
+              </CardContent>
+            </Card>
             
             <Card>
               <CardHeader>

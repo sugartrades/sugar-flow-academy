@@ -9,6 +9,60 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      daily_tips: {
+        Row: {
+          category: string | null
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      market_updates: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -35,6 +89,68 @@ export type Database = {
           username?: string | null
         }
         Relationships: []
+      }
+      user_course_progress: {
+        Row: {
+          completed_at: string
+          course_id: string
+          created_at: string
+          id: string
+          lesson_id: string
+          user_id: string
+          xp_earned: number | null
+        }
+        Insert: {
+          completed_at?: string
+          course_id: string
+          created_at?: string
+          id?: string
+          lesson_id: string
+          user_id: string
+          xp_earned?: number | null
+        }
+        Update: {
+          completed_at?: string
+          course_id?: string
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          user_id?: string
+          xp_earned?: number | null
+        }
+        Relationships: []
+      }
+      user_daily_tips: {
+        Row: {
+          created_at: string
+          id: string
+          shown_date: string
+          tip_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          shown_date?: string
+          tip_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          shown_date?: string
+          tip_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_daily_tips_tip_id_fkey"
+            columns: ["tip_id"]
+            isOneToOne: false
+            referencedRelation: "daily_tips"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_memberships: {
         Row: {
