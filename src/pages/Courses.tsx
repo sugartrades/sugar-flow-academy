@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -81,13 +82,92 @@ export default function Courses() {
       enrolled: 934,
       rating: 4.5,
       price: "Free"
+    },
+    {
+      id: 7,
+      title: "🔐 Crypto Safety & Wallet Security",
+      description: "Learn how to protect your crypto assets with safe wallet practices and scam detection strategies",
+      difficulty: "Beginner",
+      duration: "1 hour",
+      lessons: 7,
+      enrolled: 615,
+      rating: 4.6,
+      price: "Free"
+    },
+    {
+      id: 8,
+      title: "🔍 Reading the Blockchain: On-Chain Insights for Traders",
+      description: "Explore on-chain tools and metrics to gain a trading edge through blockchain transparency",
+      difficulty: "Intermediate",
+      duration: "2 hours",
+      lessons: 9,
+      enrolled: 388,
+      rating: 4.7,
+      price: "Pro"
+    },
+    {
+      id: 9,
+      title: "🧩 Tokenomics & Project Due Diligence",
+      description: "Understand token supply mechanics, governance, and utility to evaluate crypto projects wisely",
+      difficulty: "Intermediate",
+      duration: "2.5 hours",
+      lessons: 11,
+      enrolled: 514,
+      rating: 4.8,
+      price: "Pro"
+    },
+    {
+      id: 10,
+      title: "📊 Crypto Taxes 101: What You Need to Know",
+      description: "Learn how to track, report, and minimize taxes on your crypto trades and holdings",
+      difficulty: "All Levels",
+      duration: "1 hour",
+      lessons: 6,
+      enrolled: 710,
+      rating: 4.5,
+      price: "Free"
+    },
+    {
+      id: 11,
+      title: "🌐 Crypto in the Real World",
+      description: "Discover real-world crypto use cases in payments, NFTs, stablecoins, and emerging economies",
+      difficulty: "Beginner",
+      duration: "45 mins",
+      lessons: 5,
+      enrolled: 832,
+      rating: 4.4,
+      price: "Free"
+    },
+    {
+      id: 12,
+      title: "🤖 Intro to Crypto Bots & Algorithmic Trading",
+      description: "Automate your strategy using trading bots, DCA, and backtesting tools like 3Commas and Pionex",
+      difficulty: "Advanced",
+      duration: "3 hours",
+      lessons: 12,
+      enrolled: 289,
+      rating: 4.7,
+      price: "Pro"
+    },
+    {
+      id: 13,
+      title: "📰 Mastering Market Sentiment",
+      description: "Use sentiment tools, social trends, and news flow to anticipate crypto market shifts",
+      difficulty: "Intermediate",
+      duration: "1.5 hours",
+      lessons: 8,
+      enrolled: 477,
+      rating: 4.6,
+      price: "Pro"
     }
   ];
 
   const filteredCourses = courses.filter(course => {
     const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          course.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDifficulty = selectedDifficulty === 'all' || course.difficulty.toLowerCase() === selectedDifficulty;
+    const matchesDifficulty = selectedDifficulty === 'all' || 
+                             course.difficulty.toLowerCase() === selectedDifficulty ||
+                             (selectedDifficulty === 'all levels' && course.difficulty === 'All Levels');
     return matchesSearch && matchesDifficulty;
   });
 
@@ -96,6 +176,7 @@ export default function Courses() {
       case 'beginner': return 'bg-green-100 text-green-800';
       case 'intermediate': return 'bg-yellow-100 text-yellow-800';
       case 'advanced': return 'bg-red-100 text-red-800';
+      case 'all levels': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
