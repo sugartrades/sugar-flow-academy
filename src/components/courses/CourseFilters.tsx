@@ -30,13 +30,13 @@ export function CourseFilters({
       </div>
       <Select value={selectedDifficulty} onValueChange={onDifficultyChange} disabled={!isAuthenticated}>
         <SelectTrigger className="w-full sm:w-48">
-          <SelectValue placeholder="Difficulty Level" />
+          <SelectValue placeholder="Course Tier" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Levels</SelectItem>
-          <SelectItem value="beginner">Beginner</SelectItem>
-          <SelectItem value="intermediate">Intermediate</SelectItem>
-          <SelectItem value="advanced">Advanced</SelectItem>
+          <SelectItem value="all">All Tiers</SelectItem>
+          <SelectItem value="free">Free Tier</SelectItem>
+          <SelectItem value="advanced">Advanced Tier</SelectItem>
+          <SelectItem value="pro">Pro Tier</SelectItem>
         </SelectContent>
       </Select>
     </div>
