@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Lock } from 'lucide-react';
+import { Lock, Crown } from 'lucide-react';
 
 export default function Courses() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -105,7 +105,15 @@ export default function Courses() {
       navigate('/auth');
       return;
     }
-    // Authenticated user action - would navigate to course content
+    
+    // Check if course requires upgrade
+    if (course.price === 'Pro') {
+      // Mock check for user subscription - for now, always show upgrade prompt
+      navigate('/pricing');
+      return;
+    }
+    
+    // Free course - would navigate to course content
     console.log('Starting course:', course.title);
   };
 
@@ -167,7 +175,11 @@ export default function Courses() {
                   <Badge className={getDifficultyColor(course.difficulty)}>
                     {course.difficulty}
                   </Badge>
-                  <Badge variant={course.price === 'Free' ? 'secondary' : 'default'}>
+                  <Badge 
+                    variant={course.price === 'Free' ? 'secondary' : 'default'}
+                    className={course.price === 'Pro' ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white' : ''}
+                  >
+                    {course.price === 'Pro' && <Crown className="h-3 w-3 mr-1" />}
                     {course.price}
                   </Badge>
                 </div>
@@ -190,15 +202,20 @@ export default function Courses() {
                   <Button 
                     className="w-full" 
                     onClick={() => handleCourseAction(course)}
-                    variant={!user ? "outline" : "default"}
+                    variant={!user ? "outline" : course.price === 'Pro' ? "default" : "default"}
                   >
                     {!user ? (
                       <div className="flex items-center gap-2">
                         <Lock className="h-4 w-4" />
                         Sign up to Access
                       </div>
+                    ) : course.price === 'Pro' ? (
+                      <div className="flex items-center gap-2">
+                        <Crown className="h-4 w-4" />
+                        Upgrade to Access
+                      </div>
                     ) : (
-                      course.price === 'Free' ? 'Start Course' : 'Enroll Now'
+                      'Start Course'
                     )}
                   </Button>
                 </div>

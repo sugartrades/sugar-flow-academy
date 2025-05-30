@@ -27,8 +27,8 @@ export function HeroSection() {
           <Button size="lg" onClick={() => navigate('/auth')} className="text-lg px-8">
             Start Learning Free
           </Button>
-          <Button size="lg" variant="outline" className="text-lg px-8" onClick={() => navigate('/courses')}>
-            Browse Courses
+          <Button size="lg" variant="outline" className="text-lg px-8" onClick={() => navigate('/pricing')}>
+            View Pricing
           </Button>
         </div>
         

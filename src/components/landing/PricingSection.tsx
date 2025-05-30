@@ -3,8 +3,11 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
 
 export function PricingSection() {
+  const navigate = useNavigate();
+
   return (
     <section id="pricing" className="container py-24">
       <div className="text-center mb-16">
@@ -31,7 +34,7 @@ export function PricingSection() {
               <li>✗ Advanced strategies</li>
               <li>✗ Live trading sessions</li>
             </ul>
-            <Button className="w-full" variant="outline">
+            <Button className="w-full" variant="outline" onClick={() => navigate('/auth')}>
               Get Started
             </Button>
           </CardContent>
@@ -52,8 +55,8 @@ export function PricingSection() {
               <li>✓ Priority community support</li>
               <li>✓ Chart analysis tools</li>
             </ul>
-            <Button className="w-full">
-              Start Free Trial
+            <Button className="w-full" onClick={() => navigate('/pricing')}>
+              View Details
             </Button>
           </CardContent>
         </Card>
@@ -72,11 +75,17 @@ export function PricingSection() {
               <li>✓ API access</li>
               <li>✓ White-label options</li>
             </ul>
-            <Button className="w-full" variant="outline">
-              Contact Sales
+            <Button className="w-full" variant="outline" onClick={() => navigate('/pricing')}>
+              View Details
             </Button>
           </CardContent>
         </Card>
+      </div>
+      
+      <div className="text-center mt-8">
+        <Button variant="link" onClick={() => navigate('/pricing')}>
+          Compare all plans and features →
+        </Button>
       </div>
     </section>
   );

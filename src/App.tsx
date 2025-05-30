@@ -15,6 +15,8 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
+import Pricing from "./pages/Pricing";
+import Checkout from "./pages/Checkout";
 import Lesson from "./pages/Lesson";
 import Community from "./pages/Community";
 import Admin from "./pages/Admin";
@@ -43,6 +45,15 @@ const App = () => (
               <Route path="/terms" element={<Terms />} />
               <Route path="/risk-disclosure" element={<RiskDisclosure />} />
               <Route path="/courses" element={<Courses />} />
+              <Route path="/pricing" element={<Pricing />} />
+              <Route 
+                path="/checkout" 
+                element={
+                  <ProtectedRoute>
+                    <Checkout />
+                  </ProtectedRoute>
+                } 
+              />
               <Route 
                 path="/dashboard" 
                 element={
