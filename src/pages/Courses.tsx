@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Header } from '@/components/Header';
 import { useAuth } from '@/contexts/AuthContext';
@@ -45,63 +46,78 @@ export default function Courses() {
       <div className="container py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Course Directory</h1>
-          <p className="text-muted-foreground">Choose your path to crypto trading mastery</p>
+          <p className="text-muted-foreground">Choose your path to crypto trading mastery. The courses are divided into two main paths: Fundamental Analysis and Technical Analysis. Each path has three tiers: Beginner (Free), Advanced, and Pro.</p>
           
-          {/* Course Access Levels Section */}
+          {/* Learning Paths Section */}
           <div className="mt-8 mb-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
-            <h2 className="text-2xl font-bold mb-4 text-center">📚 Course Access Levels</h2>
+            <h2 className="text-2xl font-bold mb-4 text-center">📚 Learning Paths & Tiers</h2>
             <p className="text-center text-muted-foreground mb-6">
-              At SugarTrades.io, your learning path is divided into three tiers. Start free, level up with more advanced strategies, or unlock our most powerful training tools in Pro.
+              Master crypto trading through two comprehensive learning paths. Each path is structured with progressive tiers to guide your journey from beginner to expert.
             </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Free Tier */}
-              <div className="bg-white p-5 rounded-lg border-2 border-green-200">
-                <h3 className="text-lg font-bold mb-2 text-green-700">✅ Free Tier (Beginner)</h3>
-                <p className="text-sm text-gray-600 mb-3">
-                  <strong>Goal:</strong> Onboard and educate brand-new users with essential trading fundamentals.
+            {/* Two Main Paths */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+              {/* Fundamental Analysis Path */}
+              <div className="bg-white p-6 rounded-lg border-2 border-blue-200">
+                <h3 className="text-xl font-bold mb-3 text-blue-700">📊 Fundamental Analysis Path</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Learn to evaluate cryptocurrencies based on their underlying value, technology, and market potential.
                 </p>
-                <p className="text-sm font-medium mb-2">Includes:</p>
-                <ul className="text-sm text-gray-600 space-y-1 mb-3">
-                  <li>• Cryptocurrency Fundamentals</li>
-                  <li>• Risk Management Strategies</li>
-                  <li>• Portfolio Diversification</li>
-                  <li>• Crypto Safety & Wallet Security</li>
-                  <li>• Crypto Taxes 101</li>
-                </ul>
-                <div className="text-green-700 font-bold">🟢 5 Total Courses</div>
+                <div className="space-y-3">
+                  <div className="p-3 bg-green-50 rounded border-l-4 border-green-400">
+                    <h4 className="font-semibold text-green-700">Beginner (Free)</h4>
+                    <p className="text-xs text-gray-600">Cryptocurrency basics, safety, and portfolio fundamentals</p>
+                  </div>
+                  <div className="p-3 bg-yellow-50 rounded border-l-4 border-yellow-400">
+                    <h4 className="font-semibold text-yellow-700">Advanced</h4>
+                    <p className="text-xs text-gray-600">Tokenomics, project analysis, and market research</p>
+                  </div>
+                  <div className="p-3 bg-purple-50 rounded border-l-4 border-purple-400">
+                    <h4 className="font-semibold text-purple-700">Pro</h4>
+                    <p className="text-xs text-gray-600">Advanced on-chain analysis and institutional strategies</p>
+                  </div>
+                </div>
               </div>
 
-              {/* Advanced Tier */}
-              <div className="bg-white p-5 rounded-lg border-2 border-yellow-200">
-                <h3 className="text-lg font-bold mb-2 text-yellow-700">🔶 Advanced Tier (Skill Builders)</h3>
-                <p className="text-sm text-gray-600 mb-3">
-                  <strong>Goal:</strong> Upskill users ready to go beyond basics with deeper strategies and market knowledge.
+              {/* Technical Analysis Path */}
+              <div className="bg-white p-6 rounded-lg border-2 border-purple-200">
+                <h3 className="text-xl font-bold mb-3 text-purple-700">📈 Technical Analysis Path</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Master chart patterns, indicators, and trading psychology to time your market entries and exits.
                 </p>
-                <p className="text-sm font-medium mb-2">Includes:</p>
-                <ul className="text-sm text-gray-600 space-y-1 mb-3">
-                  <li>• Mastering Market Sentiment</li>
-                  <li>• Tokenomics & Project Due Diligence</li>
-                  <li>• Reading the Blockchain: On-Chain Insights</li>
-                  <li>• Advanced Trading Psychology</li>
-                  <li>• Crypto in the Real World</li>
-                </ul>
-                <div className="text-yellow-700 font-bold">🟡 5 Total Courses</div>
+                <div className="space-y-3">
+                  <div className="p-3 bg-green-50 rounded border-l-4 border-green-400">
+                    <h4 className="font-semibold text-green-700">Beginner (Free)</h4>
+                    <p className="text-xs text-gray-600">Risk management and trading psychology basics</p>
+                  </div>
+                  <div className="p-3 bg-yellow-50 rounded border-l-4 border-yellow-400">
+                    <h4 className="font-semibold text-yellow-700">Advanced</h4>
+                    <p className="text-xs text-gray-600">Market sentiment analysis and advanced psychology</p>
+                  </div>
+                  <div className="p-3 bg-purple-50 rounded border-l-4 border-purple-400">
+                    <h4 className="font-semibold text-purple-700">Pro</h4>
+                    <p className="text-xs text-gray-600">Technical analysis mastery and algorithmic trading</p>
+                  </div>
+                </div>
               </div>
+            </div>
 
-              {/* Pro Tier */}
-              <div className="bg-white p-5 rounded-lg border-2 border-purple-200">
-                <h3 className="text-lg font-bold mb-2 text-purple-700">🔮 Pro Tier (Power Users)</h3>
-                <p className="text-sm text-gray-600 mb-3">
-                  <strong>Goal:</strong> Deliver elite-level content to our most serious traders.
-                </p>
-                <p className="text-sm font-medium mb-2">Includes:</p>
-                <ul className="text-sm text-gray-600 space-y-1 mb-3">
-                  <li>• Technical Analysis Mastery</li>
-                  <li>• DeFi and Yield Farming</li>
-                  <li>• Intro to Crypto Bots & Algorithmic Trading</li>
-                </ul>
-                <div className="text-purple-700 font-bold">🟣 3 Total Courses (expandable)</div>
+            {/* Tier Summary */}
+            <div className="bg-white p-5 rounded-lg border border-gray-200">
+              <h3 className="text-lg font-bold mb-3 text-center">🎯 Tier Overview</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">8</div>
+                  <div className="text-sm text-gray-600">Beginner (Free) Courses</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-yellow-600">5</div>
+                  <div className="text-sm text-gray-600">Advanced Courses</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-purple-600">3</div>
+                  <div className="text-sm text-gray-600">Pro Courses</div>
+                </div>
               </div>
             </div>
           </div>
