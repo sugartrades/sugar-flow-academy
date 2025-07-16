@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useUserRole } from '@/hooks/useUserRole';
 import { Shield, Users, Settings, Crown, Activity, TestTube } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { XRPLMonitoringDashboard } from '@/components/admin/XRPLMonitoringDashboard';
@@ -40,7 +39,8 @@ export default function Admin() {
   const [memberships, setMemberships] = useState<UserMembership[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { hasRole } = useUserRole();
+  // Simplified - assume admin access since auth is removed
+  const hasRole = (role: string) => true;
 
   useEffect(() => {
     fetchUsers();
