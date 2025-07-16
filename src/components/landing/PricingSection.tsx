@@ -33,11 +33,11 @@ export function PricingSection() {
     setShowPayment(true);
   };
 
-  const handlePaymentSuccess = (email: string) => {
+  const handlePaymentSuccess = (email: string, paymentId: string) => {
     setShowPayment(false);
     // In a real implementation, you'd save the email to your backend
     console.log('Payment successful for email:', email);
-    navigate('/success');
+    navigate(`/success?payment=${paymentId}`);
   };
 
   const handlePaymentCancel = () => {

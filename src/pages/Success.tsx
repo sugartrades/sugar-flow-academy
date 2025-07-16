@@ -1,15 +1,90 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, Navigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, MessageSquare, Mail, Bot, ExternalLink } from 'lucide-react';
+import { CheckCircle, MessageSquare, Mail, Bot, ExternalLink, Loader2, AlertCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Success() {
+  const [searchParams] = useSearchParams();
+  const [isLoading, setIsLoading] = useState(true);
+  const [paymentData, setPaymentData] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  
+  const paymentId = searchParams.get('payment');
+
+  useEffect(() => {
+    const verifyPayment = async () => {
+      if (!paymentId) {
+        setError('Invalid payment access. Please complete a payment first.');
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase.functions.invoke('process-payment', {
+          body: {
+            action: 'check_payment',
+            paymentId
+          }
+        });
+
+        if (error) {
+          console.error('Payment verification error:', error);
+          setError('Failed to verify payment. Please try again.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (data.status === 'completed') {
+          setPaymentData(data);
+          setIsLoading(false);
+        } else {
+          setError('Payment not completed or invalid. Please complete your payment first.');
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Payment verification error:', error);
+        setError('Failed to verify payment. Please try again.');
+        setIsLoading(false);
+      }
+    };
+
+    verifyPayment();
+  }, [paymentId]);
+
   const handleTelegramRedirect = () => {
     window.open('https://t.me/WhaleAlertProBot', '_blank');
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-16 w-16 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-lg text-muted-foreground">Verifying your payment...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !paymentData) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <AlertCircle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-foreground mb-4">Access Denied</h1>
+          <p className="text-muted-foreground mb-6">{error}</p>
+          <Button onClick={() => window.location.href = '/'}>
+            Return to Home
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

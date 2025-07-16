@@ -24,3 +24,6 @@ verify_jwt = false
 
 [functions.manage-membership]
 verify_jwt = false
+
+[functions.send-payment-confirmation]
+verify_jwt = false

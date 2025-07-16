@@ -253,6 +253,20 @@ async function checkPaymentStatus(paymentId: string) {
             })
             .eq("id", paymentId);
 
+          // Send confirmation email and Telegram alert
+          try {
+            await supabase.functions.invoke("send-payment-confirmation", {
+              body: {
+                email: paymentRequest.email,
+                amount: paymentRequest.amount,
+                transactionHash: transactionHash,
+                paymentId: paymentId
+              }
+            });
+          } catch (error) {
+            console.error("Error sending payment confirmation:", error);
+          }
+
           return {
             status: "completed",
             transactionHash,
@@ -318,6 +332,20 @@ async function checkPaymentStatus(paymentId: string) {
         ledger_index: payment.ledger_index
       })
       .eq("id", paymentId);
+
+    // Send confirmation email and Telegram alert
+    try {
+      await supabase.functions.invoke("send-payment-confirmation", {
+        body: {
+          email: paymentRequest.email,
+          amount: paymentRequest.amount,
+          transactionHash: payment.hash,
+          paymentId: paymentId
+        }
+      });
+    } catch (error) {
+      console.error("Error sending payment confirmation:", error);
+    }
 
     return {
       status: "completed",

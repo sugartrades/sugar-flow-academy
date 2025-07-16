@@ -13,7 +13,7 @@ import QRCode from 'qrcode';
 interface XamanPaymentProps {
   amount: string;
   destinationAddress: string;
-  onSuccess: (email: string) => void;
+  onSuccess: (email: string, paymentId: string) => void;
   onCancel: () => void;
 }
 
@@ -87,7 +87,7 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
           });
         }
         
-        onSuccess(email);
+        onSuccess(email, paymentId);
       } else if (result.status === 'failed' || result.status === 'expired') {
         setPaymentStatus('failed');
         if (pollingInterval) {
