@@ -486,6 +486,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      test_net_http_post: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       test_whale_alert_trigger: {
         Args: {
           p_wallet_address: string

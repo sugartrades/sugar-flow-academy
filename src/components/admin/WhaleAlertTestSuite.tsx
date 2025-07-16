@@ -120,6 +120,47 @@ export const WhaleAlertTestSuite = () => {
     }
   };
 
+  const testNetHttpPost = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('test_net_http_post');
+      
+      if (error) throw error;
+
+      const result = {
+        id: Date.now(),
+        type: 'net_http_post_test',
+        status: 'success',
+        message: data,
+        timestamp: new Date().toISOString()
+      };
+
+      setTestResults(prev => [result, ...prev]);
+      toast({
+        title: "Net HTTP Post Test",
+        description: "HTTP post function test completed",
+      });
+
+    } catch (error) {
+      console.error('Net HTTP post test failed:', error);
+      const result = {
+        id: Date.now(),
+        type: 'net_http_post_test',
+        status: 'error',
+        message: `Net HTTP Post Error: ${error.message}`,
+        timestamp: new Date().toISOString()
+      };
+      setTestResults(prev => [result, ...prev]);
+      toast({
+        title: "Net HTTP Post Test Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const testEdgeFunction = async () => {
     setLoading(true);
     try {
@@ -254,23 +295,34 @@ export const WhaleAlertTestSuite = () => {
               </div>
             </div>
 
-            <div className="flex gap-2 pt-4">
+            <div className="space-y-2 pt-4">
+              <div className="flex gap-2">
+                <Button
+                  onClick={testTriggerFunction}
+                  disabled={loading}
+                  className="flex-1"
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  Test Trigger Function
+                </Button>
+                <Button
+                  onClick={testEdgeFunction}
+                  disabled={loading}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  <Zap className="w-4 h-4 mr-2" />
+                  Test Edge Function
+                </Button>
+              </div>
               <Button
-                onClick={testTriggerFunction}
+                onClick={testNetHttpPost}
                 disabled={loading}
-                className="flex-1"
+                variant="secondary"
+                className="w-full"
               >
-                <Play className="w-4 h-4 mr-2" />
-                Test Trigger Function
-              </Button>
-              <Button
-                onClick={testEdgeFunction}
-                disabled={loading}
-                variant="outline"
-                className="flex-1"
-              >
-                <Zap className="w-4 h-4 mr-2" />
-                Test Edge Function
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Test Net HTTP Post
               </Button>
             </div>
           </CardContent>
@@ -341,8 +393,10 @@ export const WhaleAlertTestSuite = () => {
           <ul className="mt-2 ml-4 space-y-1 text-sm">
             <li>• <strong>Trigger Test:</strong> Tests the database trigger that automatically calls the Telegram bot when a whale alert is created</li>
             <li>• <strong>Edge Function Test:</strong> Tests the Telegram notification edge function directly</li>
+            <li>• <strong>Net HTTP Post Test:</strong> Tests if the pg_net extension and http_post function are working correctly</li>
             <li>• Set amount to 10,000+ XRP to trigger whale alert threshold</li>
             <li>• Check your Telegram channel for notifications after running tests</li>
+            <li>• <strong>Troubleshooting:</strong> Run the Net HTTP Post test first to diagnose connectivity issues</li>
           </ul>
         </AlertDescription>
       </Alert>
