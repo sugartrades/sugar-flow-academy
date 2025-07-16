@@ -4,9 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { QrCode, ExternalLink, CheckCircle, Clock, AlertCircle, Mail } from 'lucide-react';
+import { QrCode, ExternalLink, CheckCircle, Clock, AlertCircle, Mail, Smartphone, Monitor, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useDeviceDetection, generateXamanDeepLink, generateAppStoreLinks } from '@/hooks/useDeviceDetection';
+import QRCode from 'qrcode';
 
 interface XamanPaymentProps {
   amount: string;
@@ -18,11 +20,14 @@ interface XamanPaymentProps {
 export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }: XamanPaymentProps) {
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'pending' | 'success' | 'failed' | 'cancelled'>('idle');
   const [paymentUrl, setPaymentUrl] = useState<string>('');
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [emailError, setEmailError] = useState<string>('');
   const [paymentId, setPaymentId] = useState<string>('');
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
+  const deviceInfo = useDeviceDetection();
+  const appStoreLinks = generateAppStoreLinks();
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -160,9 +165,28 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
       setPaymentId(result.paymentId);
       setPaymentUrl(result.xamanUrl);
 
+      // Generate QR code for desktop users
+      if (deviceInfo.isDesktop) {
+        try {
+          const qrCodeUrl = await QRCode.toDataURL(result.xamanUrl, {
+            width: 200,
+            margin: 2,
+            color: {
+              dark: '#000000',
+              light: '#ffffff'
+            }
+          });
+          setQrCodeDataUrl(qrCodeUrl);
+        } catch (error) {
+          console.error('Error generating QR code:', error);
+        }
+      }
+
       toast({
         title: "Payment Request Created",
-        description: "Please complete the payment in your Xaman Wallet app.",
+        description: deviceInfo.isMobile 
+          ? "Please complete the payment in your Xaman Wallet app."
+          : "Scan the QR code with your Xaman Wallet app or open the link on your mobile device.",
       });
 
       // Start monitoring payment status
@@ -190,7 +214,27 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
 
   const openXamanWallet = () => {
     if (paymentUrl) {
-      window.open(paymentUrl, '_blank');
+      if (deviceInfo.isMobile) {
+        // Try to open the Xaman app directly with deep link
+        const deepLink = generateXamanDeepLink(paymentUrl);
+        window.location.href = deepLink;
+        
+        // Fallback to web URL after a short delay if app doesn't open
+        setTimeout(() => {
+          window.open(paymentUrl, '_blank');
+        }, 1000);
+      } else {
+        // Desktop users get the web URL
+        window.open(paymentUrl, '_blank');
+      }
+    }
+  };
+
+  const openAppStore = () => {
+    if (deviceInfo.isIOS) {
+      window.open(appStoreLinks.ios, '_blank');
+    } else if (deviceInfo.isAndroid) {
+      window.open(appStoreLinks.android, '_blank');
     }
   };
 
@@ -290,10 +334,63 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
 
             {paymentStatus === 'pending' && (
               <>
-                <Button onClick={openXamanWallet} className="w-full" size="lg">
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Open Xaman Wallet
-                </Button>
+                {deviceInfo.isDesktop && qrCodeDataUrl && (
+                  <div className="space-y-4">
+                    <div className="bg-white p-4 rounded-lg border-2 border-dashed border-gray-300">
+                      <div className="text-center space-y-3">
+                        <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                          <Monitor className="h-4 w-4" />
+                          <span>Scan with your mobile device</span>
+                        </div>
+                        <div className="flex justify-center">
+                          <img src={qrCodeDataUrl} alt="Payment QR Code" className="w-40 h-40" />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium">Using Xaman Wallet App</p>
+                          <p className="text-xs text-muted-foreground">
+                            1. Open Xaman Wallet on your phone<br />
+                            2. Tap "Scan QR" or camera icon<br />
+                            3. Scan this QR code to complete payment
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <Button onClick={openXamanWallet} variant="outline" size="sm" className="w-full">
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        Or open on this device
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {deviceInfo.isMobile && (
+                  <div className="space-y-3">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Smartphone className="h-5 w-5 text-blue-600" />
+                        <p className="text-sm font-medium text-blue-900">Mobile Payment</p>
+                      </div>
+                      <p className="text-sm text-blue-700">
+                        Tap the button below to open your Xaman Wallet app directly
+                      </p>
+                    </div>
+                    
+                    <Button onClick={openXamanWallet} className="w-full" size="lg">
+                      <Smartphone className="mr-2 h-4 w-4" />
+                      Open Xaman Wallet App
+                    </Button>
+                    
+                    <div className="text-center space-y-2">
+                      <p className="text-sm text-muted-foreground">Don't have Xaman Wallet?</p>
+                      <Button onClick={openAppStore} variant="outline" size="sm" className="w-full">
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Xaman Wallet
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto mb-2"></div>
                   <p className="text-sm text-muted-foreground">
