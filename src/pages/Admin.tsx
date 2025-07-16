@@ -11,6 +11,7 @@ import { Shield, Users, Settings, Crown, Activity, TestTube } from 'lucide-react
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { XRPLMonitoringDashboard } from '@/components/admin/XRPLMonitoringDashboard';
 import { XRPLTestSuite } from '@/components/admin/XRPLTestSuite';
+import { EmailTestSuite } from '@/components/admin/EmailTestSuite';
 
 type AppRole = 'super_admin' | 'admin' | 'moderator' | 'user';
 type MembershipTier = 'free' | 'advanced' | 'pro';
@@ -409,7 +410,10 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="testing">
-            <XRPLTestSuite />
+            <div className="space-y-6">
+              <EmailTestSuite />
+              <XRPLTestSuite />
+            </div>
           </TabsContent>
         </Tabs>
       </div>
