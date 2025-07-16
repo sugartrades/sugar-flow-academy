@@ -13,14 +13,14 @@ const steps = [
   },
   {
     icon: Bell,
-    title: "Set Preferences",
-    description: "Choose your alert method - email, Telegram, or both. Configure your notification settings.",
+    title: "Join Telegram",
+    description: "Get access to our exclusive Telegram channel for instant alerts on Chris Larsen and Arthur Britto wallet movements.",
     step: "2"
   },
   {
     icon: Smartphone,
     title: "Get Alerts",
-    description: "Receive instant notifications when whale wallets move 50k+ XRP to exchanges.",
+    description: "Receive instant Telegram notifications when tracked wallets move 10k+ XRP to exchanges.",
     step: "3"
   },
   {
@@ -64,16 +64,6 @@ export function HowItWorksSection() {
             </CardContent>
           </Card>
         ))}
-      </div>
-      
-      <div className="text-center mt-16">
-        <Button 
-          size="lg" 
-          onClick={() => navigate('/auth')}
-          className="text-lg px-8"
-        >
-          Start Monitoring Now
-        </Button>
       </div>
     </section>
   );
