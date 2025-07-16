@@ -4,7 +4,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { HeroSection } from '@/components/landing/HeroSection';
 import { FeaturesSection } from '@/components/landing/FeaturesSection';
-import { TestimonialsSection } from '@/components/landing/TestimonialsSection';
+import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
 import { PricingSection } from '@/components/landing/PricingSection';
 import { CTASection } from '@/components/landing/CTASection';
 
@@ -14,7 +14,7 @@ export default function Landing() {
       <Header />
       <HeroSection />
       <FeaturesSection />
-      <TestimonialsSection />
+      <HowItWorksSection />
       <PricingSection />
       <CTASection />
       <Footer />

@@ -1,0 +1,80 @@
+import React from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { CreditCard, Bell, Smartphone, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+const steps = [
+  {
+    icon: CreditCard,
+    title: "Pay with XRP",
+    description: "One-time payment of 5 XRP via Xaman Wallet for lifetime access to whale alerts.",
+    step: "1"
+  },
+  {
+    icon: Bell,
+    title: "Set Preferences",
+    description: "Choose your alert method - email, Telegram, or both. Configure your notification settings.",
+    step: "2"
+  },
+  {
+    icon: Smartphone,
+    title: "Get Alerts",
+    description: "Receive instant notifications when whale wallets move 50k+ XRP to exchanges.",
+    step: "3"
+  },
+  {
+    icon: TrendingUp,
+    title: "Trade Smart",
+    description: "Use early whale movement intel to make informed trading decisions ahead of the market.",
+    step: "4"
+  }
+];
+
+export function HowItWorksSection() {
+  const navigate = useNavigate();
+
+  return (
+    <section id="how-it-works" className="container py-24 bg-muted/30">
+      <div className="text-center mb-16">
+        <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          How It <span className="text-primary">Works</span>
+        </h2>
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          Get started with whale alerts in just 4 simple steps. No complex setup, no recurring fees.
+        </p>
+      </div>
+      
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+        {steps.map((step, index) => (
+          <Card key={index} className="text-center relative">
+            <CardHeader>
+              <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4 relative">
+                <step.icon className="w-8 h-8 text-white" />
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-background border-2 border-primary rounded-full flex items-center justify-center">
+                  <span className="text-xs font-bold text-primary">{step.step}</span>
+                </div>
+              </div>
+              <CardTitle className="text-xl">{step.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription className="text-base leading-relaxed">
+                {step.description}
+              </CardDescription>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      
+      <div className="text-center mt-16">
+        <Button 
+          size="lg" 
+          onClick={() => navigate('/auth')}
+          className="text-lg px-8"
+        >
+          Start Monitoring Now
+        </Button>
+      </div>
+    </section>
+  );
+}

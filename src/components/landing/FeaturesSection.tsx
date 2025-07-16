@@ -1,49 +1,78 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Bell, Smartphone, Mail, Eye, Clock, TrendingUp } from 'lucide-react';
+
+const features = [
+  {
+    icon: Bell,
+    title: "Real-time Alerts",
+    description: "Get instant notifications when whale wallets move 50k+ XRP to exchanges, giving you advance warning of potential market movements.",
+    badge: "Instant"
+  },
+  {
+    icon: Smartphone,
+    title: "Telegram Integration",
+    description: "Receive alerts directly on your phone via Telegram bot. Never miss important whale movements even when away from your computer.",
+    badge: "Mobile"
+  },
+  {
+    icon: Mail,
+    title: "Email Notifications",
+    description: "Professional email alerts with detailed transaction information, wallet addresses, and movement timestamps.",
+    badge: "Professional"
+  },
+  {
+    icon: Eye,
+    title: "18 Whale Wallets",
+    description: "Monitor Arthur Britto and Chris Larsen's key wallet addresses - major XRPL figures whose movements can impact the market.",
+    badge: "Comprehensive"
+  },
+  {
+    icon: Clock,
+    title: "Minute-by-Minute",
+    description: "Continuous monitoring every minute ensures you get the fastest possible alerts for time-sensitive trading decisions.",
+    badge: "Fast"
+  },
+  {
+    icon: TrendingUp,
+    title: "Exchange Detection",
+    description: "Advanced tracking specifically identifies movements to major exchanges, indicating potential selling pressure.",
+    badge: "Smart"
+  }
+];
 
 export function FeaturesSection() {
-  const features = [
-    {
-      title: "Beginner: Crypto Basics & Wallets",
-      description: "Step-by-step lessons that break down complex trading concepts into digestible, actionable insights.",
-      icon: "📚"
-    },
-    {
-      title: "Intermediate: Technical Analysis Foundations",
-      description: "Hands-on exercises, quizzes, and simulations to practice without risking real money.",
-      icon: "🎮"
-    },
-    {
-      title: "Advanced: Trade Like a Pro",
-      description: "Integrated charting tools to analyze markets and apply what you've learned immediately.",
-      icon: "📊"
-    },
-    {
-      title: "Community Support",
-      description: "Connect with fellow learners, share strategies, and get answers from experienced traders.",
-      icon: "🤝"
-    }
-  ];
-
   return (
     <section id="features" className="container py-24">
       <div className="text-center mb-16">
         <h2 className="text-3xl md:text-4xl font-bold mb-4">
-          Choose Your Learning Path
+          Advanced <span className="text-primary">Whale Tracking</span> Features
         </h2>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          We've built the most comprehensive yet beginner-friendly crypto trading education platform.
+          Stay ahead of the market with comprehensive monitoring of major XRPL whale wallets and instant alerts for significant movements.
         </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         {features.map((feature, index) => (
-          <Card key={index} className="border-2 hover:border-primary/20 transition-colors">
-            <CardContent className="p-6 text-center">
-              <div className="text-4xl mb-4">{feature.icon}</div>
-              <h3 className="font-semibold mb-2">{feature.title}</h3>
-              <p className="text-sm text-muted-foreground">{feature.description}</p>
+          <Card key={index} className="border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-lg">
+            <CardHeader>
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <feature.icon className="w-6 h-6 text-primary" />
+                </div>
+                <Badge variant="secondary" className="text-xs">
+                  {feature.badge}
+                </Badge>
+              </div>
+              <CardTitle className="text-xl">{feature.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription className="text-base leading-relaxed">
+                {feature.description}
+              </CardDescription>
             </CardContent>
           </Card>
         ))}

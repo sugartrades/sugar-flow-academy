@@ -14,11 +14,12 @@ import Signup from "./pages/Signup";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
-import Courses from "./pages/Courses";
-import Pricing from "./pages/Pricing";
-import Checkout from "./pages/Checkout";
-import Lesson from "./pages/Lesson";
-import Community from "./pages/Community";
+// Educational platform imports (temporarily hidden)
+// import Courses from "./pages/Courses";
+// import Pricing from "./pages/Pricing";
+// import Checkout from "./pages/Checkout";
+// import Lesson from "./pages/Lesson";
+// import Community from "./pages/Community";
 import Admin from "./pages/Admin";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
@@ -44,21 +45,15 @@ const App = () => (
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/risk-disclosure" element={<RiskDisclosure />} />
-              <Route path="/courses" element={<Courses />} />
+              
+              {/* Educational platform routes (temporarily hidden) */}
+              {/* <Route path="/courses" element={<Courses />} />
               <Route path="/pricing" element={<Pricing />} />
               <Route 
                 path="/checkout" 
                 element={
                   <ProtectedRoute>
                     <Checkout />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ProtectedRoute>
-                    <Dashboard />
                   </ProtectedRoute>
                 } 
               />
@@ -75,6 +70,15 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Community />
+                  </ProtectedRoute>
+                } 
+              /> */}
+              
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
                   </ProtectedRoute>
                 } 
               />

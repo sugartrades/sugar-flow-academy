@@ -58,12 +58,9 @@ export function Header({ showAuth = true }: HeaderProps) {
           <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">
             Pricing
           </a>
-          <button 
-            onClick={handleCommunityClick}
-            className="text-sm font-medium hover:text-primary transition-colors"
-          >
-            Community
-          </button>
+          <a href="#how-it-works" className="text-sm font-medium hover:text-primary transition-colors">
+            How It Works
+          </a>
         </nav>
 
         <div className="flex items-center space-x-4">
@@ -113,11 +110,11 @@ export function Header({ showAuth = true }: HeaderProps) {
                 <Button variant="ghost" onClick={() => navigate('/auth')}>
                   Login
                 </Button>
-                <Button 
+                 <Button 
                   onClick={() => navigate('/auth')}
                   className="bg-primary hover:bg-primary/90"
                 >
-                  Get Started Free
+                  Get Alerts
                 </Button>
               </>
             )

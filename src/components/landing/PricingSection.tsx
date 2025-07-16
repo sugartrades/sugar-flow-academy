@@ -1,91 +1,101 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Check, Star, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+
+const plan = {
+  name: "Whale Alert Pro",
+  price: "5 XRP",
+  period: "one-time",
+  description: "Lifetime access to whale movement alerts for serious XRP traders",
+  features: [
+    "Real-time monitoring of 18 whale wallets",
+    "Instant alerts for 50k+ XRP movements",
+    "Email notifications with full details",
+    "Telegram bot integration",
+    "Exchange detection technology",
+    "Historical movement data",
+    "Custom threshold settings",
+    "Priority support"
+  ],
+  buttonText: "Get Lifetime Access"
+};
 
 export function PricingSection() {
   const navigate = useNavigate();
+
+  const handleUpgrade = () => {
+    navigate('/auth');
+  };
 
   return (
     <section id="pricing" className="container py-24">
       <div className="text-center mb-16">
         <h2 className="text-3xl md:text-4xl font-bold mb-4">
-          Simple, Transparent Pricing
+          Simple, <span className="text-primary">One-Time</span> Pricing
         </h2>
-        <p className="text-xl text-muted-foreground">
-          Choose the plan that fits your learning journey.
+        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+          No subscriptions, no hidden fees. Pay once with XRP and get lifetime access to whale movement alerts.
         </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="font-semibold text-lg mb-2">Starter</h3>
-            <div className="mb-4">
-              <span className="text-3xl font-bold">Free</span>
-              <span className="text-muted-foreground">/forever</span>
+      <div className="max-w-md mx-auto">
+        <Card className="relative border-primary shadow-lg">
+          <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary">
+            <Star className="w-4 h-4 mr-1" />
+            Best Value
+          </Badge>
+          
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl flex items-center justify-center gap-2">
+              <Zap className="w-6 h-6 text-primary" />
+              {plan.name}
+            </CardTitle>
+            <div className="mt-4">
+              <span className="text-4xl font-bold">{plan.price}</span>
+              <span className="text-muted-foreground"> {plan.period}</span>
             </div>
-            <ul className="space-y-2 text-sm mb-6">
-              <li>✓ 5 beginner courses</li>
-              <li>✓ Basic community access</li>
-              <li>✓ Mobile app</li>
-              <li>✗ Advanced strategies</li>
-              <li>✗ Live trading sessions</li>
-            </ul>
-            <Button className="w-full" variant="outline" onClick={() => navigate('/auth')}>
-              Get Started
+            <CardDescription className="mt-2">
+              {plan.description}
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="space-y-6">
+            <Button 
+              className="w-full" 
+              size="lg"
+              onClick={handleUpgrade}
+            >
+              {plan.buttonText}
             </Button>
+            
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold mb-4">Everything included:</h4>
+                <ul className="space-y-3">
+                  {plan.features.map((feature, index) => (
+                    <li key={index} className="flex items-start gap-3">
+                      <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            
+            <div className="bg-muted/50 rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground mb-2">
+                Secure payment via Xaman Wallet
+              </p>
+              <p className="text-xs text-muted-foreground">
+                ✓ Instant activation • ✓ No recurring fees • ✓ 24/7 monitoring
+              </p>
+            </div>
           </CardContent>
         </Card>
-        
-        <Card className="border-primary">
-          <CardContent className="p-6">
-            <Badge className="mb-2">Most Popular</Badge>
-            <h3 className="font-semibold text-lg mb-2">Advanced</h3>
-            <div className="mb-4">
-              <span className="text-3xl font-bold">$29</span>
-              <span className="text-muted-foreground">/month</span>
-            </div>
-            <ul className="space-y-2 text-sm mb-6">
-              <li>✓ All courses & content</li>
-              <li>✓ Advanced strategies</li>
-              <li>✓ Live trading sessions</li>
-              <li>✓ Priority community support</li>
-              <li>✓ Chart analysis tools</li>
-            </ul>
-            <Button className="w-full" onClick={() => navigate('/pricing')}>
-              View Details
-            </Button>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="font-semibold text-lg mb-2">Pro</h3>
-            <div className="mb-4">
-              <span className="text-3xl font-bold">$99</span>
-              <span className="text-muted-foreground">/month</span>
-            </div>
-            <ul className="space-y-2 text-sm mb-6">
-              <li>✓ Everything in Advanced</li>
-              <li>✓ 1-on-1 mentoring</li>
-              <li>✓ Custom learning paths</li>
-              <li>✓ API access</li>
-              <li>✓ White-label options</li>
-            </ul>
-            <Button className="w-full" variant="outline" onClick={() => navigate('/pricing')}>
-              View Details
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <div className="text-center mt-8">
-        <Button variant="link" onClick={() => navigate('/pricing')}>
-          Compare all plans and features →
-        </Button>
       </div>
     </section>
   );
