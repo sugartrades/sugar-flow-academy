@@ -56,36 +56,11 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
           clearInterval(pollingInterval);
           setPollingInterval(null);
         }
-        // Grant membership access
-        try {
-          const { data: membershipData, error: membershipError } = await supabase.functions.invoke('manage-membership', {
-            body: {
-              action: 'grant_access',
-              email,
-              paymentId,
-              tier: 'pro'
-            }
-          });
-
-          if (membershipError) {
-            console.error('Error granting membership:', membershipError);
-            toast({
-              title: "Payment Confirmed! 🎉",
-              description: "Payment verified but membership setup failed. Please contact support.",
-            });
-          } else {
-            toast({
-              title: "Payment Confirmed! 🎉",
-              description: membershipData.message || "Your payment has been verified and access granted!",
-            });
-          }
-        } catch (error) {
-          console.error('Error granting membership:', error);
-          toast({
-            title: "Payment Confirmed! 🎉",
-            description: "Payment verified but membership setup failed. Please contact support.",
-          });
-        }
+        
+        toast({
+          title: "Payment Confirmed! 🎉",
+          description: "Your payment has been verified and access is being processed!",
+        });
         
         onSuccess(email, paymentId);
       } else if (result.status === 'failed' || result.status === 'expired') {
