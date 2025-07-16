@@ -173,8 +173,8 @@ async function createPaymentRequest(email: string, amount: number, destinationAd
       multisign: false,
       expire: 1440, // 24 hours in minutes
       return_url: {
-        web: `${baseUrl}/success`,
-        app: `${baseUrl}/success`
+        web: `${baseUrl}/success?payment=${paymentRequest.id}`,
+        app: `${baseUrl}/success?payment=${paymentRequest.id}`
       }
     }
   });
