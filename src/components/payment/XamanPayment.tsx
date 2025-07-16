@@ -142,9 +142,12 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
       setPaymentUrl(result.xamanUrl);
 
       // Generate QR code for desktop users
+      console.log('Device detection - isDesktop:', deviceInfo.isDesktop, 'isMobile:', deviceInfo.isMobile);
+      console.log('Xaman URL received:', result.xamanUrl);
+      
       if (deviceInfo.isDesktop) {
+        console.log('Desktop detected, generating QR code...');
         try {
-          console.log('Generating QR code for URL:', result.xamanUrl);
           const qrCodeUrl = await QRCode.toDataURL(result.xamanUrl, {
             width: 200,
             margin: 2,
@@ -153,8 +156,8 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
               light: '#ffffff'
             }
           });
+          console.log('QR code generated successfully, length:', qrCodeUrl.length);
           setQrCodeDataUrl(qrCodeUrl);
-          console.log('QR code generated successfully');
         } catch (error) {
           console.error('Error generating QR code:', error);
           toast({
@@ -163,6 +166,8 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
             variant: "destructive",
           });
         }
+      } else {
+        console.log('Mobile device detected, skipping QR code generation');
       }
 
       toast({
