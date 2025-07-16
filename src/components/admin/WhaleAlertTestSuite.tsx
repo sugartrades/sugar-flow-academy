@@ -120,6 +120,47 @@ export const WhaleAlertTestSuite = () => {
     }
   };
 
+  const testDirectTriggerCall = async () => {
+    setLoading(true);
+    try {
+      // Test the exact HTTP call that the trigger makes
+      const response = await fetch('https://fyxfbbkgginrbphtrhdi.supabase.co/functions/v1/send-whale-alert', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5eGZiYmtnZ2lucmJwaHRyaGRpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODQ4NjE3MywiZXhwIjoyMDY0MDYyMTczfQ.JoTun6WaA9Cg3YS_GfwfRaJmQ2yO9LPQ8RFRVcJTMFs'
+        },
+        body: JSON.stringify({ whale_alert_id: 'test-id-123' })
+      });
+
+      const result = await response.json();
+      
+      const testResult = {
+        id: Date.now(),
+        type: 'direct_trigger_call',
+        status: response.ok ? 'success' : 'error',
+        message: response.ok ? 'Direct trigger call successful' : `HTTP ${response.status}: ${result.error || 'Unknown error'}`,
+        response: result,
+        timestamp: new Date().toISOString()
+      };
+
+      setTestResults(prev => [testResult, ...prev]);
+      
+    } catch (error) {
+      console.error('Direct trigger call failed:', error);
+      const result = {
+        id: Date.now(),
+        type: 'direct_trigger_call',
+        status: 'error',
+        message: `Direct trigger call failed: ${error.message}`,
+        timestamp: new Date().toISOString()
+      };
+      setTestResults(prev => [result, ...prev]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const testNetHttpPost = async () => {
     setLoading(true);
     try {
@@ -315,15 +356,26 @@ export const WhaleAlertTestSuite = () => {
                   Test Edge Function
                 </Button>
               </div>
-              <Button
-                onClick={testNetHttpPost}
-                disabled={loading}
-                variant="secondary"
-                className="w-full"
-              >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Test Net HTTP Post
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={testNetHttpPost}
+                  disabled={loading}
+                  variant="secondary"
+                  className="flex-1"
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Test Net HTTP Post
+                </Button>
+                <Button
+                  onClick={testDirectTriggerCall}
+                  disabled={loading}
+                  variant="destructive"
+                  className="flex-1"
+                >
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  Test Direct Call
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -394,9 +446,10 @@ export const WhaleAlertTestSuite = () => {
             <li>• <strong>Trigger Test:</strong> Tests the database trigger that automatically calls the Telegram bot when a whale alert is created</li>
             <li>• <strong>Edge Function Test:</strong> Tests the Telegram notification edge function directly</li>
             <li>• <strong>Net HTTP Post Test:</strong> Tests if the pg_net extension and http_post function are working correctly</li>
+            <li>• <strong>Test Direct Call:</strong> Tests the exact HTTP call that the database trigger makes to the edge function</li>
             <li>• Set amount to 10,000+ XRP to trigger whale alert threshold</li>
             <li>• Check your Telegram channel for notifications after running tests</li>
-            <li>• <strong>Troubleshooting:</strong> Run the Net HTTP Post test first to diagnose connectivity issues</li>
+            <li>• <strong>Troubleshooting:</strong> Run tests in order: Net HTTP Post → Test Direct Call → Edge Function → Trigger Test</li>
           </ul>
         </AlertDescription>
       </Alert>
