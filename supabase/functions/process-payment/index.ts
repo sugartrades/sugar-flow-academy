@@ -370,12 +370,32 @@ serve(async (req) => {
   }
 
   try {
-    const { action, ...params } = await req.json();
+    console.log("Processing request:", req.method, req.url);
+    
+    // Check if required environment variables are present
+    const requiredEnvVars = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "XAMAN_API_KEY", "XAMAN_API_SECRET"];
+    const missingEnvVars = requiredEnvVars.filter(varName => !Deno.env.get(varName));
+    
+    if (missingEnvVars.length > 0) {
+      console.error("Missing environment variables:", missingEnvVars);
+      return new Response(
+        JSON.stringify({ error: `Missing environment variables: ${missingEnvVars.join(', ')}` }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const requestBody = await req.json();
+    console.log("Request body:", requestBody);
+    
+    const { action, ...params } = requestBody;
 
     if (action === "create_payment") {
       const { email, amount, destinationAddress } = params as PaymentRequest;
       
+      console.log("Creating payment request for:", email, amount, destinationAddress);
+      
       if (!email || !amount || !destinationAddress) {
+        console.error("Missing required fields:", { email, amount, destinationAddress });
         return new Response(
           JSON.stringify({ error: "Missing required fields" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -384,8 +404,10 @@ serve(async (req) => {
 
       // Get origin from request headers
       const origin = req.headers.get("origin") || req.headers.get("referer")?.split("/").slice(0, 3).join("/");
+      console.log("Origin detected:", origin);
       
       const result = await createPaymentRequest(email, amount, destinationAddress, origin);
+      console.log("Payment request created:", result);
       
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -416,8 +438,12 @@ serve(async (req) => {
 
   } catch (error) {
     console.error("Error in process-payment function:", error);
+    console.error("Error stack:", error.stack);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: "Check edge function logs for more information"
+      }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
