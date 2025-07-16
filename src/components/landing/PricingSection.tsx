@@ -122,7 +122,7 @@ export function PricingSection() {
           </DialogHeader>
           <XamanPayment
             amount="5"
-            destinationAddress="rYourXRPWalletAddressHere123456789"
+            destinationAddress="rD7Q1UGja3Ntwq4ak7Y4kCt5ST6PMSn1Vr"
             onSuccess={handlePaymentSuccess}
             onCancel={handlePaymentCancel}
           />
