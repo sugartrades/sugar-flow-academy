@@ -70,7 +70,7 @@ serve(async (req) => {
 
     // Send confirmation email
     const emailResult = await resend.emails.send({
-      from: "Whale Alert Pro <noreply@whalewatch.pro>",
+      from: "Whale Alert Pro <onboarding@resend.dev>",
       to: [email],
       subject: "🎉 Welcome to Whale Alert Pro - Lifetime Access Activated!",
       html: `

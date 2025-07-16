@@ -143,6 +143,45 @@ export type Database = {
         }
         Relationships: []
       }
+      pending_memberships: {
+        Row: {
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string
+          email: string
+          granted_at: string
+          id: string
+          is_purchased: boolean
+          payment_id: string
+          tier: Database["public"]["Enums"]["membership_tier"]
+          updated_at: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          email: string
+          granted_at?: string
+          id?: string
+          is_purchased?: boolean
+          payment_id: string
+          tier?: Database["public"]["Enums"]["membership_tier"]
+          updated_at?: string
+        }
+        Update: {
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          email?: string
+          granted_at?: string
+          id?: string
+          is_purchased?: boolean
+          payment_id?: string
+          tier?: Database["public"]["Enums"]["membership_tier"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -235,6 +274,7 @@ export type Database = {
       user_memberships: {
         Row: {
           created_at: string
+          email: string | null
           expires_at: string | null
           granted_at: string
           granted_by: string | null
@@ -242,10 +282,11 @@ export type Database = {
           is_purchased: boolean
           tier: Database["public"]["Enums"]["membership_tier"]
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
+          email?: string | null
           expires_at?: string | null
           granted_at?: string
           granted_by?: string | null
@@ -253,10 +294,11 @@ export type Database = {
           is_purchased?: boolean
           tier?: Database["public"]["Enums"]["membership_tier"]
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
+          email?: string | null
           expires_at?: string | null
           granted_at?: string
           granted_by?: string | null
@@ -264,7 +306,7 @@ export type Database = {
           is_purchased?: boolean
           tier?: Database["public"]["Enums"]["membership_tier"]
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }

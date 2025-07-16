@@ -59,6 +59,8 @@ async function createUserProfile(userId: string, email: string) {
 
 async function grantMembershipAccess(email: string, paymentId: string, tier: 'pro' | 'premium') {
   try {
+    console.log(`Granting membership access for ${email}, payment: ${paymentId}, tier: ${tier}`);
+    
     // Verify the payment was successful
     const { data: payment, error: paymentError } = await supabase
       .from('payment_requests')
@@ -69,24 +71,29 @@ async function grantMembershipAccess(email: string, paymentId: string, tier: 'pr
       .single();
 
     if (paymentError || !payment) {
+      console.error('Payment verification failed:', paymentError);
       throw new Error('Payment verification failed');
     }
+
+    console.log('Payment verified successfully');
 
     // Check if user exists
     const authUser = await findUserByEmail(email);
     
     if (!authUser) {
-      // For now, we'll create a pending membership that can be claimed later
       console.log(`User ${email} doesn't exist yet, creating pending membership`);
       
       // Create a pending membership record that can be claimed when user signs up
       const { error: pendingError } = await supabase
-        .from('user_memberships')
+        .from('pending_memberships')
         .upsert({
-          user_id: '00000000-0000-0000-0000-000000000000', // Placeholder UUID for pending
+          email,
+          payment_id: paymentId,
           tier,
           is_purchased: true,
           granted_at: new Date().toISOString(),
+        }, {
+          onConflict: 'email,payment_id'
         });
 
       if (pendingError) {
@@ -94,13 +101,16 @@ async function grantMembershipAccess(email: string, paymentId: string, tier: 'pr
         throw new Error('Failed to create pending membership');
       }
 
+      console.log('Pending membership created successfully');
       return {
         success: true,
-        message: 'Membership granted. Please sign up to activate your access.',
+        message: 'Payment confirmed! Your membership will be activated when you create an account.',
         pending: true
       };
     }
 
+    console.log(`User ${email} exists, granting immediate access`);
+    
     // User exists, grant immediate access
     await createUserProfile(authUser.id, email);
 
@@ -109,9 +119,12 @@ async function grantMembershipAccess(email: string, paymentId: string, tier: 'pr
       .from('user_memberships')
       .upsert({
         user_id: authUser.id,
+        email: email,
         tier,
         is_purchased: true,
         granted_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id'
       });
 
     if (membershipError) {
@@ -119,6 +132,7 @@ async function grantMembershipAccess(email: string, paymentId: string, tier: 'pr
       throw new Error('Failed to grant membership');
     }
 
+    console.log('Membership activated successfully');
     return {
       success: true,
       message: 'Membership activated successfully!',
@@ -177,6 +191,76 @@ async function checkUserAccess(email: string) {
   }
 }
 
+async function claimPendingMemberships(email: string, userId: string) {
+  try {
+    console.log(`Checking for pending memberships for ${email}`);
+    
+    // Look for pending memberships for this email
+    const { data: pendingMemberships, error } = await supabase
+      .from('pending_memberships')
+      .select('*')
+      .eq('email', email)
+      .is('claimed_at', null)
+      .order('granted_at', { ascending: false });
+
+    if (error) {
+      console.error('Error checking pending memberships:', error);
+      return { claimed: false, error: error.message };
+    }
+
+    if (!pendingMemberships || pendingMemberships.length === 0) {
+      console.log('No pending memberships found');
+      return { claimed: false, message: 'No pending memberships found' };
+    }
+
+    // Get the most recent pending membership
+    const pendingMembership = pendingMemberships[0];
+    console.log('Found pending membership:', pendingMembership);
+
+    // Create user profile if it doesn't exist
+    await createUserProfile(userId, email);
+
+    // Grant the membership
+    const { error: membershipError } = await supabase
+      .from('user_memberships')
+      .upsert({
+        user_id: userId,
+        email: email,
+        tier: pendingMembership.tier,
+        is_purchased: true,
+        granted_at: pendingMembership.granted_at,
+      }, {
+        onConflict: 'user_id'
+      });
+
+    if (membershipError) {
+      console.error('Error granting membership:', membershipError);
+      throw new Error('Failed to grant membership');
+    }
+
+    // Mark the pending membership as claimed
+    await supabase
+      .from('pending_memberships')
+      .update({
+        claimed_at: new Date().toISOString(),
+        claimed_by: userId,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', pendingMembership.id);
+
+    console.log('Membership claimed successfully');
+    return {
+      claimed: true,
+      tier: pendingMembership.tier,
+      message: `Your ${pendingMembership.tier} membership has been activated!`
+    };
+
+  } catch (error) {
+    console.error('Error claiming pending memberships:', error);
+    return { claimed: false, error: error.message };
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -213,6 +297,23 @@ serve(async (req) => {
       }
 
       const result = await checkUserAccess(email);
+      
+      return new Response(JSON.stringify(result), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "claim_pending") {
+      const { email, userId } = params;
+      
+      if (!email || !userId) {
+        return new Response(
+          JSON.stringify({ error: "Email and user ID are required" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const result = await claimPendingMemberships(email, userId);
       
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
