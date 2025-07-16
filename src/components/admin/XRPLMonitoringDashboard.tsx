@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useXRPLMonitoring } from '@/hooks/useXRPLMonitoring';
+import { WhaleAlertTestSuite } from './WhaleAlertTestSuite';
 import { Activity, AlertTriangle, CheckCircle, Play, Settings, Wallet, XCircle } from 'lucide-react';
 
 export const XRPLMonitoringDashboard = () => {
@@ -69,12 +70,13 @@ export const XRPLMonitoringDashboard = () => {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="wallets">Wallets</TabsTrigger>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
           <TabsTrigger value="alerts">Alerts</TabsTrigger>
           <TabsTrigger value="health">Health</TabsTrigger>
+          <TabsTrigger value="test">Test</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -319,6 +321,10 @@ export const XRPLMonitoringDashboard = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="test" className="space-y-4">
+          <WhaleAlertTestSuite />
         </TabsContent>
       </Tabs>
     </div>

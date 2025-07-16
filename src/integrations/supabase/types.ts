@@ -486,6 +486,16 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      test_whale_alert_trigger: {
+        Args: {
+          p_wallet_address: string
+          p_owner_name: string
+          p_transaction_hash: string
+          p_amount: number
+          p_transaction_type?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "moderator" | "user"
