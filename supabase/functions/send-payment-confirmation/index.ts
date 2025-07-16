@@ -70,15 +70,15 @@ serve(async (req) => {
 
     // Send confirmation email
     const emailResult = await resend.emails.send({
-      from: "Whale Alert Pro <onboarding@resend.dev>",
+      from: "Sugar Whale <fivemcs@icloud.com>",
       to: [email],
-      subject: "🎉 Welcome to Whale Alert Pro - Lifetime Access Activated!",
+      subject: "🎉 Welcome to Sugar Whale - Lifetime Access Activated!",
       html: `
         <!DOCTYPE html>
         <html>
           <head>
             <meta charset="utf-8">
-            <title>Welcome to Whale Alert Pro</title>
+            <title>Welcome to Sugar Whale</title>
             <style>
               body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
               .container { max-width: 600px; margin: 0 auto; padding: 20px; }
@@ -93,13 +93,13 @@ serve(async (req) => {
           <body>
             <div class="container">
               <div class="header">
-                <h1>🐋 Welcome to Whale Alert Pro!</h1>
+                <h1>🐋 Welcome to Sugar Whale!</h1>
                 <p>Your lifetime access is now active</p>
               </div>
               
               <div class="content">
                 <h2>Payment Confirmed ✅</h2>
-                <p>Thank you for your payment! Your <strong>lifetime access</strong> to Whale Alert Pro has been successfully activated.</p>
+                <p>Thank you for your payment! Your <strong>lifetime access</strong> to Sugar Whale has been successfully activated.</p>
                 
                 <div class="highlight">
                   <h3>Payment Details:</h3>
@@ -110,7 +110,7 @@ serve(async (req) => {
                 
                 <h3>🚀 Next Steps:</h3>
                 <ol>
-                  <li><strong>Join our Telegram bot:</strong> <a href="https://t.me/WhaleAlertProBot" class="button">@WhaleAlertProBot</a></li>
+                  <li><strong>Join our Telegram bot:</strong> <a href="https://t.me/SugarWhaleBot" class="button">@SugarWhaleBot</a></li>
                   <li><strong>Configure your alerts:</strong> Set your preferred thresholds and notification preferences</li>
                   <li><strong>Start monitoring:</strong> Receive real-time whale movement alerts instantly</li>
                 </ol>
@@ -128,16 +128,16 @@ serve(async (req) => {
                 <div class="highlight">
                   <h3>🔧 Technical Support:</h3>
                   <p>If you need any help setting up your alerts or have questions:</p>
-                  <p>📧 Email: <a href="mailto:support@whalewatch.pro">support@whalewatch.pro</a></p>
-                  <p>💬 Telegram: <a href="https://t.me/WhaleAlertProSupport">@WhaleAlertProSupport</a></p>
+                  <p>📧 Email: <a href="mailto:hello@sugartrades.io">hello@sugartrades.io</a></p>
+                  <p>💬 Telegram: <a href="https://t.me/SugarWhaleBot">@SugarWhaleBot</a></p>
                 </div>
                 
-                <p class="success">Thank you for choosing Whale Alert Pro! 🙏</p>
+                <p class="success">Thank you for choosing Sugar Whale! 🙏</p>
               </div>
               
               <div class="footer">
-                <p>© 2024 Whale Alert Pro. All rights reserved.</p>
-                <p>You're receiving this email because you successfully purchased lifetime access to Whale Alert Pro.</p>
+                <p>© 2024 Sugar Whale. All rights reserved.</p>
+                <p>You're receiving this email because you successfully purchased lifetime access to Sugar Whale.</p>
               </div>
             </div>
           </body>

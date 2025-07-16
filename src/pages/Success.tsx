@@ -57,7 +57,7 @@ export default function Success() {
   }, [paymentId]);
 
   const handleTelegramRedirect = () => {
-    window.open('https://t.me/WhaleAlertProBot', '_blank');
+    window.open('https://t.me/SugarWhaleBot', '_blank');
   };
 
   if (isLoading) {
@@ -99,7 +99,7 @@ export default function Success() {
             Payment Successful! 🎉
           </h1>
           <p className="text-xl text-muted-foreground mb-4">
-            Welcome to Whale Alert Pro - Your lifetime access is now active!
+            Welcome to Sugar Whale - Your lifetime access is now active!
           </p>
           <Badge variant="secondary" className="text-lg px-4 py-2">
             Lifetime Access Activated
@@ -125,7 +125,7 @@ export default function Success() {
                 size="lg"
               >
                 <Bot className="mr-2 h-4 w-4" />
-                Join @WhaleAlertProBot
+                Join @SugarWhaleBot
                 <ExternalLink className="ml-2 h-4 w-4" />
               </Button>
               <div className="bg-muted/50 rounded-lg p-4">
@@ -204,14 +204,14 @@ export default function Success() {
         <div className="text-center mt-12">
           <h3 className="text-xl font-semibold mb-4">Need Help?</h3>
           <p className="text-muted-foreground mb-4">
-            Our support team is here to help you get started with Whale Alert Pro.
+            Our support team is here to help you get started with Sugar Whale.
           </p>
           <div className="flex justify-center gap-4">
-            <Button variant="outline" onClick={() => window.open('mailto:support@whalealertpro.com')}>
+            <Button variant="outline" onClick={() => window.open('mailto:hello@sugartrades.io')}>
               <Mail className="mr-2 h-4 w-4" />
               Email Support
             </Button>
-            <Button variant="outline" onClick={() => window.open('https://t.me/WhaleAlertProSupport')}>
+            <Button variant="outline" onClick={() => window.open('https://t.me/SugarWhaleBot')}>
               <MessageSquare className="mr-2 h-4 w-4" />
               Telegram Support
             </Button>
