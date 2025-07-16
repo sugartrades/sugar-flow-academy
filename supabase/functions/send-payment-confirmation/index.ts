@@ -110,18 +110,18 @@ serve(async (req) => {
                 
                 <h3>🚀 Next Steps:</h3>
                 <ol>
-                  <li><strong>Join our Telegram bot:</strong> <a href="https://t.me/SugarWhaleBot" class="button">@SugarWhaleBot</a></li>
-                  <li><strong>Configure your alerts:</strong> Set your preferred thresholds and notification preferences</li>
-                  <li><strong>Start monitoring:</strong> Receive real-time whale movement alerts instantly</li>
+                  <li><strong>Join our Telegram channel:</strong> <a href="https://t.me/SugarWhaleBot" class="button">@SugarWhaleBot</a></li>
+                  <li><strong>Stay connected:</strong> All whale alerts (transactions over 10,000 XRP) are automatically sent to the channel</li>
+                  <li><strong>Monitor in real-time:</strong> Receive instant notifications on your phone</li>
                 </ol>
                 
                 <h3>🎯 What You Get:</h3>
                 <ul>
-                  <li>✅ Real-time whale movement alerts</li>
-                  <li>✅ Large transaction notifications</li>
-                  <li>✅ Market impact analysis</li>
-                  <li>✅ Instant delivery to your phone</li>
-                  <li>✅ Premium alert customization</li>
+                  <li>✅ Real-time whale movement alerts (10,000+ XRP transactions)</li>
+                  <li>✅ Large transaction notifications with full details</li>
+                  <li>✅ Transaction hash and wallet information</li>
+                  <li>✅ Instant delivery to your phone via Telegram</li>
+                  <li>✅ Lifetime access - no recurring fees</li>
                   <li>✅ Priority support</li>
                 </ul>
                 
