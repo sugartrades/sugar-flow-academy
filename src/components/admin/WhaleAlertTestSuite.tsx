@@ -175,8 +175,13 @@ export const WhaleAlertTestSuite = () => {
       }
 
       // Now test the edge function with the real alert ID
+      console.log('Attempting to invoke send-whale-alert function with alert ID:', alertData.id);
+      
       const { data, error } = await supabase.functions.invoke('send-whale-alert', {
-        body: { whale_alert_id: alertData.id }
+        body: { whale_alert_id: alertData.id },
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
 
       if (error) {

@@ -6,21 +6,41 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-Deno.serve(async (req) => {
+serve(async (req) => {
+  console.log('🚀 Whale alert function called, method:', req.method);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    console.log('✅ Handling CORS preflight request');
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 200 
+    });
   }
 
   try {
+    console.log('📋 Initializing Supabase client...');
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { whale_alert_id } = await req.json();
+    console.log('📝 Parsing request body...');
+    const requestBody = await req.json();
+    const { whale_alert_id } = requestBody;
     
-    console.log(`Processing whale alert notification: ${whale_alert_id}`);
+    if (!whale_alert_id) {
+      console.error('❌ No whale_alert_id provided');
+      return new Response(JSON.stringify({ 
+        error: 'whale_alert_id is required',
+        received: requestBody
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+    
+    console.log(`🔍 Processing whale alert notification: ${whale_alert_id}`);
 
     // Fetch the whale alert details
     const { data: whaleAlert, error: fetchError } = await supabase
@@ -30,13 +50,30 @@ Deno.serve(async (req) => {
       .eq('is_sent', false)
       .single();
 
-    if (fetchError || !whaleAlert) {
-      console.error('Failed to fetch whale alert:', fetchError);
-      return new Response(JSON.stringify({ error: 'Whale alert not found' }), {
+    if (fetchError) {
+      console.error('❌ Failed to fetch whale alert:', fetchError);
+      return new Response(JSON.stringify({ 
+        error: 'Failed to fetch whale alert',
+        details: fetchError.message,
+        whale_alert_id
+      }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+
+    if (!whaleAlert) {
+      console.error('❌ Whale alert not found or already sent');
+      return new Response(JSON.stringify({ 
+        error: 'Whale alert not found or already sent',
+        whale_alert_id
+      }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    console.log('✅ Whale alert found:', whaleAlert);
 
     // Format the amount with proper number formatting
     const formattedAmount = new Intl.NumberFormat('en-US', {
@@ -68,7 +105,7 @@ Deno.serve(async (req) => {
     const telegramBotToken = Deno.env.get('TELEGRAM_BOT_TOKEN');
     
     if (!telegramBotToken) {
-      console.error('TELEGRAM_BOT_TOKEN not configured');
+      console.error('❌ TELEGRAM_BOT_TOKEN not configured');
       return new Response(JSON.stringify({ 
         error: 'Telegram bot token not configured',
         details: 'TELEGRAM_BOT_TOKEN environment variable is missing'
@@ -78,7 +115,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log('Telegram bot token found, preparing message...');
+    console.log('📱 Telegram bot token found, preparing message...');
     
     // Try sending to your personal chat first (get your chat ID by messaging the bot)
     // You can get your chat ID by messaging @userinfobot or @chatid_echo_bot
@@ -92,7 +129,7 @@ Deno.serve(async (req) => {
       disable_web_page_preview: true
     };
 
-    console.log('Sending to Telegram:', { 
+    console.log('📤 Sending to Telegram:', { 
       chatId: telegramChatId, 
       url: telegramUrl.replace(telegramBotToken, '[TOKEN]'),
       messageLength: telegramMessage.length 
@@ -109,7 +146,7 @@ Deno.serve(async (req) => {
     const telegramResult = await telegramResponse.json();
     
     if (!telegramResponse.ok) {
-      console.error('Telegram API error:', telegramResult);
+      console.error('❌ Telegram API error:', telegramResult);
       return new Response(JSON.stringify({ 
         error: 'Failed to send Telegram message',
         details: telegramResult,
@@ -121,7 +158,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    console.log('Telegram message sent successfully:', telegramResult);
+    console.log('✅ Telegram message sent successfully:', telegramResult);
 
     // Mark the whale alert as sent
     const { error: updateError } = await supabase
@@ -133,8 +170,12 @@ Deno.serve(async (req) => {
       .eq('id', whale_alert_id);
 
     if (updateError) {
-      console.error('Failed to update whale alert status:', updateError);
-      return new Response(JSON.stringify({ error: 'Failed to update whale alert status' }), {
+      console.error('❌ Failed to update whale alert status:', updateError);
+      return new Response(JSON.stringify({ 
+        error: 'Failed to update whale alert status',
+        details: updateError.message,
+        whale_alert_id
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
@@ -145,15 +186,20 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ 
       success: true, 
       message: 'Whale alert sent successfully',
-      whale_alert_id
+      whale_alert_id,
+      telegram_result: telegramResult
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
   } catch (error) {
-    console.error('Error in send-whale-alert function:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+    console.error('💥 Error in send-whale-alert function:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error',
+      details: error.message,
+      stack: error.stack
+    }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
