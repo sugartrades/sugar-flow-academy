@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { QrCode, ExternalLink, CheckCircle, Clock, AlertCircle, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface XamanPaymentProps {
   amount: string;
@@ -19,11 +20,109 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
   const [paymentUrl, setPaymentUrl] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [emailError, setEmailError] = useState<string>('');
+  const [paymentId, setPaymentId] = useState<string>('');
+  const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
+  };
+
+  const checkPaymentStatus = async (paymentId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke('process-payment', {
+        body: {
+          action: 'check_payment',
+          paymentId
+        }
+      });
+
+      if (error) {
+        console.error('Payment status check error:', error);
+        return;
+      }
+
+      const result = data;
+      
+      if (result.status === 'completed') {
+        setPaymentStatus('success');
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+          setPollingInterval(null);
+        }
+        // Grant membership access
+        try {
+          const { data: membershipData, error: membershipError } = await supabase.functions.invoke('manage-membership', {
+            body: {
+              action: 'grant_access',
+              email,
+              paymentId,
+              tier: 'pro'
+            }
+          });
+
+          if (membershipError) {
+            console.error('Error granting membership:', membershipError);
+            toast({
+              title: "Payment Confirmed! 🎉",
+              description: "Payment verified but membership setup failed. Please contact support.",
+            });
+          } else {
+            toast({
+              title: "Payment Confirmed! 🎉",
+              description: membershipData.message || "Your payment has been verified and access granted!",
+            });
+          }
+        } catch (error) {
+          console.error('Error granting membership:', error);
+          toast({
+            title: "Payment Confirmed! 🎉",
+            description: "Payment verified but membership setup failed. Please contact support.",
+          });
+        }
+        
+        onSuccess(email);
+      } else if (result.status === 'failed' || result.status === 'expired') {
+        setPaymentStatus('failed');
+        if (pollingInterval) {
+          clearInterval(pollingInterval);
+          setPollingInterval(null);
+        }
+        toast({
+          title: "Payment Failed",
+          description: result.error || "Payment verification failed.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Payment status check error:', error);
+    }
+  };
+
+  const startPaymentMonitoring = (paymentId: string) => {
+    // Start polling for payment status
+    const interval = setInterval(() => {
+      checkPaymentStatus(paymentId);
+    }, 3000); // Check every 3 seconds
+
+    setPollingInterval(interval);
+
+    // Stop polling after 15 minutes (timeout)
+    setTimeout(() => {
+      if (interval) {
+        clearInterval(interval);
+        setPollingInterval(null);
+        if (paymentStatus === 'pending') {
+          setPaymentStatus('failed');
+          toast({
+            title: "Payment Timeout",
+            description: "Payment verification timed out. Please try again.",
+            variant: "destructive",
+          });
+        }
+      }
+    }, 15 * 60 * 1000);
   };
 
   const initiatePayment = async () => {
@@ -43,47 +142,31 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
     try {
       setPaymentStatus('pending');
       
-      // Create payment request for Xaman Wallet
-      const paymentRequest = {
-        TransactionType: 'Payment',
-        Destination: destinationAddress,
-        Amount: (parseFloat(amount) * 1000000).toString(), // Convert XRP to drops
-        Memo: {
-          MemoType: Buffer.from('Description').toString('hex').toUpperCase(),
-          MemoData: Buffer.from('Whale Alert Pro - Lifetime Access').toString('hex').toUpperCase()
+      // Create payment request using the backend
+      const { data, error } = await supabase.functions.invoke('process-payment', {
+        body: {
+          action: 'create_payment',
+          email,
+          amount: parseFloat(amount),
+          destinationAddress
         }
-      };
+      });
 
-      // Generate Xaman payment URL
-      const xamanUrl = `https://xumm.app/sign/${encodeURIComponent(JSON.stringify(paymentRequest))}`;
-      setPaymentUrl(xamanUrl);
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      const result = data;
+      setPaymentId(result.paymentId);
+      setPaymentUrl(result.xamanUrl);
 
       toast({
         title: "Payment Request Created",
         description: "Please complete the payment in your Xaman Wallet app.",
       });
 
-      // Simulate payment monitoring (in real implementation, you'd poll a backend service)
-      setTimeout(() => {
-        // In a real implementation, you'd verify the payment on the XRPL
-        const isPaymentSuccessful = Math.random() > 0.3; // 70% success rate for demo
-        
-        if (isPaymentSuccessful) {
-          setPaymentStatus('success');
-          toast({
-            title: "Payment Successful! 🎉",
-            description: "Your payment has been confirmed on the XRPL.",
-          });
-          onSuccess(email);
-        } else {
-          setPaymentStatus('failed');
-          toast({
-            title: "Payment Failed",
-            description: "Please try again or contact support.",
-            variant: "destructive",
-          });
-        }
-      }, 10000); // 10 second delay for demo
+      // Start monitoring payment status
+      startPaymentMonitoring(result.paymentId);
 
     } catch (error) {
       console.error('Payment initiation error:', error);
@@ -95,6 +178,15 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
       });
     }
   };
+
+  // Cleanup polling on component unmount
+  useEffect(() => {
+    return () => {
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
+      }
+    };
+  }, [pollingInterval]);
 
   const openXamanWallet = () => {
     if (paymentUrl) {

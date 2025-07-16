@@ -98,6 +98,51 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_requests: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          destination_address: string
+          email: string
+          expires_at: string
+          id: string
+          ledger_index: number | null
+          status: string
+          transaction_hash: string | null
+          updated_at: string
+          xaman_request_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          destination_address: string
+          email: string
+          expires_at?: string
+          id?: string
+          ledger_index?: number | null
+          status?: string
+          transaction_hash?: string | null
+          updated_at?: string
+          xaman_request_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          destination_address?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          ledger_index?: number | null
+          status?: string
+          transaction_hash?: string | null
+          updated_at?: string
+          xaman_request_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
