@@ -49,11 +49,32 @@ export const WhaleAlertTestSuite = () => {
       const data = await response.json();
       console.log('Chat ID response:', data);
       
+      // Extract useful information from the response
+      let chatIds = [];
+      let botInfo = data.bot_info?.result || {};
+      
+      if (data.recent_updates?.result) {
+        chatIds = data.recent_updates.result
+          .map(update => {
+            if (update.message?.chat) {
+              return {
+                id: update.message.chat.id,
+                title: update.message.chat.title || update.message.chat.first_name || 'Unknown',
+                type: update.message.chat.type
+              };
+            }
+            return null;
+          })
+          .filter(chat => chat !== null);
+      }
+
       const result = {
         id: Date.now(),
         type: 'get_chat_id',
         status: 'success',
-        message: 'Retrieved Telegram bot info and recent updates. Check the response for chat IDs.',
+        message: `Bot: ${botInfo.username || 'Unknown'} | Found ${chatIds.length} chat(s)`,
+        botInfo: botInfo,
+        chatIds: chatIds,
         response: data,
         timestamp: new Date().toISOString()
       };
@@ -665,6 +686,25 @@ export const WhaleAlertTestSuite = () => {
                         {result.alertId && (
                           <div className="text-xs text-muted-foreground mt-1">
                             Alert ID: {result.alertId}
+                          </div>
+                        )}
+                        {result.chatIds && result.chatIds.length > 0 && (
+                          <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
+                            <div className="font-medium text-blue-700 mb-1">🎯 Found Chat IDs:</div>
+                            {result.chatIds.map((chat, index) => (
+                              <div key={index} className="mb-1">
+                                <span className="font-mono bg-blue-100 px-1 rounded">{chat.id}</span>
+                                <span className="ml-2 text-blue-600">{chat.title} ({chat.type})</span>
+                              </div>
+                            ))}
+                            <div className="mt-1 text-blue-600 text-xs">
+                              💡 Use the negative number (like -1001234567890) as your chat ID
+                            </div>
+                          </div>
+                        )}
+                        {result.botInfo && result.botInfo.username && (
+                          <div className="mt-1 text-xs text-blue-600">
+                            🤖 Bot: @{result.botInfo.username}
                           </div>
                         )}
                       </div>
