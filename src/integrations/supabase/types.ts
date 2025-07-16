@@ -68,6 +68,36 @@ export type Database = {
         }
         Relationships: []
       }
+      monitoring_health: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          last_check_at: string
+          response_time_ms: number | null
+          service_name: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          last_check_at?: string
+          response_time_ms?: number | null
+          service_name: string
+          status: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          last_check_at?: string
+          response_time_ms?: number | null
+          service_name?: string
+          status?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -216,6 +246,134 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      wallet_monitoring: {
+        Row: {
+          alert_threshold: number
+          created_at: string
+          id: string
+          is_active: boolean
+          last_checked_at: string | null
+          last_ledger_index: number | null
+          owner_name: string
+          updated_at: string
+          wallet_address: string
+        }
+        Insert: {
+          alert_threshold?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_checked_at?: string | null
+          last_ledger_index?: number | null
+          owner_name: string
+          updated_at?: string
+          wallet_address: string
+        }
+        Update: {
+          alert_threshold?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_checked_at?: string | null
+          last_ledger_index?: number | null
+          owner_name?: string
+          updated_at?: string
+          wallet_address?: string
+        }
+        Relationships: []
+      }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          destination_address: string | null
+          id: string
+          ledger_index: number
+          processed_at: string
+          source_address: string | null
+          transaction_date: string
+          transaction_hash: string
+          transaction_type: string
+          wallet_address: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          destination_address?: string | null
+          id?: string
+          ledger_index: number
+          processed_at?: string
+          source_address?: string | null
+          transaction_date: string
+          transaction_hash: string
+          transaction_type: string
+          wallet_address: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          destination_address?: string | null
+          id?: string
+          ledger_index?: number
+          processed_at?: string
+          source_address?: string | null
+          transaction_date?: string
+          transaction_hash?: string
+          transaction_type?: string
+          wallet_address?: string
+        }
+        Relationships: []
+      }
+      whale_alerts: {
+        Row: {
+          alert_type: string
+          amount: number
+          created_at: string
+          id: string
+          is_sent: boolean
+          owner_name: string
+          sent_at: string | null
+          transaction_hash: string
+          transaction_type: string
+          wallet_address: string
+        }
+        Insert: {
+          alert_type?: string
+          amount: number
+          created_at?: string
+          id?: string
+          is_sent?: boolean
+          owner_name: string
+          sent_at?: string | null
+          transaction_hash: string
+          transaction_type: string
+          wallet_address: string
+        }
+        Update: {
+          alert_type?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          is_sent?: boolean
+          owner_name?: string
+          sent_at?: string | null
+          transaction_hash?: string
+          transaction_type?: string
+          wallet_address?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whale_alerts_transaction_hash_fkey"
+            columns: ["transaction_hash"]
+            isOneToOne: false
+            referencedRelation: "wallet_transactions"
+            referencedColumns: ["transaction_hash"]
+          },
+        ]
       }
     }
     Views: {

@@ -8,8 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useUserRole } from '@/hooks/useUserRole';
-import { Shield, Users, Settings, Crown } from 'lucide-react';
+import { Shield, Users, Settings, Crown, Activity, TestTube } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { XRPLMonitoringDashboard } from '@/components/admin/XRPLMonitoringDashboard';
+import { XRPLTestSuite } from '@/components/admin/XRPLTestSuite';
 
 type AppRole = 'super_admin' | 'admin' | 'moderator' | 'user';
 type MembershipTier = 'free' | 'advanced' | 'pro';
@@ -294,6 +296,8 @@ export default function Admin() {
           <TabsList>
             <TabsTrigger value="roles">User Roles</TabsTrigger>
             <TabsTrigger value="memberships">Memberships</TabsTrigger>
+            <TabsTrigger value="monitoring">XRPL Monitoring</TabsTrigger>
+            <TabsTrigger value="testing">Test Suite</TabsTrigger>
           </TabsList>
 
           <TabsContent value="roles">
@@ -398,6 +402,14 @@ export default function Admin() {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="monitoring">
+            <XRPLMonitoringDashboard />
+          </TabsContent>
+
+          <TabsContent value="testing">
+            <XRPLTestSuite />
           </TabsContent>
         </Tabs>
       </div>
