@@ -110,7 +110,7 @@ serve(async (req) => {
                 
                 <h3>🚀 Next Steps:</h3>
                 <ol>
-                  <li><strong>Join our Telegram channel:</strong> <a href="https://t.me/xrpwhalealerts" class="button">Join XRP Whale Alerts</a></li>
+                  <li><strong>Join our Telegram channel:</strong> <a href="https://t.me/+Ck8eRLM00gY0YTI5" class="button">Join XRP Whale Alerts</a></li>
                   <li><strong>Stay connected:</strong> All whale alerts (transactions over 10,000 XRP) are automatically sent to the channel</li>
                   <li><strong>Monitor in real-time:</strong> Receive instant notifications on your phone</li>
                 </ol>
@@ -129,7 +129,7 @@ serve(async (req) => {
                   <h3>🔧 Technical Support:</h3>
                   <p>If you need any help setting up your alerts or have questions:</p>
                   <p>📧 Email: <a href="mailto:hello@sugartrades.io">hello@sugartrades.io</a></p>
-                  <p>💬 Telegram: <a href="https://t.me/xrpwhalealerts">XRP Whale Alerts Channel</a></p>
+                  <p>💬 Telegram: <a href="https://t.me/+Ck8eRLM00gY0YTI5">XRP Whale Alerts Channel</a></p>
                 </div>
                 
                 <p class="success">Thank you for choosing Sugar Whale! 🙏</p>

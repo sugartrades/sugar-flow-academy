@@ -57,7 +57,7 @@ export default function Success() {
   }, [paymentId]);
 
   const handleTelegramRedirect = () => {
-    window.open('https://t.me/+XRPWhaleAlerts_Private', '_blank');
+    window.open('https://t.me/+Ck8eRLM00gY0YTI5', '_blank');
   };
 
   if (isLoading) {
@@ -213,7 +213,7 @@ export default function Success() {
               <Mail className="mr-2 h-4 w-4" />
               Email Support
             </Button>
-            <Button variant="outline" onClick={() => window.open('https://t.me/+XRPWhaleAlerts_Private')}>
+            <Button variant="outline" onClick={() => window.open('https://t.me/+Ck8eRLM00gY0YTI5')}>
               <MessageSquare className="mr-2 h-4 w-4" />
               Join Channel
             </Button>
