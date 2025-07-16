@@ -3,9 +3,32 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { XamanPayment } from '@/components/payment/XamanPayment';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function CTASection() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [showPayment, setShowPayment] = useState(false);
+
+  const handleGetAlerts = () => {
+    if (!user) {
+      navigate('/auth');
+    } else {
+      setShowPayment(true);
+    }
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowPayment(false);
+    navigate('/dashboard');
+  };
+
+  const handlePaymentCancel = () => {
+    setShowPayment(false);
+  };
 
   return (
     <section className="container py-24">
@@ -20,7 +43,7 @@ export function CTASection() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Button 
             size="lg" 
-            onClick={() => navigate('/auth')}
+            onClick={handleGetAlerts}
             className="text-lg px-8"
           >
             Get Alerts Now
@@ -39,6 +62,20 @@ export function CTASection() {
           ⚡ One-time payment: 5 XRP • Lifetime access • 18 whale wallets monitored
         </p>
       </div>
+
+      <Dialog open={showPayment} onOpenChange={setShowPayment}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Complete Payment</DialogTitle>
+          </DialogHeader>
+          <XamanPayment
+            amount="5"
+            destinationAddress="rYourXRPWalletAddressHere123456789"
+            onSuccess={handlePaymentSuccess}
+            onCancel={handlePaymentCancel}
+          />
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

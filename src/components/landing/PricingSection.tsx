@@ -1,10 +1,12 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Check, Star, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { XamanPayment } from '@/components/payment/XamanPayment';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 const plan = {
   name: "Whale Alert Pro",
@@ -26,9 +28,24 @@ const plan = {
 
 export function PricingSection() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [showPayment, setShowPayment] = useState(false);
 
   const handleUpgrade = () => {
-    navigate('/auth');
+    if (!user) {
+      navigate('/auth');
+    } else {
+      setShowPayment(true);
+    }
+  };
+
+  const handlePaymentSuccess = () => {
+    setShowPayment(false);
+    navigate('/dashboard');
+  };
+
+  const handlePaymentCancel = () => {
+    setShowPayment(false);
   };
 
   return (
@@ -97,6 +114,20 @@ export function PricingSection() {
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={showPayment} onOpenChange={setShowPayment}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Complete Payment</DialogTitle>
+          </DialogHeader>
+          <XamanPayment
+            amount="5"
+            destinationAddress="rYourXRPWalletAddressHere123456789"
+            onSuccess={handlePaymentSuccess}
+            onCancel={handlePaymentCancel}
+          />
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
