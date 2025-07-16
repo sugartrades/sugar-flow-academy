@@ -266,6 +266,7 @@ async function checkPaymentStatus(paymentId: string) {
                 paymentId: paymentId
               }
             });
+            console.log("Payment confirmation email sent successfully");
           } catch (error) {
             console.error("Error sending payment confirmation:", error);
           }
@@ -336,18 +337,30 @@ async function checkPaymentStatus(paymentId: string) {
       })
       .eq("id", paymentId);
 
-    // Send confirmation email and Telegram alert
-    try {
-      await supabase.functions.invoke("send-payment-confirmation", {
-        body: {
-          email: paymentRequest.email,
-          amount: paymentRequest.amount,
-          transactionHash: payment.hash,
-          paymentId: paymentId
-        }
-      });
-    } catch (error) {
-      console.error("Error sending payment confirmation:", error);
+    // Check if confirmation email was already sent to prevent duplicates
+    const { data: existingRequest } = await supabase
+      .from("payment_requests")
+      .select("status")
+      .eq("id", paymentId)
+      .single();
+    
+    // Only send email if status wasn't already "completed" (prevents duplicates)
+    if (existingRequest?.status !== "completed") {
+      try {
+        await supabase.functions.invoke("send-payment-confirmation", {
+          body: {
+            email: paymentRequest.email,
+            amount: paymentRequest.amount,
+            transactionHash: payment.hash,
+            paymentId: paymentId
+          }
+        });
+        console.log("Payment confirmation email sent successfully (XRPL fallback)");
+      } catch (error) {
+        console.error("Error sending payment confirmation:", error);
+      }
+    } else {
+      console.log("Confirmation email already sent, skipping duplicate");
     }
 
     return {
