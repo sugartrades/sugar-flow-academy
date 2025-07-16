@@ -123,13 +123,36 @@ export const WhaleAlertTestSuite = () => {
   const testDirectTriggerCall = async () => {
     setLoading(true);
     try {
-      // First create a real whale alert to test with
+      const transactionHash = testData.transactionHash || `TEST_DIRECT_${Date.now()}`;
+      
+      // First ensure the wallet transaction exists
+      const { error: walletError } = await supabase.rpc('ensure_wallet_transaction_exists', {
+        p_wallet_address: testData.walletAddress,
+        p_transaction_hash: transactionHash,
+        p_amount: parseFloat(testData.amount),
+        p_transaction_type: testData.transactionType
+      });
+
+      if (walletError) {
+        const testResult = {
+          id: Date.now(),
+          type: 'direct_trigger_call',
+          status: 'error',
+          message: `Failed to create wallet transaction: ${walletError.message}`,
+          error: walletError,
+          timestamp: new Date().toISOString()
+        };
+        setTestResults(prev => [testResult, ...prev]);
+        return;
+      }
+
+      // Now create the whale alert
       const { data: alertData, error: alertError } = await supabase
         .from('whale_alerts')
         .insert({
           wallet_address: testData.walletAddress,
           owner_name: testData.ownerName,
-          transaction_hash: testData.transactionHash || `TEST_DIRECT_${Date.now()}`,
+          transaction_hash: transactionHash,
           amount: parseFloat(testData.amount),
           transaction_type: testData.transactionType,
           alert_type: 'whale_movement',
