@@ -70,7 +70,7 @@ serve(async (req) => {
 
     // Send confirmation email
     const emailResult = await resend.emails.send({
-      from: "Sugar Whale <fivemcs@icloud.com>",
+      from: "Sugar Whale <hello@sugartrades.io>",
       to: [email],
       subject: "🎉 Welcome to Sugar Whale - Lifetime Access Activated!",
       html: `
