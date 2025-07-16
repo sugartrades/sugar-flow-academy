@@ -170,8 +170,8 @@ async function createPaymentRequest(email: string, amount: number, destinationAd
       multisign: false,
       expire: 1440, // 24 hours in minutes
       return_url: {
-        web: "https://e63742723ce.lovableproject.com/success",
-        app: "https://e63742723ce.lovableproject.com/success"
+        web: "https://545a6574-6ee1-470a-91f2-e7e6374273ce.lovableproject.com/success",
+        app: "https://545a6574-6ee1-470a-91f2-e7e6374273ce.lovableproject.com/success"
       }
     }
   });
