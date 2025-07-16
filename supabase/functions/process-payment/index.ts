@@ -128,7 +128,7 @@ async function makeXamanRequest(endpoint: string, method: string, body?: any) {
   return await response.json();
 }
 
-async function createPaymentRequest(email: string, amount: number, destinationAddress: string) {
+async function createPaymentRequest(email: string, amount: number, destinationAddress: string, origin?: string) {
   // Create payment request in database
   const { data: paymentRequest, error } = await supabase
     .from("payment_requests")
@@ -163,6 +163,9 @@ async function createPaymentRequest(email: string, amount: number, destinationAd
 
   console.log("Creating Xaman payment request:", xamanPayload);
 
+  // Use dynamic return URL based on origin or fallback to production
+  const baseUrl = origin || "https://sugartrades.io";
+  
   const xamanResponse = await makeXamanRequest("/payload", "POST", {
     txjson: xamanPayload,
     options: {
@@ -170,8 +173,8 @@ async function createPaymentRequest(email: string, amount: number, destinationAd
       multisign: false,
       expire: 1440, // 24 hours in minutes
       return_url: {
-        web: "https://545a6574-6ee1-470a-91f2-e7e6374273ce.lovableproject.com/success",
-        app: "https://545a6574-6ee1-470a-91f2-e7e6374273ce.lovableproject.com/success"
+        web: `${baseUrl}/success`,
+        app: `${baseUrl}/success`
       }
     }
   });
@@ -379,7 +382,10 @@ serve(async (req) => {
         );
       }
 
-      const result = await createPaymentRequest(email, amount, destinationAddress);
+      // Get origin from request headers
+      const origin = req.headers.get("origin") || req.headers.get("referer")?.split("/").slice(0, 3).join("/");
+      
+      const result = await createPaymentRequest(email, amount, destinationAddress, origin);
       
       return new Response(JSON.stringify(result), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
