@@ -133,7 +133,8 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
       });
 
       if (error) {
-        throw new Error(error.message);
+        console.error('Supabase function error:', error);
+        throw new Error(error.message || error.toString() || 'Failed to send a request to the Edge Function');
       }
 
       const result = data;
