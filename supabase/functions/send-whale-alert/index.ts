@@ -169,11 +169,8 @@ serve(async (req) => {
     let telegramResult = { message_id: 'test-mode' };
     
     if (!isTestMode) {
-      // For production, you need to:
-      // 1. Create a Telegram channel or get your personal chat ID
-      // 2. Add the bot to the channel with admin rights
-      // 3. Use the correct chat ID (numeric for private chats, @channel for public channels)
-      const telegramChatId = '@SugarWhaleBot'; // Change this to your actual chat ID or channel
+      // Using the provided Telegram channel chat ID
+      const telegramChatId = '-1002780142050'; // Your private Telegram channel ID
       
       const telegramUrl = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
       const telegramPayload = {
