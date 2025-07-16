@@ -143,6 +143,7 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
       // Generate QR code for desktop users
       if (deviceInfo.isDesktop) {
         try {
+          console.log('Generating QR code for URL:', result.xamanUrl);
           const qrCodeUrl = await QRCode.toDataURL(result.xamanUrl, {
             width: 200,
             margin: 2,
@@ -152,8 +153,14 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
             }
           });
           setQrCodeDataUrl(qrCodeUrl);
+          console.log('QR code generated successfully');
         } catch (error) {
           console.error('Error generating QR code:', error);
+          toast({
+            title: "QR Code Error",
+            description: "Could not generate QR code, but you can still use the payment link.",
+            variant: "destructive",
+          });
         }
       }
 
@@ -169,10 +176,14 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
 
     } catch (error) {
       console.error('Payment initiation error:', error);
+      console.error('Error details:', error);
       setPaymentStatus('failed');
+      
+      // More specific error message
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       toast({
         title: "Payment Error",
-        description: "Failed to initiate payment. Please try again.",
+        description: `Failed to initiate payment: ${errorMessage}`,
         variant: "destructive",
       });
     }
