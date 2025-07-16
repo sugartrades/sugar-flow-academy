@@ -2,28 +2,22 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-import { XamanPayment } from '@/components/payment/XamanPayment';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export function CTASection() {
-  const navigate = useNavigate();
-  const [showPayment, setShowPayment] = useState(false);
-
   const handleGetAlerts = () => {
-    setShowPayment(true);
+    // Smooth scroll to pricing section
+    const pricingSection = document.getElementById('pricing');
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
-  const handlePaymentSuccess = (email: string) => {
-    setShowPayment(false);
-    // In a real implementation, you'd save the email to your backend
-    console.log('Payment successful for email:', email);
-    navigate('/success');
-  };
-
-  const handlePaymentCancel = () => {
-    setShowPayment(false);
+  const handleLearnMore = () => {
+    // Smooth scroll to features section
+    const featuresSection = document.getElementById('features');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   return (
@@ -49,6 +43,7 @@ export function CTASection() {
             size="lg" 
             variant="outline" 
             className="text-lg px-8"
+            onClick={handleLearnMore}
           >
             Learn More
           </Button>
@@ -58,20 +53,6 @@ export function CTASection() {
           ⚡ One-time payment: 5 XRP • Lifetime access • 18 whale wallets monitored
         </p>
       </div>
-
-      <Dialog open={showPayment} onOpenChange={setShowPayment}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Complete Payment</DialogTitle>
-          </DialogHeader>
-          <XamanPayment
-            amount="5"
-            destinationAddress="rD7Q1UGja3Ntwq4ak7Y4kCt5ST6PMSn1Vr"
-            onSuccess={handlePaymentSuccess}
-            onCancel={handlePaymentCancel}
-          />
-        </DialogContent>
-      </Dialog>
     </section>
   );
 }
