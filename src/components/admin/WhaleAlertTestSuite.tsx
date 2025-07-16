@@ -123,24 +123,30 @@ export const WhaleAlertTestSuite = () => {
   const testDirectTriggerCall = async () => {
     setLoading(true);
     try {
-      // Test the exact HTTP call that the trigger makes
-      const response = await fetch('https://fyxfbbkgginrbphtrhdi.supabase.co/functions/v1/send-whale-alert', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5eGZiYmtnZ2lucmJwaHRyaGRpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0ODQ4NjE3MywiZXhwIjoyMDY0MDYyMTczfQ.JoTun6WaA9Cg3YS_GfwfRaJmQ2yO9LPQ8RFRVcJTMFs'
-        },
-        body: JSON.stringify({ whale_alert_id: 'test-id-123' })
+      // Test using Supabase function invocation instead of direct HTTP call
+      const { data, error } = await supabase.functions.invoke('send-whale-alert', {
+        body: { whale_alert_id: 'test-id-123' }
       });
 
-      const result = await response.json();
-      
+      if (error) {
+        const testResult = {
+          id: Date.now(),
+          type: 'direct_trigger_call',
+          status: 'error',
+          message: `Supabase function invoke failed: ${error.message}`,
+          error: error,
+          timestamp: new Date().toISOString()
+        };
+        setTestResults(prev => [testResult, ...prev]);
+        return;
+      }
+
       const testResult = {
         id: Date.now(),
         type: 'direct_trigger_call',
-        status: response.ok ? 'success' : 'error',
-        message: response.ok ? 'Direct trigger call successful' : `HTTP ${response.status}: ${result.error || 'Unknown error'}`,
-        response: result,
+        status: 'success',
+        message: 'Supabase function invoke successful',
+        response: data,
         timestamp: new Date().toISOString()
       };
 
@@ -153,6 +159,7 @@ export const WhaleAlertTestSuite = () => {
         type: 'direct_trigger_call',
         status: 'error',
         message: `Direct trigger call failed: ${error.message}`,
+        error: error,
         timestamp: new Date().toISOString()
       };
       setTestResults(prev => [result, ...prev]);
