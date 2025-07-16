@@ -2,11 +2,15 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useNavigate } from 'react-router-dom';
 import { Bell, Shield, Zap } from 'lucide-react';
 
 export function HeroSection() {
-  const navigate = useNavigate();
+  const scrollToPricing = () => {
+    const pricingSection = document.getElementById('pricing');
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <section className="container py-24 text-center">
@@ -57,10 +61,15 @@ export function HeroSection() {
         </div>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button size="lg" onClick={() => navigate('/auth')} className="text-lg px-8">
+          <Button size="lg" onClick={scrollToPricing} className="text-lg px-8">
             Get Alerts Now
           </Button>
-          <Button size="lg" variant="outline" className="text-lg px-8">
+          <Button size="lg" variant="outline" className="text-lg px-8" onClick={() => {
+            const featuresSection = document.getElementById('features');
+            if (featuresSection) {
+              featuresSection.scrollIntoView({ behavior: 'smooth' });
+            }
+          }}>
             Learn More
           </Button>
         </div>
