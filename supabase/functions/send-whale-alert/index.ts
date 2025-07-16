@@ -117,48 +117,60 @@ serve(async (req) => {
 
     console.log('📱 Telegram bot token found, preparing message...');
     
-    // Try sending to your personal chat first (get your chat ID by messaging the bot)
-    // You can get your chat ID by messaging @userinfobot or @chatid_echo_bot
-    const telegramChatId = '@SugarWhaleBot'; // We'll try the channel first
+    // Check if we're in test mode (skip Telegram sending)
+    const isTestMode = requestBody.test_mode === true;
     
-    const telegramUrl = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
-    const telegramPayload = {
-      chat_id: telegramChatId,
-      text: telegramMessage,
-      parse_mode: 'HTML',
-      disable_web_page_preview: true
-    };
+    let telegramResult = { message_id: 'test-mode' };
+    
+    if (!isTestMode) {
+      // For production, you need to:
+      // 1. Create a Telegram channel or get your personal chat ID
+      // 2. Add the bot to the channel with admin rights
+      // 3. Use the correct chat ID (numeric for private chats, @channel for public channels)
+      const telegramChatId = '@SugarWhaleBot'; // Change this to your actual chat ID or channel
+      
+      const telegramUrl = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
+      const telegramPayload = {
+        chat_id: telegramChatId,
+        text: telegramMessage,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true
+      };
 
-    console.log('📤 Sending to Telegram:', { 
-      chatId: telegramChatId, 
-      url: telegramUrl.replace(telegramBotToken, '[TOKEN]'),
-      messageLength: telegramMessage.length 
-    });
-    
-    const telegramResponse = await fetch(telegramUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(telegramPayload)
-    });
-
-    const telegramResult = await telegramResponse.json();
-    
-    if (!telegramResponse.ok) {
-      console.error('❌ Telegram API error:', telegramResult);
-      return new Response(JSON.stringify({ 
-        error: 'Failed to send Telegram message',
-        details: telegramResult,
-        status: telegramResponse.status,
-        chatId: telegramChatId
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      console.log('📤 Sending to Telegram:', { 
+        chatId: telegramChatId, 
+        url: telegramUrl.replace(telegramBotToken, '[TOKEN]'),
+        messageLength: telegramMessage.length 
       });
-    }
+      
+      const telegramResponse = await fetch(telegramUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(telegramPayload)
+      });
 
-    console.log('✅ Telegram message sent successfully:', telegramResult);
+      telegramResult = await telegramResponse.json();
+      
+      if (!telegramResponse.ok) {
+        console.error('❌ Telegram API error:', telegramResult);
+        return new Response(JSON.stringify({ 
+          error: 'Failed to send Telegram message',
+          details: telegramResult,
+          status: telegramResponse.status,
+          chatId: telegramChatId,
+          message: 'Make sure the Telegram channel exists and the bot has access'
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      console.log('✅ Telegram message sent successfully:', telegramResult);
+    } else {
+      console.log('🧪 Test mode: Skipping Telegram send');
+    }
 
     // Mark the whale alert as sent
     const { error: updateError } = await supabase

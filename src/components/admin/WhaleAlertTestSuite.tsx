@@ -178,7 +178,10 @@ export const WhaleAlertTestSuite = () => {
       console.log('Attempting to invoke send-whale-alert function with alert ID:', alertData.id);
       
       const { data, error } = await supabase.functions.invoke('send-whale-alert', {
-        body: { whale_alert_id: alertData.id },
+        body: { 
+          whale_alert_id: alertData.id,
+          test_mode: true // Skip Telegram sending for testing
+        },
         headers: {
           'Content-Type': 'application/json',
         }
@@ -308,7 +311,10 @@ export const WhaleAlertTestSuite = () => {
 
       // Then test the edge function directly
       const { data, error } = await supabase.functions.invoke('send-whale-alert', {
-        body: { whale_alert_id: alertData.id }
+        body: { 
+          whale_alert_id: alertData.id,
+          test_mode: true // Skip Telegram sending for testing
+        }
       });
 
       if (error) throw error;
