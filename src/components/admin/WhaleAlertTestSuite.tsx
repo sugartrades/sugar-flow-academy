@@ -29,6 +29,64 @@ export const WhaleAlertTestSuite = () => {
     setTestData(prev => ({ ...prev, transactionHash: hash }));
   };
 
+  const getChatId = async () => {
+    setLoading(true);
+    try {
+      console.log('Getting Telegram chat ID...');
+      
+      const response = await fetch('https://fyxfbbkgginrbphtrhdi.supabase.co/functions/v1/send-whale-alert?get_chat_id=true', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5eGZiYmtnZ2lucmJwaHRyaGRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0ODYxNzMsImV4cCI6MjA2NDA2MjE3M30.oW7Cw9w41qWAKpWV1yigsJyxq2t-voTMCdkZg_5hw6s`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Chat ID response:', data);
+      
+      const result = {
+        id: Date.now(),
+        type: 'get_chat_id',
+        status: 'success',
+        message: 'Retrieved Telegram bot info and recent updates. Check the response for chat IDs.',
+        response: data,
+        timestamp: new Date().toISOString()
+      };
+
+      setTestResults(prev => [result, ...prev]);
+      
+      toast({
+        title: "Chat ID Request Successful",
+        description: "Check the results for chat information. Add bot to channel first!",
+      });
+      
+    } catch (error) {
+      console.error('Get chat ID failed:', error);
+      const result = {
+        id: Date.now(),
+        type: 'get_chat_id',
+        status: 'error',
+        message: `Failed to get chat ID: ${error.message}`,
+        error: error,
+        timestamp: new Date().toISOString()
+      };
+      setTestResults(prev => [result, ...prev]);
+      
+      toast({
+        title: "Get Chat ID Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const testFunctionConnectivity = async () => {
     setLoading(true);
     try {
@@ -538,6 +596,15 @@ export const WhaleAlertTestSuite = () => {
                 </Button>
               </div>
               <div className="flex gap-2">
+                <Button
+                  onClick={getChatId}
+                  disabled={loading}
+                  variant="outline"
+                  className="flex-1"
+                >
+                  <Zap className="w-4 h-4 mr-2" />
+                  Get Chat ID
+                </Button>
                 <Button
                   onClick={testNetHttpPost}
                   disabled={loading}
