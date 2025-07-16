@@ -66,16 +66,24 @@ serve(async (req) => {
 
     // Send to Telegram
     const telegramBotToken = Deno.env.get('TELEGRAM_BOT_TOKEN');
-    const telegramChatId = '@SugarWhaleBot'; // Channel username
     
     if (!telegramBotToken) {
       console.error('TELEGRAM_BOT_TOKEN not configured');
-      return new Response(JSON.stringify({ error: 'Telegram bot token not configured' }), {
+      return new Response(JSON.stringify({ 
+        error: 'Telegram bot token not configured',
+        details: 'TELEGRAM_BOT_TOKEN environment variable is missing'
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
+    console.log('Telegram bot token found, preparing message...');
+    
+    // Try sending to your personal chat first (get your chat ID by messaging the bot)
+    // You can get your chat ID by messaging @userinfobot or @chatid_echo_bot
+    const telegramChatId = '@SugarWhaleBot'; // We'll try the channel first
+    
     const telegramUrl = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
     const telegramPayload = {
       chat_id: telegramChatId,
@@ -84,7 +92,11 @@ serve(async (req) => {
       disable_web_page_preview: true
     };
 
-    console.log('Sending Telegram message for whale alert:', whale_alert_id);
+    console.log('Sending to Telegram:', { 
+      chatId: telegramChatId, 
+      url: telegramUrl.replace(telegramBotToken, '[TOKEN]'),
+      messageLength: telegramMessage.length 
+    });
     
     const telegramResponse = await fetch(telegramUrl, {
       method: 'POST',
@@ -94,14 +106,22 @@ serve(async (req) => {
       body: JSON.stringify(telegramPayload)
     });
 
+    const telegramResult = await telegramResponse.json();
+    
     if (!telegramResponse.ok) {
-      const errorText = await telegramResponse.text();
-      console.error('Failed to send Telegram message:', errorText);
-      return new Response(JSON.stringify({ error: 'Failed to send Telegram message' }), {
+      console.error('Telegram API error:', telegramResult);
+      return new Response(JSON.stringify({ 
+        error: 'Failed to send Telegram message',
+        details: telegramResult,
+        status: telegramResponse.status,
+        chatId: telegramChatId
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
+
+    console.log('Telegram message sent successfully:', telegramResult);
 
     // Mark the whale alert as sent
     const { error: updateError } = await supabase
