@@ -18,7 +18,13 @@ serve(async (req) => {
     });
   }
 
-  try {
+  // Add timeout to prevent hanging
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Function timeout after 30 seconds')), 30000);
+  });
+
+  const mainPromise = async () => {
+    try {
     console.log('📋 Initializing Supabase client...');
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -27,7 +33,9 @@ serve(async (req) => {
 
     console.log('📝 Parsing request body...');
     const requestBody = await req.json();
-    const { whale_alert_id } = requestBody;
+    const { whale_alert_id, test_mode } = requestBody;
+    
+    console.log('🔍 Request details:', { whale_alert_id, test_mode, body: requestBody });
     
     if (!whale_alert_id) {
       console.error('❌ No whale_alert_id provided');
@@ -195,20 +203,42 @@ serve(async (req) => {
 
     console.log(`✅ Whale alert sent successfully: ${whale_alert_id}`);
     
-    return new Response(JSON.stringify({ 
+    const responseData = { 
       success: true, 
       message: 'Whale alert sent successfully',
       whale_alert_id,
-      telegram_result: telegramResult
-    }), {
+      telegram_result: telegramResult,
+      test_mode: isTestMode
+    };
+    
+    console.log('📤 Sending response:', responseData);
+    
+    return new Response(JSON.stringify(responseData), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
+    } catch (error) {
+      console.error('💥 Error in send-whale-alert function:', error);
+      return new Response(JSON.stringify({ 
+        error: 'Internal server error',
+        details: error.message,
+        stack: error.stack
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+  };
+
+  try {
+    // Race between main function and timeout
+    const result = await Promise.race([mainPromise(), timeoutPromise]);
+    return result;
   } catch (error) {
-    console.error('💥 Error in send-whale-alert function:', error);
+    console.error('💥 Function timeout or error:', error);
     return new Response(JSON.stringify({ 
-      error: 'Internal server error',
+      error: 'Function timeout or error',
       details: error.message,
       stack: error.stack
     }), {
