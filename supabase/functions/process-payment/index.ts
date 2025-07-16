@@ -10,6 +10,11 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Xaman API configuration
+const XAMAN_API_KEY = Deno.env.get("XAMAN_API_KEY")!;
+const XAMAN_API_SECRET = Deno.env.get("XAMAN_API_SECRET")!;
+const XAMAN_BASE_URL = "https://xumm.app/api/v1/platform";
+
 // XRPL endpoints for payment verification
 const XRPL_ENDPOINTS = [
   "https://xrplcluster.com",
@@ -96,6 +101,33 @@ async function verifyPayment(destinationAddress: string, expectedAmount: number,
   return null;
 }
 
+// Helper function to convert string to hex
+function stringToHex(str: string): string {
+  return new TextEncoder().encode(str).reduce((hex, byte) => hex + byte.toString(16).padStart(2, '0'), '').toUpperCase();
+}
+
+// Helper function to make authenticated Xaman API requests
+async function makeXamanRequest(endpoint: string, method: string, body?: any) {
+  const headers = {
+    "Content-Type": "application/json",
+    "X-API-Key": XAMAN_API_KEY,
+    "X-API-Secret": XAMAN_API_SECRET,
+  };
+
+  const response = await fetch(`${XAMAN_BASE_URL}${endpoint}`, {
+    method,
+    headers,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Xaman API request failed: ${response.statusText} - ${errorText}`);
+  }
+
+  return await response.json();
+}
+
 async function createPaymentRequest(email: string, amount: number, destinationAddress: string) {
   // Create payment request in database
   const { data: paymentRequest, error } = await supabase
@@ -114,24 +146,46 @@ async function createPaymentRequest(email: string, amount: number, destinationAd
     throw new Error(`Failed to create payment request: ${error.message}`);
   }
 
-  // Create Xaman payment request
+  // Create Xaman payment request using the official API
   const xamanPayload = {
     TransactionType: "Payment",
     Destination: destinationAddress,
     Amount: (amount * 1000000).toString(), // Convert XRP to drops
-    Memo: {
-      MemoType: Buffer.from("Description").toString("hex").toUpperCase(),
-      MemoData: Buffer.from("Whale Alert Pro - Lifetime Access").toString("hex").toUpperCase()
-    }
+    Memos: [
+      {
+        Memo: {
+          MemoType: stringToHex("Description"),
+          MemoData: stringToHex("Whale Alert Pro - Lifetime Access")
+        }
+      }
+    ]
   };
 
-  // For now, create a simple payment URL since we don't have Xaman API keys
-  // In production, this would use the Xaman SDK to create a proper payment request
-  const xamanUrl = `https://xumm.app/sign/${encodeURIComponent(JSON.stringify(xamanPayload))}`;
+  console.log("Creating Xaman payment request:", xamanPayload);
+
+  const xamanResponse = await makeXamanRequest("/payload", "POST", {
+    txjson: xamanPayload,
+    options: {
+      submit: true,
+      multisign: false,
+      expire: 1440, // 24 hours in minutes
+      return_url: {
+        web: "https://whalewatch.pro/payment/success",
+        app: "https://whalewatch.pro/payment/success"
+      }
+    }
+  });
+
+  // Store the Xaman request ID in the database
+  await supabase
+    .from("payment_requests")
+    .update({ xaman_request_id: xamanResponse.uuid })
+    .eq("id", paymentRequest.id);
 
   return {
     paymentId: paymentRequest.id,
-    xamanUrl,
+    xamanUrl: xamanResponse.next.always,
+    xamanRequestId: xamanResponse.uuid,
     amount,
     destinationAddress
   };
@@ -178,7 +232,75 @@ async function checkPaymentStatus(paymentId: string) {
     };
   }
 
-  // Check XRPL for payment
+  // First check Xaman API if we have a request ID
+  if (paymentRequest.xaman_request_id) {
+    try {
+      const xamanStatus = await makeXamanRequest(`/payload/${paymentRequest.xaman_request_id}`, "GET");
+      
+      if (xamanStatus.meta.signed && xamanStatus.meta.submit) {
+        // Payment was signed and submitted, check if it was successful
+        if (xamanStatus.response.dispatched_result === "tesSUCCESS") {
+          const transactionHash = xamanStatus.response.txid;
+          const ledgerIndex = xamanStatus.response.dispatched_to;
+          
+          // Update payment request status
+          await supabase
+            .from("payment_requests")
+            .update({
+              status: "completed",
+              transaction_hash: transactionHash,
+              ledger_index: ledgerIndex
+            })
+            .eq("id", paymentId);
+
+          return {
+            status: "completed",
+            transactionHash,
+            ledgerIndex,
+            amount: paymentRequest.amount
+          };
+        } else if (xamanStatus.response.dispatched_result) {
+          // Payment was submitted but failed
+          await supabase
+            .from("payment_requests")
+            .update({ status: "failed" })
+            .eq("id", paymentId);
+
+          return {
+            status: "failed",
+            error: `Transaction failed: ${xamanStatus.response.dispatched_result}`
+          };
+        }
+      } else if (xamanStatus.meta.cancelled) {
+        // Payment was cancelled
+        await supabase
+          .from("payment_requests")
+          .update({ status: "failed" })
+          .eq("id", paymentId);
+
+        return {
+          status: "failed",
+          error: "Payment was cancelled"
+        };
+      } else if (xamanStatus.meta.expired) {
+        // Payment expired
+        await supabase
+          .from("payment_requests")
+          .update({ status: "expired" })
+          .eq("id", paymentId);
+
+        return {
+          status: "expired",
+          error: "Payment request expired"
+        };
+      }
+    } catch (error) {
+      console.error("Error checking Xaman status:", error);
+      // Fall back to XRPL verification
+    }
+  }
+
+  // Fallback: Check XRPL for payment
   const createdAt = new Date(paymentRequest.created_at);
   const payment = await verifyPayment(
     paymentRequest.destination_address,
