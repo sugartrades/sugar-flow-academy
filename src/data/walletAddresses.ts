@@ -25,7 +25,8 @@ export const MONITORED_WALLETS = {
       "rhREXVHV938ToGkdJQ9NCYEY4x8kSEtjna",
       "rPoJNiCk7XSFLR28nH2hAbkYqjtMC3hK2k",
       "raorBmbzraA6TooLQ6kGWRSx1HQq7d4gzS",
-      "rJNLz3A1qPKfWCtJLPhmMZAfBkutC2Qojm"
+      "rJNLz3A1qPKfWCtJLPhmMZAfBkutC2Qojm",
+      "rB5TihdPbKgMrkFqrqUC3yLdE8hhv4BdeY"
     ]
   }
 };
