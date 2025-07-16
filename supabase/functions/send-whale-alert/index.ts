@@ -58,13 +58,28 @@ serve(async (req) => {
       console.log('📝 Parsing request body...');
       let requestBody;
       try {
-        requestBody = await req.json();
+        const requestText = await req.text();
+        console.log('📄 Raw request body:', requestText);
+        
+        if (!requestText || requestText.trim() === '') {
+          console.error('❌ Empty request body received');
+          return new Response(JSON.stringify({ 
+            error: 'Empty request body',
+            details: 'No data was sent in the request body'
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        
+        requestBody = JSON.parse(requestText);
         console.log('✅ Request body parsed successfully:', requestBody);
       } catch (parseError) {
         console.error('❌ Failed to parse request body:', parseError);
         return new Response(JSON.stringify({ 
           error: 'Failed to parse request body',
-          details: parseError.message
+          details: parseError.message,
+          received_data: 'Unable to show raw data due to parsing error'
         }), {
           status: 400,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
