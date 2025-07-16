@@ -21,50 +21,6 @@ serve(async (req) => {
   // Health check endpoint
   if (req.method === 'GET') {
     console.log('🏥 Health check requested');
-    
-    // Check if this is a request to get chat info
-    const url = new URL(req.url);
-    if (url.searchParams.get('get_chat_id') === 'true') {
-      const telegramBotToken = Deno.env.get('TELEGRAM_BOT_TOKEN');
-      
-      if (!telegramBotToken) {
-        return new Response(JSON.stringify({
-          error: 'Telegram bot token not configured'
-        }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-      
-      try {
-        // Get bot info to test token
-        const botInfoResponse = await fetch(`https://api.telegram.org/bot${telegramBotToken}/getMe`);
-        const botInfo = await botInfoResponse.json();
-        
-        // Get updates to see recent chats
-        const updatesResponse = await fetch(`https://api.telegram.org/bot${telegramBotToken}/getUpdates`);
-        const updates = await updatesResponse.json();
-        
-        return new Response(JSON.stringify({
-          status: 'chat_info',
-          bot_info: botInfo,
-          recent_updates: updates,
-          message: 'Add the bot to your channel and send a test message, then call this endpoint again'
-        }), {
-          status: 200,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      } catch (error) {
-        return new Response(JSON.stringify({
-          error: 'Failed to get Telegram info',
-          details: error.message
-        }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
-      }
-    }
-    
     return new Response(JSON.stringify({ 
       status: 'healthy',
       timestamp: new Date().toISOString(),
