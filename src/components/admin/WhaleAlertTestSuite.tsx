@@ -123,9 +123,37 @@ export const WhaleAlertTestSuite = () => {
   const testDirectTriggerCall = async () => {
     setLoading(true);
     try {
-      // Test using Supabase function invocation instead of direct HTTP call
+      // First create a real whale alert to test with
+      const { data: alertData, error: alertError } = await supabase
+        .from('whale_alerts')
+        .insert({
+          wallet_address: testData.walletAddress,
+          owner_name: testData.ownerName,
+          transaction_hash: testData.transactionHash || `TEST_DIRECT_${Date.now()}`,
+          amount: parseFloat(testData.amount),
+          transaction_type: testData.transactionType,
+          alert_type: 'whale_movement',
+          is_sent: false
+        })
+        .select()
+        .single();
+
+      if (alertError) {
+        const testResult = {
+          id: Date.now(),
+          type: 'direct_trigger_call',
+          status: 'error',
+          message: `Failed to create test whale alert: ${alertError.message}`,
+          error: alertError,
+          timestamp: new Date().toISOString()
+        };
+        setTestResults(prev => [testResult, ...prev]);
+        return;
+      }
+
+      // Now test the edge function with the real alert ID
       const { data, error } = await supabase.functions.invoke('send-whale-alert', {
-        body: { whale_alert_id: 'test-id-123' }
+        body: { whale_alert_id: alertData.id }
       });
 
       if (error) {
@@ -135,6 +163,7 @@ export const WhaleAlertTestSuite = () => {
           status: 'error',
           message: `Supabase function invoke failed: ${error.message}`,
           error: error,
+          alertId: alertData.id,
           timestamp: new Date().toISOString()
         };
         setTestResults(prev => [testResult, ...prev]);
@@ -145,12 +174,18 @@ export const WhaleAlertTestSuite = () => {
         id: Date.now(),
         type: 'direct_trigger_call',
         status: 'success',
-        message: 'Supabase function invoke successful',
+        message: 'Direct edge function call successful! Check Telegram for notification.',
         response: data,
+        alertId: alertData.id,
         timestamp: new Date().toISOString()
       };
 
       setTestResults(prev => [testResult, ...prev]);
+      
+      toast({
+        title: "Direct Call Successful",
+        description: "Edge function worked! Check your Telegram channel.",
+      });
       
     } catch (error) {
       console.error('Direct trigger call failed:', error);
