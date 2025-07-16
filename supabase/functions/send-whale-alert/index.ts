@@ -21,10 +21,21 @@ serve(async (req) => {
   // Health check endpoint
   if (req.method === 'GET') {
     console.log('🏥 Health check requested');
+    
+    // Check if we have the bot token
+    const telegramBotToken = Deno.env.get('TELEGRAM_BOT_TOKEN');
+    const hasToken = !!telegramBotToken;
+    const tokenLength = telegramBotToken ? telegramBotToken.length : 0;
+    
     return new Response(JSON.stringify({ 
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      message: 'send-whale-alert function is running'
+      message: 'send-whale-alert function is running',
+      telegram_config: {
+        has_token: hasToken,
+        token_length: tokenLength,
+        token_preview: telegramBotToken ? `${telegramBotToken.substring(0, 10)}...` : 'NOT SET'
+      }
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
