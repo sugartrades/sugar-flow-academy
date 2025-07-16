@@ -327,16 +327,6 @@ async function checkPaymentStatus(paymentId: string) {
   );
 
   if (payment) {
-    // Update payment request status
-    await supabase
-      .from("payment_requests")
-      .update({
-        status: "completed",
-        transaction_hash: payment.hash,
-        ledger_index: payment.ledger_index
-      })
-      .eq("id", paymentId);
-
     // Check if confirmation email was already sent to prevent duplicates
     const { data: existingRequest } = await supabase
       .from("payment_requests")
@@ -346,6 +336,15 @@ async function checkPaymentStatus(paymentId: string) {
     
     // Only send email if status wasn't already "completed" (prevents duplicates)
     if (existingRequest?.status !== "completed") {
+      // Update payment request status
+      await supabase
+        .from("payment_requests")
+        .update({
+          status: "completed",
+          transaction_hash: payment.hash,
+          ledger_index: payment.ledger_index
+        })
+        .eq("id", paymentId);
       try {
         await supabase.functions.invoke("send-payment-confirmation", {
           body: {
