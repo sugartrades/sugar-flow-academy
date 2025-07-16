@@ -8,20 +8,20 @@ const features = [
   {
     icon: Bell,
     title: "Real-time Alerts",
-    description: "Get instant notifications when whale wallets move 50k+ XRP to exchanges, giving you advance warning of potential market movements.",
+    description: "Get instant notifications when whale wallets move 10k+ XRP to exchanges, giving you advance warning of potential market movements.",
     badge: "Instant"
   },
   {
     icon: Smartphone,
     title: "Telegram Integration",
-    description: "Receive alerts directly on your phone via Telegram bot. Never miss important whale movements even when away from your computer.",
+    description: "Join our exclusive Telegram channel to receive instant alerts directly on your phone. Never miss important whale movements even when away from your computer.",
     badge: "Mobile"
   },
   {
     icon: Mail,
-    title: "Email Notifications",
-    description: "Professional email alerts with detailed transaction information, wallet addresses, and movement timestamps.",
-    badge: "Professional"
+    title: "Key Figures Tracking",
+    description: "Monitor wallet movements of Chris Larsen (Ripple Co-founder) and Arthur Britto (XRPL Co-creator) - major figures whose movements can significantly impact XRP markets.",
+    badge: "Exclusive"
   },
   {
     icon: Eye,

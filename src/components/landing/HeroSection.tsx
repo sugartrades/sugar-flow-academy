@@ -25,7 +25,7 @@ export function HeroSection() {
         </h1>
         
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Get instant alerts when major XRP whales move their funds to exchanges. Stay ahead of the market with real-time monitoring of key wallet addresses.
+          Get instant Telegram alerts when Chris Larsen and Arthur Britto move their XRP. Stay ahead of the market with real-time monitoring of these influential XRPL figures.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-6 justify-center items-center my-12">
@@ -35,7 +35,7 @@ export function HeroSection() {
             </div>
             <div className="text-left">
               <p className="font-semibold">Real-time Alerts</p>
-              <p className="text-sm text-muted-foreground">Email & Telegram</p>
+              <p className="text-sm text-muted-foreground">Telegram Channel</p>
             </div>
           </div>
           
@@ -54,7 +54,7 @@ export function HeroSection() {
               <Zap className="w-6 h-6 text-primary" />
             </div>
             <div className="text-left">
-              <p className="font-semibold">50k+ XRP Moves</p>
+              <p className="font-semibold">10k+ XRP Moves</p>
               <p className="text-sm text-muted-foreground">Threshold alerts</p>
             </div>
           </div>
@@ -75,7 +75,7 @@ export function HeroSection() {
         </div>
         
         <p className="text-sm text-muted-foreground">
-          ⚡ One-time fee: 5 XRP • Real-time monitoring • Email & Telegram support
+          ⚡ One-time fee: 5 XRP • Real-time monitoring • Telegram channel access
         </p>
       </div>
     </section>

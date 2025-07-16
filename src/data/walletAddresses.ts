@@ -33,7 +33,7 @@ export const MONITORED_WALLETS = {
 // Configuration for monitoring
 export const MONITORING_CONFIG = {
   checkInterval: 60000, // 1 minute in milliseconds
-  alertThreshold: 50000, // 50,000 XRP threshold
+  alertThreshold: 10000, // 10,000 XRP threshold
   paymentAmount: 5 // 5 XRP payment for access
 };
 

@@ -14,9 +14,9 @@ const plan = {
   description: "Lifetime access to whale movement alerts for serious XRP traders",
   features: [
     "Real-time monitoring of 18 whale wallets",
-    "Instant alerts for 50k+ XRP movements",
-    "Email notifications with full details",
-    "Telegram bot integration",
+    "Instant alerts for 10k+ XRP movements",
+    "Chris Larsen & Arthur Britto wallet tracking",
+    "Exclusive Telegram channel access",
     "Exchange detection technology",
     "Historical movement data",
     "Custom threshold settings",

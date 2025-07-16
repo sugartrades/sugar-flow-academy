@@ -57,7 +57,7 @@ export default function Success() {
   }, [paymentId]);
 
   const handleTelegramRedirect = () => {
-    window.open('https://t.me/SugarWhaleBot', '_blank');
+    window.open('https://t.me/+XRPWhaleAlerts_Private', '_blank');
   };
 
   if (isLoading) {
@@ -99,7 +99,7 @@ export default function Success() {
             Payment Successful! 🎉
           </h1>
           <p className="text-xl text-muted-foreground mb-4">
-            Welcome to Sugar Whale - Your lifetime access is now active!
+            Welcome to exclusive whale tracking! Your lifetime access to our private Telegram channel is now active.
           </p>
           <Badge variant="secondary" className="text-lg px-4 py-2">
             Lifetime Access Activated
@@ -107,17 +107,17 @@ export default function Success() {
         </div>
 
         <div className="grid gap-8 md:grid-cols-2">
-          {/* Step 1: Join Telegram */}
+          {/* Step 1: Join Private Telegram Channel */}
           <Card className="border-2 border-primary">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5 text-primary" />
-                Step 1: Join Our Telegram Bot
+                Step 1: Join Our Private Telegram Channel
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-muted-foreground">
-                Click the button below to start receiving whale movement alerts directly on Telegram.
+                Click the button below to join our exclusive Telegram channel where you'll receive instant alerts for Chris Larsen and Arthur Britto wallet movements.
               </p>
               <Button 
                 onClick={handleTelegramRedirect}
@@ -125,44 +125,46 @@ export default function Success() {
                 size="lg"
               >
                 <Bot className="mr-2 h-4 w-4" />
-                Join @SugarWhaleBot
+                Join Private Channel
                 <ExternalLink className="ml-2 h-4 w-4" />
               </Button>
               <div className="bg-muted/50 rounded-lg p-4">
-                <h4 className="font-semibold mb-2">What you'll get:</h4>
+                <h4 className="font-semibold mb-2">Exclusive Access Includes:</h4>
                 <ul className="text-sm space-y-1">
-                  <li>• Real-time whale movement alerts</li>
-                  <li>• Large transaction notifications</li>
-                  <li>• Market impact analysis</li>
-                  <li>• Instant delivery to your phone</li>
+                  <li>• Chris Larsen wallet movement alerts (10k+ XRP)</li>
+                  <li>• Arthur Britto wallet movement alerts (10k+ XRP)</li>
+                  <li>• Real-time transaction notifications</li>
+                  <li>• Exchange movement detection</li>
+                  <li>• Community of serious XRP traders</li>
                 </ul>
               </div>
             </CardContent>
           </Card>
 
-          {/* Step 2: Email Confirmation */}
+          {/* Step 2: Important Information */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Mail className="h-5 w-5 text-primary" />
-                Step 2: Check Your Email
+                <AlertCircle className="h-5 w-5 text-primary" />
+                Step 2: Important Channel Rules
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-muted-foreground">
-                We've sent a confirmation email with additional setup instructions and premium features.
+                Our private channel is for serious XRP traders. Please follow these guidelines to maintain the quality of our community.
               </p>
               <div className="bg-muted/50 rounded-lg p-4">
-                <h4 className="font-semibold mb-2">Email includes:</h4>
+                <h4 className="font-semibold mb-2">Channel Guidelines:</h4>
                 <ul className="text-sm space-y-1">
-                  <li>• Account activation details</li>
-                  <li>• Premium alert settings</li>
-                  <li>• Support contact information</li>
-                  <li>• Advanced configuration options</li>
+                  <li>• This is an alerts-only channel (no chat)</li>
+                  <li>• Alerts are sent for movements of 10k+ XRP</li>
+                  <li>• Focuses on Chris Larsen & Arthur Britto wallets</li>
+                  <li>• Notifications sent 24/7 during market hours</li>
+                  <li>• Your access is valid for lifetime</li>
                 </ul>
               </div>
               <p className="text-xs text-muted-foreground">
-                Don't see our email? Check your spam folder or contact support.
+                Need help? Contact support via the buttons below.
               </p>
             </CardContent>
           </Card>
@@ -179,15 +181,15 @@ export default function Success() {
                 <div className="bg-primary/10 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
                   <span className="text-primary font-bold">1</span>
                 </div>
-                <h3 className="font-semibold mb-1">Join Telegram</h3>
-                <p className="text-sm text-muted-foreground">Click the button above to join our bot</p>
+                <h3 className="font-semibold mb-1">Join Channel</h3>
+                <p className="text-sm text-muted-foreground">Click the button above to join our private channel</p>
               </div>
               <div className="text-center">
                 <div className="bg-primary/10 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
                   <span className="text-primary font-bold">2</span>
                 </div>
-                <h3 className="font-semibold mb-1">Configure Alerts</h3>
-                <p className="text-sm text-muted-foreground">Set your preferred alert thresholds</p>
+                <h3 className="font-semibold mb-1">Stay Active</h3>
+                <p className="text-sm text-muted-foreground">Keep notifications enabled for instant alerts</p>
               </div>
               <div className="text-center">
                 <div className="bg-primary/10 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
@@ -204,16 +206,16 @@ export default function Success() {
         <div className="text-center mt-12">
           <h3 className="text-xl font-semibold mb-4">Need Help?</h3>
           <p className="text-muted-foreground mb-4">
-            Our support team is here to help you get started with Sugar Whale.
+            Our support team is here to help you get the most out of your whale tracking alerts.
           </p>
           <div className="flex justify-center gap-4">
             <Button variant="outline" onClick={() => window.open('mailto:hello@sugartrades.io')}>
               <Mail className="mr-2 h-4 w-4" />
               Email Support
             </Button>
-            <Button variant="outline" onClick={() => window.open('https://t.me/SugarWhaleBot')}>
+            <Button variant="outline" onClick={() => window.open('https://t.me/+XRPWhaleAlerts_Private')}>
               <MessageSquare className="mr-2 h-4 w-4" />
-              Telegram Support
+              Join Channel
             </Button>
           </div>
         </div>

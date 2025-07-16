@@ -27,7 +27,7 @@ export function CTASection() {
           Ready to <span className="text-primary">Track Whale Movements?</span>
         </h2>
         <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-          Join smart traders who stay ahead of the market with real-time whale movement alerts. Get instant notifications when major players move their XRP.
+          Join smart traders who stay ahead of the market with real-time whale movement alerts. Get instant Telegram notifications when Chris Larsen and Arthur Britto move their XRP.
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -50,7 +50,7 @@ export function CTASection() {
         </div>
         
         <p className="text-sm text-muted-foreground mt-6">
-          ⚡ One-time payment: 5 XRP • Lifetime access • 18 whale wallets monitored
+          ⚡ One-time payment: 5 XRP • Lifetime access • Chris Larsen & Arthur Britto wallets monitored
         </p>
       </div>
     </section>
