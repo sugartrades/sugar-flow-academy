@@ -2,22 +2,44 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { QrCode, ExternalLink, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { QrCode, ExternalLink, CheckCircle, Clock, AlertCircle, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface XamanPaymentProps {
   amount: string;
   destinationAddress: string;
-  onSuccess: () => void;
+  onSuccess: (email: string) => void;
   onCancel: () => void;
 }
 
 export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }: XamanPaymentProps) {
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'pending' | 'success' | 'failed' | 'cancelled'>('idle');
   const [paymentUrl, setPaymentUrl] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [emailError, setEmailError] = useState<string>('');
   const { toast } = useToast();
 
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const initiatePayment = async () => {
+    // Validate email first
+    if (!email.trim()) {
+      setEmailError('Email is required');
+      return;
+    }
+    
+    if (!validateEmail(email)) {
+      setEmailError('Please enter a valid email address');
+      return;
+    }
+    
+    setEmailError('');
+    
     try {
       setPaymentStatus('pending');
       
@@ -52,7 +74,7 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
             title: "Payment Successful! 🎉",
             description: "Your payment has been confirmed on the XRPL.",
           });
-          onSuccess();
+          onSuccess(email);
         } else {
           setPaymentStatus('failed');
           toast({
@@ -125,6 +147,29 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
         </div>
 
         <div className="space-y-4">
+          {/* Email Input */}
+          <div className="space-y-2">
+            <Label htmlFor="email">Email Address</Label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="email"
+                type="email"
+                placeholder="Enter your email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={`pl-10 ${emailError ? 'border-red-500' : ''}`}
+                disabled={paymentStatus === 'pending'}
+              />
+            </div>
+            {emailError && (
+              <p className="text-sm text-red-500">{emailError}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              We'll send setup instructions and confirmation to this email
+            </p>
+          </div>
+
           <div className="bg-muted/50 rounded-lg p-4">
             <h4 className="font-semibold mb-2">Payment Details:</h4>
             <div className="space-y-1 text-sm">
@@ -145,7 +190,7 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
 
           <div className="space-y-3">
             {paymentStatus === 'idle' && (
-              <Button onClick={initiatePayment} className="w-full" size="lg">
+              <Button onClick={initiatePayment} className="w-full" size="lg" disabled={!email.trim()}>
                 <QrCode className="mr-2 h-4 w-4" />
                 Pay with Xaman Wallet
               </Button>

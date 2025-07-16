@@ -6,24 +6,20 @@ import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { XamanPayment } from '@/components/payment/XamanPayment';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useAuth } from '@/contexts/AuthContext';
 
 export function CTASection() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [showPayment, setShowPayment] = useState(false);
 
   const handleGetAlerts = () => {
-    if (!user) {
-      navigate('/auth');
-    } else {
-      setShowPayment(true);
-    }
+    setShowPayment(true);
   };
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = (email: string) => {
     setShowPayment(false);
-    navigate('/dashboard');
+    // In a real implementation, you'd save the email to your backend
+    console.log('Payment successful for email:', email);
+    navigate('/success');
   };
 
   const handlePaymentCancel = () => {

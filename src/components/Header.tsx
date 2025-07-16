@@ -106,17 +106,12 @@ export function Header({ showAuth = true }: HeaderProps) {
             </DropdownMenu>
           ) : (
             showAuth && (
-              <>
-                <Button variant="ghost" onClick={() => navigate('/auth')}>
-                  Login
-                </Button>
-                 <Button 
-                  onClick={() => navigate('/auth')}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  Get Alerts
-                </Button>
-              </>
+              <Button 
+                onClick={() => window.location.href = '#pricing'}
+                className="bg-primary hover:bg-primary/90"
+              >
+                Get Alerts
+              </Button>
             )
           )}
           
