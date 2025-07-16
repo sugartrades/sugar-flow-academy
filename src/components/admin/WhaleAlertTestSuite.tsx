@@ -504,6 +504,53 @@ export const WhaleAlertTestSuite = () => {
     }
   };
 
+  const testSimpleFunction = async () => {
+    setLoading(true);
+    try {
+      console.log('Testing simple edge function...');
+      
+      const { data, error } = await supabase.functions.invoke('test-simple', {
+        body: { test: true }
+      });
+
+      if (error) throw error;
+
+      const result = {
+        id: Date.now(),
+        type: 'simple_function_test',
+        status: 'success',
+        message: 'Simple function test successful - Edge Functions are working',
+        response: data,
+        timestamp: new Date().toISOString()
+      };
+
+      setTestResults(prev => [result, ...prev]);
+      toast({
+        title: "Simple Function Test Successful",
+        description: "Basic Edge Functions are working properly",
+      });
+
+    } catch (error) {
+      console.error('Simple function test failed:', error);
+      const result = {
+        id: Date.now(),
+        type: 'simple_function_test',
+        status: 'error',
+        message: `Simple function failed: ${error.message}`,
+        error: error,
+        timestamp: new Date().toISOString()
+      };
+      setTestResults(prev => [result, ...prev]);
+      toast({
+        title: "Simple Function Test Failed",
+        description: "Edge Functions may not be working properly",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const clearResults = () => {
     setTestResults([]);
   };
@@ -634,6 +681,17 @@ export const WhaleAlertTestSuite = () => {
                 >
                   <CheckCircle className="w-4 h-4 mr-2" />
                   Test Net HTTP Post
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={testSimpleFunction}
+                  disabled={loading}
+                  variant="secondary"
+                  className="flex-1"
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  Test Simple Function
                 </Button>
               </div>
             </div>
