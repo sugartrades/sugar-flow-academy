@@ -180,16 +180,30 @@ export const WhaleAlertTestSuite = () => {
       });
 
       if (error) {
+        // Try to get more details about the error
+        let errorDetails = error.message;
+        if (error.context) {
+          errorDetails += ` | Context: ${JSON.stringify(error.context)}`;
+        }
+        
         const testResult = {
           id: Date.now(),
           type: 'direct_trigger_call',
           status: 'error',
-          message: `Supabase function invoke failed: ${error.message}`,
+          message: `Supabase function invoke failed: ${errorDetails}`,
           error: error,
           alertId: alertData.id,
           timestamp: new Date().toISOString()
         };
         setTestResults(prev => [testResult, ...prev]);
+        
+        // Also try to get the actual HTTP response for debugging
+        console.log('Full error object:', error);
+        toast({
+          title: "Function Error",
+          description: `Error: ${errorDetails}`,
+          variant: "destructive"
+        });
         return;
       }
 
