@@ -45,7 +45,7 @@ export function HeroSection() {
             </div>
             <div className="text-left">
               <p className="font-semibold">Whale Tracking</p>
-              <p className="text-sm text-muted-foreground">18 Major Wallets</p>
+              <p className="text-sm text-muted-foreground">20+ Major Wallets (and counting)</p>
             </div>
           </div>
           

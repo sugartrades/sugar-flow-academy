@@ -25,8 +25,8 @@ const features = [
   },
   {
     icon: Eye,
-    title: "18 Whale Wallets",
-    description: "Monitor Arthur Britto and Chris Larsen's key wallet addresses - major XRPL figures whose movements can impact the market.",
+    title: "20+ Whale Wallets",
+    description: "Monitor Chris Larsen and Arthur Britto's key wallet addresses (and counting) - major XRPL figures whose movements can impact the market.",
     badge: "Comprehensive"
   },
   {

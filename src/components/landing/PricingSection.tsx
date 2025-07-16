@@ -13,7 +13,7 @@ const plan = {
   period: "one-time",
   description: "Lifetime access to whale movement alerts for serious XRP traders",
   features: [
-    "Real-time monitoring of 18 whale wallets",
+    "Real-time monitoring of 20+ whale wallets (and counting)",
     "Instant alerts for 10k+ XRP movements",
     "Chris Larsen & Arthur Britto wallet tracking",
     "Exclusive Telegram channel access",
