@@ -18,6 +18,19 @@ serve(async (req) => {
     });
   }
 
+  // Health check endpoint
+  if (req.method === 'GET') {
+    console.log('🏥 Health check requested');
+    return new Response(JSON.stringify({ 
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      message: 'send-whale-alert function is running'
+    }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
+
   // Add timeout to prevent hanging
   const timeoutPromise = new Promise((_, reject) => {
     setTimeout(() => reject(new Error('Function timeout after 30 seconds')), 30000);
@@ -25,17 +38,31 @@ serve(async (req) => {
 
   const mainPromise = async () => {
     try {
-    console.log('📋 Initializing Supabase client...');
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
+      console.log('📋 Initializing Supabase client...');
+      const supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      );
 
-    console.log('📝 Parsing request body...');
-    const requestBody = await req.json();
-    const { whale_alert_id, test_mode } = requestBody;
-    
-    console.log('🔍 Request details:', { whale_alert_id, test_mode, body: requestBody });
+      console.log('📝 Parsing request body...');
+      let requestBody;
+      try {
+        requestBody = await req.json();
+        console.log('✅ Request body parsed successfully:', requestBody);
+      } catch (parseError) {
+        console.error('❌ Failed to parse request body:', parseError);
+        return new Response(JSON.stringify({ 
+          error: 'Failed to parse request body',
+          details: parseError.message
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
+      const { whale_alert_id, test_mode } = requestBody;
+      
+      console.log('🔍 Request details:', { whale_alert_id, test_mode, body: requestBody });
     
     if (!whale_alert_id) {
       console.error('❌ No whale_alert_id provided');

@@ -29,6 +29,77 @@ export const WhaleAlertTestSuite = () => {
     setTestData(prev => ({ ...prev, transactionHash: hash }));
   };
 
+  const testFunctionConnectivity = async () => {
+    setLoading(true);
+    try {
+      console.log('Testing edge function connectivity...');
+      
+      // Try to call the health check endpoint
+      const response = await fetch('https://fyxfbbkgginrbphtrhdi.supabase.co/functions/v1/send-whale-alert', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5eGZiYmtnZ2lucmJwaHRyaGRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg0ODYxNzMsImV4cCI6MjA2NDA2MjE3M30.oW7Cw9w41qWAKpWV1yigsJyxq2t-voTMCdkZg_5hw6s`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('Health check response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Function health check response:', data);
+      
+      const result = {
+        id: Date.now(),
+        type: 'connectivity_test',
+        status: data.status === 'healthy' ? 'success' : 'error',
+        message: data.status === 'healthy' 
+          ? 'Edge function is accessible and healthy'
+          : 'Edge function returned unexpected status',
+        response: data,
+        timestamp: new Date().toISOString()
+      };
+
+      setTestResults(prev => [result, ...prev]);
+      
+      if (data.status === 'healthy') {
+        toast({
+          title: "Connectivity Test Successful",
+          description: "Edge function is accessible and responding",
+        });
+      } else {
+        toast({
+          title: "Connectivity Test Warning",
+          description: "Function accessible but not healthy",
+          variant: "destructive"
+        });
+      }
+      
+    } catch (error) {
+      console.error('Function connectivity test failed:', error);
+      const result = {
+        id: Date.now(),
+        type: 'connectivity_test',
+        status: 'error',
+        message: `Connectivity test failed: ${error.message}`,
+        error: error,
+        timestamp: new Date().toISOString()
+      };
+      setTestResults(prev => [result, ...prev]);
+      
+      toast({
+        title: "Connectivity Test Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const testTriggerFunction = async () => {
     setLoading(true);
     try {
@@ -429,6 +500,26 @@ export const WhaleAlertTestSuite = () => {
             <div className="space-y-2 pt-4">
               <div className="flex gap-2">
                 <Button
+                  onClick={testFunctionConnectivity}
+                  disabled={loading}
+                  variant="secondary"
+                  className="flex-1"
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Test Connectivity
+                </Button>
+                <Button
+                  onClick={testDirectTriggerCall}
+                  disabled={loading}
+                  variant="destructive"
+                  className="flex-1"
+                >
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  Test Direct Call
+                </Button>
+              </div>
+              <div className="flex gap-2">
+                <Button
                   onClick={testTriggerFunction}
                   disabled={loading}
                   className="flex-1"
@@ -455,15 +546,6 @@ export const WhaleAlertTestSuite = () => {
                 >
                   <CheckCircle className="w-4 h-4 mr-2" />
                   Test Net HTTP Post
-                </Button>
-                <Button
-                  onClick={testDirectTriggerCall}
-                  disabled={loading}
-                  variant="destructive"
-                  className="flex-1"
-                >
-                  <AlertTriangle className="w-4 h-4 mr-2" />
-                  Test Direct Call
                 </Button>
               </div>
             </div>
