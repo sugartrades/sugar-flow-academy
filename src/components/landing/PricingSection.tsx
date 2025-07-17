@@ -48,7 +48,7 @@ export function PricingSection() {
     <section id="pricing" className="container py-24">
       <div className="text-center mb-16">
         <h2 className="text-3xl md:text-4xl font-bold mb-4">
-          Simple, <span className="text-primary">One-Time</span> Pricing
+          Simple, Affordable, <span className="text-primary">One-Time</span> Pricing
         </h2>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           No subscriptions, no hidden fees. Pay once with XRP and get lifetime access to whale movement alerts.
