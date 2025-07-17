@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { XRPLMonitoringDashboard } from '@/components/admin/XRPLMonitoringDashboard';
 import { XRPLTestSuite } from '@/components/admin/XRPLTestSuite';
 import { EmailTestSuite } from '@/components/admin/EmailTestSuite';
+import { DestinationTagTestSuite } from '@/components/admin/DestinationTagTestSuite';
 
 type AppRole = 'super_admin' | 'admin' | 'moderator' | 'user';
 type MembershipTier = 'free' | 'advanced' | 'pro';
@@ -507,6 +508,7 @@ export default function Admin() {
             <div className="space-y-6">
               <EmailTestSuite />
               <XRPLTestSuite />
+              <DestinationTagTestSuite />
             </div>
           </TabsContent>
         </Tabs>
