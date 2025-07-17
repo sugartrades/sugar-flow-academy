@@ -39,9 +39,15 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
-  const fetchDashboardData = async () => {
+  // Track initial load vs refresh
+  const [initialLoad, setInitialLoad] = useState(true);
+
+  const fetchDashboardData = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      // Only show loading indicator on initial load, not during refreshes
+      if (!isRefresh) {
+        setLoading(true);
+      }
 
       // Fetch recent alerts
       const { data: alerts, error: alertsError } = await supabase
@@ -110,10 +116,11 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchDashboardData();
+    // Initial load
+    fetchDashboardData(false);
     
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(fetchDashboardData, 30000);
+    // Auto-refresh every 30 seconds - use isRefresh=true to prevent loading state
+    const interval = setInterval(() => fetchDashboardData(true), 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -176,7 +183,7 @@ export default function Dashboard() {
             <Button
               variant="outline"
               size="sm"
-              onClick={fetchDashboardData}
+              onClick={() => fetchDashboardData(false)}
               disabled={loading}
             >
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
