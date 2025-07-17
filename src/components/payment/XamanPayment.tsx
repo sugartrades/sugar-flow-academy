@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { QrCode, ExternalLink, CheckCircle, Clock, AlertCircle, Mail, Smartphone, Monitor, Download } from 'lucide-react';
+import { QrCode, ExternalLink, CheckCircle, Clock, AlertCircle, Smartphone, Monitor, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useDeviceDetection, generateXamanDeepLink, generateAppStoreLinks } from '@/hooks/useDeviceDetection';
@@ -13,7 +13,7 @@ import QRCode from 'qrcode';
 interface XamanPaymentProps {
   amount: string;
   destinationAddress: string;
-  onSuccess: (email: string, paymentId: string) => void;
+  onSuccess: (paymentId: string) => void;
   onCancel: () => void;
 }
 
@@ -21,18 +21,12 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'pending' | 'success' | 'failed' | 'cancelled'>('idle');
   const [paymentUrl, setPaymentUrl] = useState<string>('');
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
-  const [emailError, setEmailError] = useState<string>('');
   const [paymentId, setPaymentId] = useState<string>('');
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
   const deviceInfo = useDeviceDetection();
   const appStoreLinks = generateAppStoreLinks();
 
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
 
   const checkPaymentStatus = async (paymentId: string) => {
     try {
@@ -62,7 +56,7 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
           description: "Your payment has been verified and access is being processed!",
         });
         
-        onSuccess(email, paymentId);
+        onSuccess(paymentId);
       } else if (result.status === 'failed' || result.status === 'expired') {
         setPaymentStatus('failed');
         if (pollingInterval) {
@@ -106,18 +100,6 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
   };
 
   const initiatePayment = async () => {
-    // Validate email first
-    if (!email.trim()) {
-      setEmailError('Email is required');
-      return;
-    }
-    
-    if (!validateEmail(email)) {
-      setEmailError('Please enter a valid email address');
-      return;
-    }
-    
-    setEmailError('');
     
     try {
       setPaymentStatus('pending');
@@ -126,7 +108,7 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
       const { data, error } = await supabase.functions.invoke('process-payment', {
         body: {
           action: 'create_payment',
-          email,
+          email: 'tip@whalealer.com', // Use a default email for tips
           amount: parseFloat(amount),
           destinationAddress
         }
@@ -275,28 +257,6 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
         </div>
 
         <div className="space-y-4">
-          {/* Email Input */}
-          <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={`pl-10 ${emailError ? 'border-red-500' : ''}`}
-                disabled={paymentStatus === 'pending'}
-              />
-            </div>
-            {emailError && (
-              <p className="text-sm text-red-500">{emailError}</p>
-            )}
-            <p className="text-xs text-muted-foreground">
-              We'll send setup instructions and confirmation to this email
-            </p>
-          </div>
 
           <div className="bg-muted/50 rounded-lg p-4">
             <h4 className="font-semibold mb-2">Payment Details:</h4>
@@ -318,7 +278,7 @@ export function XamanPayment({ amount, destinationAddress, onSuccess, onCancel }
 
           <div className="space-y-3">
             {paymentStatus === 'idle' && (
-              <Button onClick={initiatePayment} className="w-full" size="lg" disabled={!email.trim()}>
+              <Button onClick={initiatePayment} className="w-full" size="lg">
                 <QrCode className="mr-2 h-4 w-4" />
                 Pay with Xaman Wallet
               </Button>

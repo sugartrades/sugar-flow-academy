@@ -44,9 +44,9 @@ export function PricingSection() {
     setShowTipping(true);
   };
 
-  const handleTipSuccess = (email: string, paymentId: string) => {
+  const handleTipSuccess = (paymentId: string) => {
     setShowTipping(false);
-    console.log('Tip successful for email:', email);
+    console.log('Tip successful with payment ID:', paymentId);
     navigate(`/success?payment=${paymentId}`);
   };
 
@@ -125,7 +125,7 @@ export function PricingSection() {
                 onClick={handleTip}
               >
                 <Heart className="w-4 h-4 mr-2" />
-                Send a Tip (Optional)
+                Tip with Xaman Wallet
               </Button>
             </div>
             
