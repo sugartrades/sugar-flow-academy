@@ -327,22 +327,18 @@ export default function Dashboard() {
                   <p className="text-sm text-muted-foreground">
                     Join our Telegram channel to receive real-time whale alerts and market updates
                   </p>
-                  <Button 
-                    asChild 
-                    className="w-full"
-                    variant="default"
+                  <a 
+                    href="#"
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.open("https://t.me/your_whale_alerts_channel", "_blank", "noopener,noreferrer");
+                    }}
                   >
-                    <a 
-                      href="https://t.me/your_whale_alerts_channel" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2"
-                    >
-                      <MessageCircle className="h-4 w-4" />
-                      Join Telegram Channel
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </Button>
+                    <MessageCircle className="h-4 w-4" />
+                    Join Telegram Channel
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
                 </div>
               </CardContent>
             </Card>
