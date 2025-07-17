@@ -55,15 +55,31 @@ export const XRPLTestSuite = () => {
       id: 'database_connectivity',
       name: 'Database Operations',
       test: async () => {
-        // Test database connectivity by fetching monitoring data
-        const response = await fetch('/api/test-db', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'test' }),
-        });
-        if (!response.ok) throw new Error('Database test failed');
-        const data = await response.json();
-        return data;
+        // Test database connectivity by fetching wallet monitoring data
+        const { supabase } = await import('@/integrations/supabase/client');
+        
+        // Test reading wallet monitoring data
+        const { data: walletData, error: walletError } = await supabase
+          .from('wallet_monitoring')
+          .select('*')
+          .limit(1);
+        
+        if (walletError) throw new Error(`Database read failed: ${walletError.message}`);
+        
+        // Test reading whale alerts
+        const { data: alertData, error: alertError } = await supabase
+          .from('whale_alerts')
+          .select('*')
+          .limit(1);
+        
+        if (alertError) throw new Error(`Alert read failed: ${alertError.message}`);
+        
+        return { 
+          wallet_monitoring_accessible: true,
+          whale_alerts_accessible: true,
+          wallet_count: walletData?.length || 0,
+          alert_count: alertData?.length || 0
+        };
       },
     },
     {

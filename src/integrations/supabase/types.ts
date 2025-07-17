@@ -98,6 +98,50 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_attempts: {
+        Row: {
+          attempt_number: number | null
+          channel_id: string
+          channel_type: string
+          created_at: string | null
+          error_message: string | null
+          id: string
+          sent_at: string | null
+          status: string
+          whale_alert_id: string | null
+        }
+        Insert: {
+          attempt_number?: number | null
+          channel_id: string
+          channel_type: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status: string
+          whale_alert_id?: string | null
+        }
+        Update: {
+          attempt_number?: number | null
+          channel_id?: string
+          channel_type?: string
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          sent_at?: string | null
+          status?: string
+          whale_alert_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_attempts_whale_alert_id_fkey"
+            columns: ["whale_alert_id"]
+            isOneToOne: false
+            referencedRelation: "whale_alerts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_requests: {
         Row: {
           amount: number
@@ -206,6 +250,36 @@ export type Database = {
           id?: string
           updated_at?: string
           username?: string | null
+        }
+        Relationships: []
+      }
+      telegram_subscriptions: {
+        Row: {
+          chat_id: number
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          subscription_type: string
+          updated_at: string | null
+          user_id: number
+        }
+        Insert: {
+          chat_id: number
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          subscription_type: string
+          updated_at?: string | null
+          user_id: number
+        }
+        Update: {
+          chat_id?: number
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          subscription_type?: string
+          updated_at?: string | null
+          user_id?: number
         }
         Relationships: []
       }
