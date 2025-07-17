@@ -205,40 +205,63 @@ async function monitorWallet(address: string, ownerName: string): Promise<Wallet
   try {
     console.log(`🔍 Monitoring wallet ${address} (${ownerName})`);
     
-    // Get the last checked ledger index to only process NEW transactions
+    // Get wallet monitoring info to determine last checked ledger
     const { data: monitoringData } = await supabase
       .from("wallet_monitoring")
       .select("last_ledger_index")
       .eq("wallet_address", address)
       .single();
 
-    const lastLedgerIndex = monitoringData?.last_ledger_index;
-    console.log(`Last checked ledger index: ${lastLedgerIndex || 'none'}`);
+    let lastLedgerIndex = monitoringData?.last_ledger_index;
+    
+    // Safety check: If last_ledger_index is still null, initialize it properly
+    if (!lastLedgerIndex) {
+      console.log('Initializing last_ledger_index for first-time setup');
+      // Get current ledger index from database function
+      const { data: currentLedger } = await supabase.rpc('get_current_ledger_index');
+      lastLedgerIndex = currentLedger || 89500000;
+      
+      // Update the wallet monitoring record
+      await supabase
+        .from('wallet_monitoring')
+        .update({ last_ledger_index: lastLedgerIndex })
+        .eq('wallet_address', address);
+    }
+    
+    console.log(`Last checked ledger index: ${lastLedgerIndex}`);
 
     const [transactions, balance] = await Promise.all([
-      getWalletTransactions(address, 100, lastLedgerIndex),
+      getWalletTransactions(address, 50, lastLedgerIndex),
       getWalletBalance(address),
     ]);
 
-    console.log(`Found ${transactions.length} transactions ${lastLedgerIndex ? 'since last check' : 'total'}`);
+    console.log(`Found ${transactions.length} transactions total`);
+    
+    // Filter out any transactions that are older than our last checked ledger
+    const newTransactions = transactions.filter(tx => tx.ledger_index > lastLedgerIndex);
+    console.log(`Found ${newTransactions.length} transactions since last check`);
 
-    // Store transactions in database
-    await storeTransactions(address, transactions);
+    // Only process new transactions
+    if (newTransactions.length > 0) {
+      // Store transactions in database
+      await storeTransactions(address, newTransactions);
 
-    // Check for whale alerts only on NEW transactions
-    await checkForWhaleAlerts(address, ownerName, transactions, lastLedgerIndex);
+      // Check for whale alerts only on NEW transactions
+      await checkForWhaleAlerts(address, ownerName, newTransactions, lastLedgerIndex);
 
-    // Update monitoring status
-    const { error } = await supabase
-      .from("wallet_monitoring")
-      .update({
-        last_checked_at: new Date().toISOString(),
-        last_ledger_index: transactions[0]?.ledger_index || null,
-      })
-      .eq("wallet_address", address);
-
-    if (error) {
-      console.error("Error updating monitoring status:", error);
+      // Update the last checked ledger index using the safe update function
+      const highestLedgerIndex = Math.max(...newTransactions.map(tx => tx.ledger_index));
+      await supabase.rpc('update_wallet_last_ledger_index', {
+        p_wallet_address: address,
+        p_new_ledger_index: highestLedgerIndex
+      });
+    } else {
+      console.log('Found 0 transactions since last check');
+      // Update last_checked_at even if no new transactions
+      await supabase
+        .from('wallet_monitoring')
+        .update({ last_checked_at: new Date().toISOString() })
+        .eq('wallet_address', address);
     }
 
     const responseTime = Date.now() - startTime;
@@ -247,7 +270,7 @@ async function monitorWallet(address: string, ownerName: string): Promise<Wallet
     return {
       address,
       owner_name: ownerName,
-      transactions,
+      transactions: newTransactions, // Return only new transactions
       balance,
     };
   } catch (error) {

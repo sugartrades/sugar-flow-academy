@@ -476,6 +476,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_current_ledger_index: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       get_current_user_role: {
         Args: Record<PropertyKey, never>
         Returns: Database["public"]["Enums"]["app_role"]
@@ -508,6 +512,10 @@ export type Database = {
           p_transaction_type?: string
         }
         Returns: string
+      }
+      update_wallet_last_ledger_index: {
+        Args: { p_wallet_address: string; p_new_ledger_index: number }
+        Returns: undefined
       }
     }
     Enums: {
