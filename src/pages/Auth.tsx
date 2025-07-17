@@ -135,7 +135,7 @@ export default function Auth() {
       // Clean up existing state first
       cleanupAuthState();
       
-      const redirectUrl = `${window.location.origin}/dashboard`;
+      const redirectUrl = `${window.location.origin}/success?type=signup`;
       
       const { data, error } = await supabase.auth.signUp({
         email,

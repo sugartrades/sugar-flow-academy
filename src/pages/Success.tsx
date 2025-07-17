@@ -5,8 +5,27 @@ import { Footer } from '@/components/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, MessageSquare, Mail, Bot, ExternalLink, Loader2, AlertCircle } from 'lucide-react';
+import { 
+  CheckCircle, MessageSquare, Mail, Bot, ExternalLink, 
+  Loader2, AlertCircle, Rocket, BellDot, BarChart 
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+
+interface SignupSuccessContent {
+  title: string;
+  description: string;
+  steps: {
+    title: string;
+    description: string;
+    icon: React.ReactNode;
+  }[];
+}
+
+interface PaymentSuccessContent {
+  title: string;
+  description: string;
+  features: string[];
+}
 
 export default function Success() {
   const [searchParams] = useSearchParams();
@@ -15,9 +34,15 @@ export default function Success() {
   const [error, setError] = useState<string | null>(null);
   
   const paymentId = searchParams.get('payment');
+  const type = searchParams.get('type');
 
   useEffect(() => {
     const verifyPayment = async () => {
+      if (type === 'signup') {
+        setIsLoading(false);
+        return;
+      }
+
       if (!paymentId) {
         setError('Invalid payment access. Please complete a payment first.');
         setIsLoading(false);
@@ -54,7 +79,7 @@ export default function Success() {
     };
 
     verifyPayment();
-  }, [paymentId]);
+  }, [paymentId, type]);
 
   const handleTelegramRedirect = () => {
     window.open('https://t.me/+Ck8eRLM00gY0YTI5', '_blank');
@@ -65,8 +90,84 @@ export default function Success() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-16 w-16 animate-spin mx-auto mb-4 text-primary" />
-          <p className="text-lg text-muted-foreground">Verifying your payment...</p>
+          <p className="text-lg text-muted-foreground">
+            {type === 'signup' ? 'Preparing your account...' : 'Verifying your payment...'}
+          </p>
         </div>
+      </div>
+    );
+  }
+
+  if (type === 'signup') {
+    const signupContent: SignupSuccessContent = {
+      title: "Welcome to XRP Whale Alerts! 🎉",
+      description: "Your account has been created successfully. Follow these steps to get started:",
+      steps: [
+        {
+          title: "Join Our Telegram Channel",
+          description: "Get instant notifications about whale movements and important updates.",
+          icon: <BellDot className="h-6 w-6 text-primary" />
+        },
+        {
+          title: "Configure Your Dashboard",
+          description: "Set up your monitoring preferences and alert thresholds.",
+          icon: <BarChart className="h-6 w-6 text-primary" />
+        },
+        {
+          title: "Explore Features",
+          description: "Discover all the tools and features available to track whale movements.",
+          icon: <Rocket className="h-6 w-6 text-primary" />
+        }
+      ]
+    };
+
+    return (
+      <div className="min-h-screen bg-background">
+        <Header showAuth={false} />
+        
+        <div className="container max-w-4xl mx-auto py-24">
+          <div className="text-center mb-12">
+            <div className="flex items-center justify-center mb-6">
+              <CheckCircle className="h-16 w-16 text-green-500" />
+            </div>
+            <h1 className="text-4xl font-bold text-foreground mb-4">
+              {signupContent.title}
+            </h1>
+            <p className="text-xl text-muted-foreground mb-6">
+              {signupContent.description}
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-3">
+            {signupContent.steps.map((step, index) => (
+              <Card key={index}>
+                <CardHeader>
+                  <div className="mb-2">{step.icon}</div>
+                  <CardTitle className="text-lg">{step.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-sm">{step.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="mt-12 text-center space-y-6">
+            <Button size="lg" onClick={handleTelegramRedirect} className="gap-2">
+              <Bot className="h-5 w-5" />
+              Join Telegram Channel
+              <ExternalLink className="h-4 w-4" />
+            </Button>
+            
+            <div className="flex justify-center gap-4">
+              <Button variant="outline" onClick={() => window.location.href = '/dashboard'}>
+                Go to Dashboard
+              </Button>
+            </div>
+          </div>
+        </div>
+        
+        <Footer />
       </div>
     );
   }
@@ -86,6 +187,18 @@ export default function Success() {
     );
   }
 
+  const paymentContent: PaymentSuccessContent = {
+    title: "Payment Successful! 🎉",
+    description: "Welcome to exclusive whale tracking! Your lifetime access to our private Telegram channel is now active.",
+    features: [
+      "Chris Larsen wallet movement alerts (10k+ XRP)",
+      "Arthur Britto wallet movement alerts (10k+ XRP)",
+      "Real-time transaction notifications",
+      "Exchange movement detection",
+      "Community of serious XRP traders"
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header showAuth={false} />
@@ -96,10 +209,10 @@ export default function Success() {
             <CheckCircle className="h-16 w-16 text-green-500" />
           </div>
           <h1 className="text-4xl font-bold text-foreground mb-4">
-            Payment Successful! 🎉
+            {paymentContent.title}
           </h1>
           <p className="text-xl text-muted-foreground mb-4">
-            Welcome to exclusive whale tracking! Your lifetime access to our private Telegram channel is now active.
+            {paymentContent.description}
           </p>
           <Badge variant="secondary" className="text-lg px-4 py-2">
             Lifetime Access Activated
@@ -131,11 +244,9 @@ export default function Success() {
               <div className="bg-muted/50 rounded-lg p-4">
                 <h4 className="font-semibold mb-2">Exclusive Access Includes:</h4>
                 <ul className="text-sm space-y-1">
-                  <li>• Chris Larsen wallet movement alerts (10k+ XRP)</li>
-                  <li>• Arthur Britto wallet movement alerts (10k+ XRP)</li>
-                  <li>• Real-time transaction notifications</li>
-                  <li>• Exchange movement detection</li>
-                  <li>• Community of serious XRP traders</li>
+                  {paymentContent.features.map((feature, index) => (
+                    <li key={index}>• {feature}</li>
+                  ))}
                 </ul>
               </div>
             </CardContent>
@@ -170,38 +281,6 @@ export default function Success() {
           </Card>
         </div>
 
-        {/* Quick Start Guide */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle>Quick Start Guide</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div className="text-center">
-                <div className="bg-primary/10 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
-                  <span className="text-primary font-bold">1</span>
-                </div>
-                <h3 className="font-semibold mb-1">Join Channel</h3>
-                <p className="text-sm text-muted-foreground">Click the button above to join our private channel</p>
-              </div>
-              <div className="text-center">
-                <div className="bg-primary/10 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
-                  <span className="text-primary font-bold">2</span>
-                </div>
-                <h3 className="font-semibold mb-1">Stay Active</h3>
-                <p className="text-sm text-muted-foreground">Keep notifications enabled for instant alerts</p>
-              </div>
-              <div className="text-center">
-                <div className="bg-primary/10 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-2">
-                  <span className="text-primary font-bold">3</span>
-                </div>
-                <h3 className="font-semibold mb-1">Start Receiving</h3>
-                <p className="text-sm text-muted-foreground">Get real-time whale alerts instantly</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Support Section */}
         <div className="text-center mt-12">
           <h3 className="text-xl font-semibold mb-4">Need Help?</h3>
@@ -209,11 +288,11 @@ export default function Success() {
             Our support team is here to help you get the most out of your whale tracking alerts.
           </p>
           <div className="flex justify-center gap-4">
-            <Button variant="outline" onClick={() => window.open('mailto:hello@sugartrades.io')}>
+            <Button variant="outline" onClick={() => window.location.href = 'mailto:hello@sugartrades.io'}>
               <Mail className="mr-2 h-4 w-4" />
               Email Support
             </Button>
-            <Button variant="outline" onClick={() => window.open('https://t.me/+Ck8eRLM00gY0YTI5')}>
+            <Button variant="outline" onClick={handleTelegramRedirect}>
               <MessageSquare className="mr-2 h-4 w-4" />
               Join Channel
             </Button>
