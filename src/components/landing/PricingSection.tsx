@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Check, Star, Zap, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { XamanPayment } from '@/components/payment/XamanPayment';
@@ -28,6 +30,11 @@ const plan = {
 export function PricingSection() {
   const navigate = useNavigate();
   const [showTipping, setShowTipping] = useState(false);
+  const [tipAmount, setTipAmount] = useState('5');
+  const [customAmount, setCustomAmount] = useState('');
+  const [isCustom, setIsCustom] = useState(false);
+
+  const presetAmounts = ['5', '10', '20', '50'];
 
   const handleFreeAccess = () => {
     navigate('/auth');
@@ -45,6 +52,29 @@ export function PricingSection() {
 
   const handleTipCancel = () => {
     setShowTipping(false);
+  };
+
+  const handleAmountSelect = (amount: string) => {
+    setTipAmount(amount);
+    setIsCustom(false);
+    setCustomAmount('');
+  };
+
+  const handleCustomAmountChange = (value: string) => {
+    setCustomAmount(value);
+    setIsCustom(true);
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue) && numValue >= 5) {
+      setTipAmount(value);
+    }
+  };
+
+  const getFinalAmount = () => {
+    if (isCustom && customAmount) {
+      const numValue = parseFloat(customAmount);
+      return numValue >= 5 ? customAmount : '5';
+    }
+    return tipAmount;
   };
 
   return (
@@ -135,8 +165,48 @@ export function PricingSection() {
               Your tip helps support the development and maintenance of this free service.
             </p>
           </div>
+          
+          <div className="space-y-4 mb-6">
+            <Label className="text-sm font-medium">Choose tip amount (minimum 5 XRP)</Label>
+            
+            <div className="grid grid-cols-2 gap-2">
+              {presetAmounts.map((amount) => (
+                <Button
+                  key={amount}
+                  variant={tipAmount === amount && !isCustom ? "default" : "outline"}
+                  onClick={() => handleAmountSelect(amount)}
+                  className="h-12"
+                >
+                  {amount} XRP
+                </Button>
+              ))}
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="custom-amount" className="text-sm">Custom amount</Label>
+              <Input
+                id="custom-amount"
+                type="number"
+                min="5"
+                step="0.01"
+                placeholder="Enter amount (min 5 XRP)"
+                value={customAmount}
+                onChange={(e) => handleCustomAmountChange(e.target.value)}
+              />
+              {isCustom && customAmount && parseFloat(customAmount) < 5 && (
+                <p className="text-sm text-red-500">Minimum tip is 5 XRP</p>
+              )}
+            </div>
+            
+            <div className="text-center p-3 bg-muted/50 rounded-lg">
+              <p className="text-sm font-medium">
+                Tip amount: <span className="text-primary">{getFinalAmount()} XRP</span>
+              </p>
+            </div>
+          </div>
+          
           <XamanPayment
-            amount="5"
+            amount={getFinalAmount()}
             destinationAddress="rD7Q1UGja3Ntwq4ak7Y4kCt5ST6PMSn1Vr"
             onSuccess={handleTipSuccess}
             onCancel={handleTipCancel}
