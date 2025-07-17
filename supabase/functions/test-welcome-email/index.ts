@@ -12,9 +12,21 @@ serve(async (req) => {
   }
 
   try {
-    // Get email from query params
-    const url = new URL(req.url);
-    const email = url.searchParams.get("email") || "test@example.com";
+    // Get email from request body or query params
+    let email;
+    let userId;
+    
+    // Try to parse request body first
+    try {
+      const body = await req.json();
+      email = body.email;
+      userId = body.userId;
+    } catch (e) {
+      // If body parsing fails, check URL params
+      const url = new URL(req.url);
+      email = url.searchParams.get("email") || "test@example.com";
+      userId = url.searchParams.get("userId") || undefined;
+    }
     
     console.log(`Attempting to send welcome email to ${email}`);
     
@@ -29,7 +41,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           email: email,
-          userId: "test-user-id"
+          userId: userId || "test-user-id"
         })
       }
     );

@@ -14,6 +14,7 @@ import { XRPLMonitoringDashboard } from '@/components/admin/XRPLMonitoringDashbo
 import { XRPLTestSuite } from '@/components/admin/XRPLTestSuite';
 import { EmailTestSuite } from '@/components/admin/EmailTestSuite';
 import DestinationTagTestSuite from '@/components/admin/DestinationTagTestSuite';
+import { WelcomeEmailTester } from '@/components/admin/WelcomeEmailTester';
 
 type AppRole = 'super_admin' | 'admin' | 'moderator' | 'user';
 type MembershipTier = 'free' | 'advanced' | 'pro';
@@ -506,6 +507,7 @@ export default function Admin() {
 
           <TabsContent value="testing">
             <div className="space-y-6">
+              <WelcomeEmailTester />
               <EmailTestSuite />
               <XRPLTestSuite />
               <DestinationTagTestSuite />
