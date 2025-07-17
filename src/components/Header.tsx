@@ -32,7 +32,7 @@ export function Header({ showAuth = true }: HeaderProps) {
             onClick={() => scrollToSection('pricing')}
             className="text-sm font-medium hover:text-primary transition-colors"
           >
-            Pricing
+            Access
           </button>
           <button 
             onClick={() => scrollToSection('how-it-works')}

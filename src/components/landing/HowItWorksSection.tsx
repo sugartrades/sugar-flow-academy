@@ -1,24 +1,24 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CreditCard, Bell, Smartphone, TrendingUp } from 'lucide-react';
+import { Bell, Smartphone, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const steps = [
   {
-    icon: CreditCard,
-    title: "Pay with XRP",
-    description: "One-time payment of 5 XRP via Xaman Wallet for lifetime access to whale alerts.",
+    icon: Bell,
+    title: "Join Free",
+    description: "Get free access to whale alerts - no payment required, no hidden fees.",
     step: "1"
   },
   {
-    icon: Bell,
+    icon: Smartphone,
     title: "Join Telegram",
     description: "Get access to our exclusive Telegram channel for instant alerts on Chris Larsen and Arthur Britto wallet movements.",
     step: "2"
   },
   {
-    icon: Smartphone,
+    icon: Bell,
     title: "Get Alerts",
     description: "Receive instant Telegram notifications when tracked wallets move 10k+ XRP to exchanges.",
     step: "3"
@@ -41,7 +41,7 @@ export function HowItWorksSection() {
           How It <span className="text-primary">Works</span>
         </h2>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Get started with whale alerts in just 4 simple steps. No complex setup, no recurring fees.
+          Get started with whale alerts in just 4 simple steps. No payment required, no complex setup.
         </p>
       </div>
       

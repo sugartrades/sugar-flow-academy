@@ -50,7 +50,7 @@ export function CTASection() {
         </div>
         
         <p className="text-sm text-muted-foreground mt-6">
-          ⚡ One-time payment: 5 XRP • Lifetime access • Chris Larsen & Arthur Britto wallets monitored
+          ⚡ Free forever • Lifetime access • Chris Larsen & Arthur Britto wallets monitored
         </p>
       </div>
     </section>

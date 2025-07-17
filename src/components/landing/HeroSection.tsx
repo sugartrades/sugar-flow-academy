@@ -75,7 +75,7 @@ export function HeroSection() {
         </div>
         
         <p className="text-sm text-muted-foreground">
-          ⚡ One-time fee: 5 XRP • Real-time monitoring • Telegram channel access
+          ⚡ Free forever • Real-time monitoring • Telegram channel access
         </p>
       </div>
     </section>
