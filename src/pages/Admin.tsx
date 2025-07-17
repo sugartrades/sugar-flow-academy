@@ -73,6 +73,7 @@ export default function Admin() {
     try {
       // Check if user is authenticated
       const { data: { session } } = await supabase.auth.getSession();
+      console.log('Session check:', session);
       if (!session) {
         toast({
           title: "Access Denied",
@@ -83,8 +84,11 @@ export default function Admin() {
         return;
       }
 
+      console.log('User ID:', session.user.id);
+
       // Get user's role
       const { data, error } = await supabase.rpc('get_current_user_role');
+      console.log('Role check result:', { data, error });
       if (error) {
         console.error('Error checking user role:', error);
         toast({
