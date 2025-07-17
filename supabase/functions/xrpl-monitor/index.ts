@@ -54,15 +54,15 @@ async function makeXRPLRequest(endpoint: string, method: string, params: any) {
   return await response.json();
 }
 
-async function getWalletTransactions(address: string, limit: number = 50): Promise<Transaction[]> {
+async function getWalletTransactions(address: string, limit: number = 50, lastLedgerIndex?: number): Promise<Transaction[]> {
   for (const endpoint of XRPL_ENDPOINTS) {
     try {
-      console.log(`Fetching transactions for ${address} from ${endpoint}`);
+      console.log(`Fetching transactions for ${address} from ${endpoint}${lastLedgerIndex ? ` starting from ledger ${lastLedgerIndex + 1}` : ''}`);
       
       const response = await makeXRPLRequest(endpoint, "account_tx", {
         account: address,
         limit,
-        ledger_index_min: -1,
+        ledger_index_min: lastLedgerIndex ? lastLedgerIndex + 1 : -1,
         ledger_index_max: -1,
       });
 
@@ -136,7 +136,7 @@ async function storeTransactions(walletAddress: string, transactions: Transactio
   }
 }
 
-async function checkForWhaleAlerts(walletAddress: string, ownerName: string, transactions: Transaction[]) {
+async function checkForWhaleAlerts(walletAddress: string, ownerName: string, transactions: Transaction[], lastLedgerIndex?: number) {
   const { data: monitoringData } = await supabase
     .from("wallet_monitoring")
     .select("alert_threshold")
@@ -146,23 +146,39 @@ async function checkForWhaleAlerts(walletAddress: string, ownerName: string, tra
   const threshold = monitoringData?.alert_threshold || 50000;
 
   for (const tx of transactions) {
+    // Only process transactions newer than the last checked ledger index
+    if (lastLedgerIndex && tx.ledger_index <= lastLedgerIndex) {
+      continue;
+    }
+
     const amount = parseFloat(tx.amount);
     if (amount >= threshold) {
-      console.log(`🐋 Whale alert! ${ownerName} - ${amount} XRP`);
+      console.log(`🐋 NEW Whale alert! ${ownerName} - ${amount} XRP (Ledger: ${tx.ledger_index})`);
       
-      const { error } = await supabase
+      // Check if we already have this alert to prevent duplicates
+      const { data: existingAlert } = await supabase
         .from("whale_alerts")
-        .insert({
-          wallet_address: walletAddress,
-          owner_name: ownerName,
-          transaction_hash: tx.hash,
-          amount,
-          transaction_type: tx.type,
-          alert_type: "whale_movement",
-        });
+        .select("id")
+        .eq("transaction_hash", tx.hash)
+        .single();
 
-      if (error) {
-        console.error("Error creating whale alert:", error);
+      if (!existingAlert) {
+        const { error } = await supabase
+          .from("whale_alerts")
+          .insert({
+            wallet_address: walletAddress,
+            owner_name: ownerName,
+            transaction_hash: tx.hash,
+            amount,
+            transaction_type: tx.type,
+            alert_type: "whale_movement",
+          });
+
+        if (error) {
+          console.error("Error creating whale alert:", error);
+        }
+      } else {
+        console.log(`Alert already exists for transaction ${tx.hash}, skipping`);
       }
     }
   }
@@ -189,16 +205,28 @@ async function monitorWallet(address: string, ownerName: string): Promise<Wallet
   try {
     console.log(`🔍 Monitoring wallet ${address} (${ownerName})`);
     
+    // Get the last checked ledger index to only process NEW transactions
+    const { data: monitoringData } = await supabase
+      .from("wallet_monitoring")
+      .select("last_ledger_index")
+      .eq("wallet_address", address)
+      .single();
+
+    const lastLedgerIndex = monitoringData?.last_ledger_index;
+    console.log(`Last checked ledger index: ${lastLedgerIndex || 'none'}`);
+
     const [transactions, balance] = await Promise.all([
-      getWalletTransactions(address, 100),
+      getWalletTransactions(address, 100, lastLedgerIndex),
       getWalletBalance(address),
     ]);
+
+    console.log(`Found ${transactions.length} transactions ${lastLedgerIndex ? 'since last check' : 'total'}`);
 
     // Store transactions in database
     await storeTransactions(address, transactions);
 
-    // Check for whale alerts
-    await checkForWhaleAlerts(address, ownerName, transactions);
+    // Check for whale alerts only on NEW transactions
+    await checkForWhaleAlerts(address, ownerName, transactions, lastLedgerIndex);
 
     // Update monitoring status
     const { error } = await supabase
