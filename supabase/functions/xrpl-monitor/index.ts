@@ -14,6 +14,7 @@ interface Transaction {
   currency: string;
   destination?: string;
   source?: string;
+  destination_tag?: string;
   ledger_index: number;
 }
 
@@ -34,6 +35,73 @@ const XRPL_ENDPOINTS = [
   "https://s1.ripple.com:51234",
   "https://s2.ripple.com:51234"
 ];
+
+// Exchange addresses with destination tags
+const EXCHANGE_ADDRESSES = {
+  arthurBritto: {
+    name: "Arthur Britto",
+    exchanges: [
+      {
+        address: "rDfrrrBJZshSQDvfT2kmL9oUBdish52unH",
+        exchange: "Binance",
+        destinationTag: "101391685"
+      },
+      {
+        address: "rLNaPoKeeBjZe2qs6x52yVPZpZ8td4dc6w",
+        exchange: "Bitfinex", 
+        destinationTag: "570654850"
+      },
+      {
+        address: "rLHVsKqC72M8FXPfEwSyYkufezZJvNZuDY",
+        exchange: "Bitstamp",
+        destinationTag: "1234567890"
+      }
+    ]
+  },
+  chrisLarsen: {
+    name: "Chris Larsen",
+    exchanges: [
+      {
+        address: "rDfrrrBJZshSQDvfT2kmL9oUBdish52unH",
+        exchange: "Binance",
+        destinationTag: "101391686"
+      },
+      {
+        address: "rLNaPoKeeBjZe2qs6x52yVPZpZ8td4dc6w",
+        exchange: "Bitfinex",
+        destinationTag: "570654851"
+      },
+      {
+        address: "rLHVsKqC72M8FXPfEwSyYkufezZJvNZuDY",
+        exchange: "Bitstamp",
+        destinationTag: "1234567891"
+      }
+    ]
+  }
+};
+
+// Helper functions for exchange detection
+function getExchangeInfo(address: string, destinationTag?: string) {
+  for (const [owner, data] of Object.entries(EXCHANGE_ADDRESSES)) {
+    const exchange = data.exchanges.find(ex => 
+      ex.address === address && ex.destinationTag === destinationTag
+    );
+    if (exchange) {
+      return {
+        owner: data.name,
+        exchange: exchange.exchange,
+        destinationTag: exchange.destinationTag
+      };
+    }
+  }
+  return null;
+}
+
+function isExchangeAddress(address: string) {
+  return Object.values(EXCHANGE_ADDRESSES).some(data => 
+    data.exchanges.some(ex => ex.address === address)
+  );
+}
 
 async function makeXRPLRequest(endpoint: string, method: string, params: any) {
   const response = await fetch(endpoint, {
@@ -80,6 +148,7 @@ async function getWalletTransactions(address: string, limit: number = 50, lastLe
             (typeof tx.tx.Amount === "string" ? "XRP" : tx.tx.Amount.currency) : "XRP",
           destination: tx.tx.Destination,
           source: tx.tx.Account,
+          destination_tag: tx.tx.DestinationTag ? tx.tx.DestinationTag.toString() : undefined,
           ledger_index: tx.tx.ledger_index || tx.ledger_index,
         }));
       }
@@ -113,6 +182,10 @@ async function getWalletBalance(address: string): Promise<string> {
 async function storeTransactions(walletAddress: string, transactions: Transaction[]) {
   for (const tx of transactions) {
     try {
+      // Check if this is an exchange deposit
+      const exchangeInfo = tx.destination && tx.destination_tag ? 
+        getExchangeInfo(tx.destination, tx.destination_tag) : null;
+
       const { error } = await supabase
         .from("wallet_transactions")
         .upsert({
@@ -123,6 +196,8 @@ async function storeTransactions(walletAddress: string, transactions: Transactio
           transaction_type: tx.type,
           destination_address: tx.destination,
           source_address: tx.source,
+          destination_tag: tx.destination_tag,
+          exchange_name: exchangeInfo?.exchange,
           ledger_index: tx.ledger_index,
           transaction_date: tx.date,
         });
@@ -143,7 +218,7 @@ async function checkForWhaleAlerts(walletAddress: string, ownerName: string, tra
     .eq("wallet_address", walletAddress)
     .single();
 
-  const threshold = monitoringData?.alert_threshold || 50000;
+  const defaultThreshold = monitoringData?.alert_threshold || 50000;
 
   for (const tx of transactions) {
     // Only process transactions newer than the last checked ledger index
@@ -152,8 +227,29 @@ async function checkForWhaleAlerts(walletAddress: string, ownerName: string, tra
     }
 
     const amount = parseFloat(tx.amount);
+    
+    // Check if this is an exchange deposit
+    const exchangeInfo = tx.destination && tx.destination_tag ? 
+      getExchangeInfo(tx.destination, tx.destination_tag) : null;
+    
+    let threshold = defaultThreshold;
+    let alertType = "whale_movement";
+    let alertCategory = "whale_movement";
+    
+    // Use different thresholds for exchange deposits
+    if (exchangeInfo) {
+      threshold = 50000; // Higher threshold for exchange deposits
+      alertType = "exchange_deposit";
+      alertCategory = "exchange_deposit";
+      console.log(`🏦 Checking exchange deposit: ${amount} XRP to ${exchangeInfo.exchange} (threshold: ${threshold})`);
+    }
+    
     if (amount >= threshold) {
-      console.log(`🐋 NEW Whale alert! ${ownerName} - ${amount} XRP (Ledger: ${tx.ledger_index})`);
+      const alertMessage = exchangeInfo ? 
+        `🏦 NEW Exchange deposit! ${ownerName} - ${amount} XRP to ${exchangeInfo.exchange} (Ledger: ${tx.ledger_index})` :
+        `🐋 NEW Whale alert! ${ownerName} - ${amount} XRP (Ledger: ${tx.ledger_index})`;
+      
+      console.log(alertMessage);
       
       // Check if we already have this alert to prevent duplicates
       const { data: existingAlert } = await supabase
@@ -171,7 +267,10 @@ async function checkForWhaleAlerts(walletAddress: string, ownerName: string, tra
             transaction_hash: tx.hash,
             amount,
             transaction_type: tx.type,
-            alert_type: "whale_movement",
+            alert_type: alertType,
+            alert_category: alertCategory,
+            destination_tag: tx.destination_tag,
+            exchange_name: exchangeInfo?.exchange,
           });
 
         if (error) {

@@ -11,6 +11,8 @@ export interface WalletTransaction {
   transaction_type: string;
   destination_address?: string;
   source_address?: string;
+  destination_tag?: string;
+  exchange_name?: string;
   ledger_index: number;
   transaction_date: string;
   created_at: string;
@@ -24,6 +26,9 @@ export interface WhaleAlert {
   amount: number;
   transaction_type: string;
   alert_type: string;
+  alert_category: string;
+  destination_tag?: string;
+  exchange_name?: string;
   is_sent: boolean;
   sent_at?: string;
   created_at: string;

@@ -31,10 +31,55 @@ export const MONITORED_WALLETS = {
   }
 };
 
+// Exchange addresses with destination tags
+export const EXCHANGE_ADDRESSES = {
+  arthurBritto: {
+    name: "Arthur Britto",
+    exchanges: [
+      {
+        address: "rDfrrrBJZshSQDvfT2kmL9oUBdish52unH",
+        exchange: "Binance",
+        destinationTag: "101391685"
+      },
+      {
+        address: "rLNaPoKeeBjZe2qs6x52yVPZpZ8td4dc6w",
+        exchange: "Bitfinex", 
+        destinationTag: "570654850"
+      },
+      {
+        address: "rLHVsKqC72M8FXPfEwSyYkufezZJvNZuDY",
+        exchange: "Bitstamp",
+        destinationTag: "1234567890"
+      }
+    ]
+  },
+  chrisLarsen: {
+    name: "Chris Larsen",
+    exchanges: [
+      {
+        address: "rDfrrrBJZshSQDvfT2kmL9oUBdish52unH",
+        exchange: "Binance",
+        destinationTag: "101391686"
+      },
+      {
+        address: "rLNaPoKeeBjZe2qs6x52yVPZpZ8td4dc6w",
+        exchange: "Bitfinex",
+        destinationTag: "570654851"
+      },
+      {
+        address: "rLHVsKqC72M8FXPfEwSyYkufezZJvNZuDY",
+        exchange: "Bitstamp",
+        destinationTag: "1234567891"
+      }
+    ]
+  }
+};
+
 // Configuration for monitoring
 export const MONITORING_CONFIG = {
   checkInterval: 60000, // 1 minute in milliseconds
-  alertThreshold: 10000, // 10,000 XRP threshold
+  alertThreshold: 10000, // 10,000 XRP threshold for regular wallets
+  exchangeAlertThreshold: 50000, // 50,000 XRP threshold for exchange deposits
   paymentAmount: 5 // 5 XRP payment for access
 };
 
@@ -43,6 +88,14 @@ export const getAllWalletAddresses = () => {
   return [
     ...MONITORED_WALLETS.arthurBritto.addresses,
     ...MONITORED_WALLETS.chrisLarsen.addresses
+  ];
+};
+
+// Get all exchange addresses as a flat array
+export const getAllExchangeAddresses = () => {
+  return [
+    ...EXCHANGE_ADDRESSES.arthurBritto.exchanges.map(ex => ex.address),
+    ...EXCHANGE_ADDRESSES.chrisLarsen.exchanges.map(ex => ex.address)
   ];
 };
 
@@ -55,4 +108,40 @@ export const getWalletOwner = (address: string) => {
     return MONITORED_WALLETS.chrisLarsen.name;
   }
   return "Unknown";
+};
+
+// Get exchange info by address and destination tag
+export const getExchangeInfo = (address: string, destinationTag?: string) => {
+  for (const [owner, data] of Object.entries(EXCHANGE_ADDRESSES)) {
+    const exchange = data.exchanges.find(ex => 
+      ex.address === address && ex.destinationTag === destinationTag
+    );
+    if (exchange) {
+      return {
+        owner: data.name,
+        exchange: exchange.exchange,
+        destinationTag: exchange.destinationTag
+      };
+    }
+  }
+  return null;
+};
+
+// Check if address is an exchange address
+export const isExchangeAddress = (address: string) => {
+  return getAllExchangeAddresses().includes(address);
+};
+
+// Get owner name by exchange address and destination tag
+export const getOwnerByExchangeDeposit = (address: string, destinationTag?: string) => {
+  const exchangeInfo = getExchangeInfo(address, destinationTag);
+  return exchangeInfo ? exchangeInfo.owner : "Unknown";
+};
+
+// Get all monitored addresses (both regular and exchange)
+export const getAllMonitoredAddresses = () => {
+  return [
+    ...getAllWalletAddresses(),
+    ...getAllExchangeAddresses()
+  ];
 };

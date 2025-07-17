@@ -376,6 +376,8 @@ export type Database = {
           created_at: string
           currency: string
           destination_address: string | null
+          destination_tag: string | null
+          exchange_name: string | null
           id: string
           ledger_index: number
           processed_at: string
@@ -390,6 +392,8 @@ export type Database = {
           created_at?: string
           currency?: string
           destination_address?: string | null
+          destination_tag?: string | null
+          exchange_name?: string | null
           id?: string
           ledger_index: number
           processed_at?: string
@@ -404,6 +408,8 @@ export type Database = {
           created_at?: string
           currency?: string
           destination_address?: string | null
+          destination_tag?: string | null
+          exchange_name?: string | null
           id?: string
           ledger_index?: number
           processed_at?: string
@@ -417,9 +423,12 @@ export type Database = {
       }
       whale_alerts: {
         Row: {
+          alert_category: string | null
           alert_type: string
           amount: number
           created_at: string
+          destination_tag: string | null
+          exchange_name: string | null
           id: string
           is_sent: boolean
           owner_name: string
@@ -429,9 +438,12 @@ export type Database = {
           wallet_address: string
         }
         Insert: {
+          alert_category?: string | null
           alert_type?: string
           amount: number
           created_at?: string
+          destination_tag?: string | null
+          exchange_name?: string | null
           id?: string
           is_sent?: boolean
           owner_name: string
@@ -441,9 +453,12 @@ export type Database = {
           wallet_address: string
         }
         Update: {
+          alert_category?: string | null
           alert_type?: string
           amount?: number
           created_at?: string
+          destination_tag?: string | null
+          exchange_name?: string | null
           id?: string
           is_sent?: boolean
           owner_name?: string
