@@ -141,7 +141,7 @@ serve(async (req) => {
                 </div>
 
                 <p>Ready to dive in?</p>
-                <a href="${supabaseUrl.replace('.supabase.co', '')}" class="button">Access Your Dashboard</a>
+                <a href="https://545a6574-6ee1-470a-91f2-e7e6374273ce.lovableproject.com/dashboard" class="button">Access Your Dashboard</a>
                 <p>If you have any questions or need assistance, feel free to reply to this email.</p>
                 <p>Happy monitoring!</p>
                 <p>Best regards,<br>The Sugar Whale Team</p>
