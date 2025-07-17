@@ -230,9 +230,25 @@ export default function Dashboard() {
                             {alert.owner_name} moved {formatAmount(alert.amount)} XRP
                           </h3>
                           <p className="text-sm text-muted-foreground">
-                            {alert.transaction_hash.substring(0, 30)}...
-                            {alert.exchange_name && ` → ${alert.exchange_name} detected`}
-                            {alert.destination_tag && ` (Tag: ${alert.destination_tag})`}
+                            <span 
+                              className="font-mono cursor-pointer hover:bg-muted px-1 py-0.5 rounded select-all break-all"
+                              title="Click to select full transaction hash"
+                              onClick={(e) => {
+                                const selection = window.getSelection();
+                                const range = document.createRange();
+                                range.selectNodeContents(e.currentTarget);
+                                selection?.removeAllRanges();
+                                selection?.addRange(range);
+                              }}
+                            >
+                              {alert.transaction_hash}
+                            </span>
+                            {alert.exchange_name && (
+                              <span className="block mt-1">→ {alert.exchange_name} detected</span>
+                            )}
+                            {alert.destination_tag && (
+                              <span className="block">Tag: {alert.destination_tag}</span>
+                            )}
                           </p>
                         </div>
                         <div className="text-right">
