@@ -130,7 +130,7 @@ serve(async (req) => {
                 <div class="telegram-section">
                   <h3>📱 Join Our Telegram Channel</h3>
                   <p>For the best experience, join our Telegram channel to receive instant whale alerts and market updates:</p>
-                  <p><a href="https://t.me/your_whale_alerts_channel" class="button" style="background-color: #0088cc;">Join Telegram Channel</a></p>
+                  <p><a href="https://t.me/xrpwhalealerts" class="button" style="background-color: #0088cc;">Join Telegram Channel</a></p>
                   <p>You'll receive real-time notifications about:</p>
                   <ul>
                     <li>Large XRP movements</li>
