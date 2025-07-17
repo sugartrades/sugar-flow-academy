@@ -9,6 +9,7 @@ import Landing from "./pages/Landing";
 import Success from "./pages/Success";
 import Dashboard from "./pages/Dashboard";
 import Admin from "./pages/Admin";
+import Auth from "./pages/Auth";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import RiskDisclosure from "./pages/RiskDisclosure";
@@ -26,6 +27,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/success" element={<Success />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/terms" element={<Terms />} />
             <Route path="/risk-disclosure" element={<RiskDisclosure />} />
