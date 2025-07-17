@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Shield, Users, Settings, Crown, Activity, TestTube } from 'lucide-react';
+import { Shield, Users, Settings, Crown, Activity, TestTube, AlertTriangle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { XRPLMonitoringDashboard } from '@/components/admin/XRPLMonitoringDashboard';
 import { XRPLTestSuite } from '@/components/admin/XRPLTestSuite';
@@ -39,14 +40,88 @@ export default function Admin() {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [memberships, setMemberships] = useState<UserMembership[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userRole, setUserRole] = useState<AppRole | null>(null);
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const { toast } = useToast();
-  // Simplified - assume admin access since auth is removed
-  const hasRole = (role: string) => true;
+  const navigate = useNavigate();
+
+  // Check if user has the required role
+  const hasRole = (requiredRole: AppRole) => {
+    if (!userRole) return false;
+    const roleHierarchy: Record<AppRole, number> = {
+      'user': 1,
+      'moderator': 2,
+      'admin': 3,
+      'super_admin': 4
+    };
+    return roleHierarchy[userRole] >= roleHierarchy[requiredRole];
+  };
+
+  // Check authentication and authorization
+  useEffect(() => {
+    checkAdminAccess();
+  }, []);
 
   useEffect(() => {
-    fetchUsers();
-    fetchMemberships();
-  }, []);
+    if (isAuthorized) {
+      fetchUsers();
+      fetchMemberships();
+    }
+  }, [isAuthorized]);
+
+  const checkAdminAccess = async () => {
+    try {
+      // Check if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Access Denied",
+          description: "You must be logged in to access the admin area",
+          variant: "destructive"
+        });
+        navigate('/');
+        return;
+      }
+
+      // Get user's role
+      const { data, error } = await supabase.rpc('get_current_user_role');
+      if (error) {
+        console.error('Error checking user role:', error);
+        toast({
+          title: "Access Denied",
+          description: "Unable to verify admin privileges",
+          variant: "destructive"
+        });
+        navigate('/');
+        return;
+      }
+
+      setUserRole(data);
+
+      // Check if user has admin or super_admin role
+      if (data !== 'admin' && data !== 'super_admin') {
+        toast({
+          title: "Access Denied",
+          description: "You don't have permission to access the admin area",
+          variant: "destructive"
+        });
+        navigate('/');
+        return;
+      }
+
+      setIsAuthorized(true);
+    } catch (error) {
+      console.error('Error checking admin access:', error);
+      toast({
+        title: "Access Denied",
+        description: "Unable to verify admin privileges",
+        variant: "destructive"
+      });
+      navigate('/');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -234,7 +309,22 @@ export default function Admin() {
         <div className="container py-8">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500 mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading...</p>
+            <p className="text-muted-foreground">Verifying admin access...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header showAuth={false} />
+        <div className="container py-8">
+          <div className="text-center">
+            <AlertTriangle className="h-16 w-16 text-destructive mx-auto mb-4" />
+            <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+            <p className="text-muted-foreground">You don't have permission to access this area.</p>
           </div>
         </div>
       </div>
