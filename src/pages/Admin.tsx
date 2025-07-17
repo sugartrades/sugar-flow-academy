@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
@@ -131,12 +130,13 @@ export default function Admin() {
 
   const fetchUsers = async () => {
     try {
+      // First, fetch all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select(`
           id,
           full_name,
-          user_roles!inner(role)
+          created_at
         `);
 
       if (profilesError) {
@@ -149,12 +149,33 @@ export default function Admin() {
         return;
       }
 
+      // Then, fetch all user roles
+      const { data: userRoles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('*');
+
+      if (rolesError) {
+        console.error('Error fetching user roles:', rolesError);
+        toast({
+          title: "Error",
+          description: "Failed to fetch user roles",
+          variant: "destructive"
+        });
+      }
+
+      // Map roles to users
+      const userRolesMap = (userRoles || []).reduce((acc, role) => {
+        acc[role.user_id] = role.role;
+        return acc;
+      }, {} as Record<string, AppRole>);
+
+      // Create users array with roles
       const usersWithRoles = profiles?.map(profile => ({
         id: profile.id,
-        email: '',
+        email: '', // Email is not stored in profiles table
         full_name: profile.full_name || 'Unknown',
-        created_at: '',
-        role: (profile.user_roles as any)[0]?.role as AppRole || 'user'
+        created_at: profile.created_at || '',
+        role: userRolesMap[profile.id] || 'user' // Default to 'user' if no role found
       })) || [];
 
       setUsers(usersWithRoles);
