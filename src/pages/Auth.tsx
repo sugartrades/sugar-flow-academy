@@ -9,23 +9,64 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Header } from '@/components/Header';
 import { Shield, Mail, Lock } from 'lucide-react';
+import { User, Session } from '@supabase/supabase-js';
 
 export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check if already authenticated
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        navigate('/admin');
+  // Cleanup auth state utility
+  const cleanupAuthState = () => {
+    // Remove standard auth tokens
+    localStorage.removeItem('supabase.auth.token');
+    // Remove all Supabase auth keys from localStorage
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        localStorage.removeItem(key);
       }
-    };
-    checkAuth();
+    });
+    // Remove from sessionStorage if in use
+    Object.keys(sessionStorage || {}).forEach((key) => {
+      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+        sessionStorage.removeItem(key);
+      }
+    });
+  };
+
+  // Set up auth state management
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('Auth event:', event, 'Session:', !!session);
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        // Handle successful sign in
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Defer navigation to prevent potential deadlocks
+          setTimeout(() => {
+            navigate('/dashboard');
+          }, 100);
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session) {
+        navigate('/dashboard');
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -33,15 +74,35 @@ export default function Auth() {
     setIsLoading(true);
 
     try {
+      // Clean up existing state first
+      cleanupAuthState();
+      
+      // Attempt global sign out before signing in
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+        console.log('Previous signout failed, continuing...');
+      }
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        let errorMessage = error.message;
+        if (error.message.includes('Invalid login credentials')) {
+          errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+        } else if (error.message.includes('Email not confirmed')) {
+          errorMessage = 'Please check your email and click the confirmation link before signing in.';
+        } else if (error.message.includes('Too many requests')) {
+          errorMessage = 'Too many login attempts. Please wait a moment before trying again.';
+        }
+        
         toast({
           title: "Sign In Failed",
-          description: error.message,
+          description: errorMessage,
           variant: "destructive"
         });
         return;
@@ -52,12 +113,13 @@ export default function Auth() {
           title: "Welcome back!",
           description: "You've been signed in successfully.",
         });
-        navigate('/admin');
+        // Navigation will be handled by the auth state listener
       }
     } catch (error) {
+      console.error('Sign in error:', error);
       toast({
         title: "Sign In Failed",
-        description: "An unexpected error occurred",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -70,7 +132,10 @@ export default function Auth() {
     setIsLoading(true);
 
     try {
-      const redirectUrl = `${window.location.origin}/admin`;
+      // Clean up existing state first
+      cleanupAuthState();
+      
+      const redirectUrl = `${window.location.origin}/dashboard`;
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -81,24 +146,42 @@ export default function Auth() {
       });
 
       if (error) {
+        let errorMessage = error.message;
+        if (error.message.includes('User already registered')) {
+          errorMessage = 'An account with this email already exists. Please sign in instead.';
+        } else if (error.message.includes('Password should be at least')) {
+          errorMessage = 'Password must be at least 6 characters long.';
+        } else if (error.message.includes('Invalid email')) {
+          errorMessage = 'Please enter a valid email address.';
+        }
+        
         toast({
           title: "Sign Up Failed",
-          description: error.message,
+          description: errorMessage,
           variant: "destructive"
         });
         return;
       }
 
       if (data.user) {
-        toast({
-          title: "Account Created!",
-          description: "Please check your email to confirm your account.",
-        });
+        if (data.user.email_confirmed_at) {
+          toast({
+            title: "Account Created!",
+            description: "You are now signed in! Check your email for a welcome message.",
+          });
+          // Navigation will be handled by the auth state listener
+        } else {
+          toast({
+            title: "Account Created!",
+            description: "Please check your email to confirm your account and for a welcome message.",
+          });
+        }
       }
     } catch (error) {
+      console.error('Sign up error:', error);
       toast({
         title: "Sign Up Failed",
-        description: "An unexpected error occurred",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
     } finally {
