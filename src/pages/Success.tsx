@@ -82,7 +82,7 @@ export default function Success() {
   }, [paymentId, type]);
 
   const handleTelegramRedirect = () => {
-    window.open('https://t.me/+Ck8eRLM00gY0YTI5', '_blank');
+    window.open('https://t.me/xrpwhalealerts', '_blank');
   };
 
   if (isLoading) {

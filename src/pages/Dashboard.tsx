@@ -332,7 +332,7 @@ export default function Dashboard() {
                     className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md"
                     onClick={(e) => {
                       e.preventDefault();
-                      window.open("https://t.me/your_whale_alerts_channel", "_blank", "noopener,noreferrer");
+                      window.open("https://t.me/xrpwhalealerts", "_blank", "noopener,noreferrer");
                     }}
                   >
                     <MessageCircle className="h-4 w-4" />
