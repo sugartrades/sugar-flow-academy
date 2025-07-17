@@ -482,6 +482,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_destination_tag_test_data: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       ensure_wallet_transaction_exists: {
         Args: {
           p_wallet_address: string
@@ -490,6 +494,10 @@ export type Database = {
           p_transaction_type: string
         }
         Returns: undefined
+      }
+      generate_destination_tag_test_data: {
+        Args: { p_count?: number }
+        Returns: Json
       }
       get_current_ledger_index: {
         Args: Record<PropertyKey, never>
@@ -513,6 +521,10 @@ export type Database = {
       make_first_user_super_admin: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      test_destination_tag_categorization: {
+        Args: { p_destination_address: string; p_destination_tag: string }
+        Returns: Json
       }
       test_net_http_post: {
         Args: Record<PropertyKey, never>

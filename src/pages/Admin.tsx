@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { XRPLMonitoringDashboard } from '@/components/admin/XRPLMonitoringDashboard';
 import { XRPLTestSuite } from '@/components/admin/XRPLTestSuite';
 import { EmailTestSuite } from '@/components/admin/EmailTestSuite';
-import { DestinationTagTestSuite } from '@/components/admin/DestinationTagTestSuite';
+import DestinationTagTestSuite from '@/components/admin/DestinationTagTestSuite';
 
 type AppRole = 'super_admin' | 'admin' | 'moderator' | 'user';
 type MembershipTier = 'free' | 'advanced' | 'pro';
