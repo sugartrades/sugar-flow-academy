@@ -2,16 +2,16 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Star, Zap } from 'lucide-react';
+import { Check, Star, Zap, Heart } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { XamanPayment } from '@/components/payment/XamanPayment';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const plan = {
   name: "Whale Alert Pro",
-  price: "5 XRP",
-  period: "one-time",
-  description: "Lifetime access to whale movement alerts for serious XRP traders",
+  price: "Free",
+  period: "forever",
+  description: "Free access to whale movement alerts for all XRP traders",
   features: [
     "Real-time monitoring of 20+ whale wallets (and counting)",
     "Instant alerts for 10k+ XRP movements",
@@ -22,44 +22,47 @@ const plan = {
     "Custom threshold settings",
     "Priority support"
   ],
-  buttonText: "Get Lifetime Access"
+  buttonText: "Get Free Access"
 };
 
 export function PricingSection() {
   const navigate = useNavigate();
-  const [showPayment, setShowPayment] = useState(false);
+  const [showTipping, setShowTipping] = useState(false);
 
-  const handleUpgrade = () => {
-    setShowPayment(true);
+  const handleFreeAccess = () => {
+    navigate('/auth');
   };
 
-  const handlePaymentSuccess = (email: string, paymentId: string) => {
-    setShowPayment(false);
-    // In a real implementation, you'd save the email to your backend
-    console.log('Payment successful for email:', email);
+  const handleTip = () => {
+    setShowTipping(true);
+  };
+
+  const handleTipSuccess = (email: string, paymentId: string) => {
+    setShowTipping(false);
+    console.log('Tip successful for email:', email);
     navigate(`/success?payment=${paymentId}`);
   };
 
-  const handlePaymentCancel = () => {
-    setShowPayment(false);
+  const handleTipCancel = () => {
+    setShowTipping(false);
   };
 
   return (
     <section id="pricing" className="container py-24">
       <div className="text-center mb-16">
         <h2 className="text-3xl md:text-4xl font-bold mb-4">
-          Simple, Affordable, <span className="text-primary">One-Time</span> Pricing
+          <span className="text-primary">Free</span> Access for Everyone
         </h2>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          No subscriptions, no hidden fees. Pay once with XRP and get lifetime access to whale movement alerts.
+          No cost, no subscriptions, no hidden fees. Free access to whale movement alerts for all XRP traders.
         </p>
       </div>
       
       <div className="max-w-md mx-auto">
         <Card className="relative border-primary shadow-lg">
-          <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-primary">
+          <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-green-500">
             <Star className="w-4 h-4 mr-1" />
-            Best Value
+            Free
           </Badge>
           
           <CardHeader className="text-center">
@@ -77,13 +80,24 @@ export function PricingSection() {
           </CardHeader>
           
           <CardContent className="space-y-6">
-            <Button 
-              className="w-full" 
-              size="lg"
-              onClick={handleUpgrade}
-            >
-              {plan.buttonText}
-            </Button>
+            <div className="space-y-3">
+              <Button 
+                className="w-full" 
+                size="lg"
+                onClick={handleFreeAccess}
+              >
+                {plan.buttonText}
+              </Button>
+              <Button 
+                variant="outline"
+                className="w-full" 
+                size="lg"
+                onClick={handleTip}
+              >
+                <Heart className="w-4 h-4 mr-2" />
+                Send a Tip (Optional)
+              </Button>
+            </div>
             
             <div className="space-y-4">
               <div>
@@ -101,26 +115,31 @@ export function PricingSection() {
             
             <div className="bg-muted/50 rounded-lg p-4 text-center">
               <p className="text-sm text-muted-foreground mb-2">
-                Secure payment via Xaman Wallet
+                Completely free access • Optional tips appreciated
               </p>
               <p className="text-xs text-muted-foreground">
-                ✓ Instant activation • ✓ No recurring fees • ✓ 24/7 monitoring
+                ✓ Instant activation • ✓ No fees required • ✓ 24/7 monitoring
               </p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Dialog open={showPayment} onOpenChange={setShowPayment}>
+      <Dialog open={showTipping} onOpenChange={setShowTipping}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Complete Payment</DialogTitle>
+            <DialogTitle>Send a Tip</DialogTitle>
           </DialogHeader>
+          <div className="text-center mb-4">
+            <p className="text-sm text-muted-foreground">
+              Your tip helps support the development and maintenance of this free service.
+            </p>
+          </div>
           <XamanPayment
             amount="5"
             destinationAddress="rD7Q1UGja3Ntwq4ak7Y4kCt5ST6PMSn1Vr"
-            onSuccess={handlePaymentSuccess}
-            onCancel={handlePaymentCancel}
+            onSuccess={handleTipSuccess}
+            onCancel={handleTipCancel}
           />
         </DialogContent>
       </Dialog>
