@@ -47,7 +47,7 @@ export function PricingSection() {
   const handleTipSuccess = (paymentId: string) => {
     setShowTipping(false);
     console.log('Tip successful with payment ID:', paymentId);
-    navigate(`/success?payment=${paymentId}`);
+    navigate('/thank-you');
   };
 
   const handleTipCancel = () => {
