@@ -196,8 +196,8 @@ export default function Auth() {
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <Shield className="h-12 w-12 text-primary mx-auto mb-4" />
-            <h1 className="text-2xl font-bold">Admin Access</h1>
-            <p className="text-muted-foreground">Sign in to access the admin dashboard</p>
+            <h1 className="text-2xl font-bold">Welcome Back</h1>
+            <p className="text-muted-foreground">Sign in to access your dashboard</p>
           </div>
 
           <Tabs defaultValue="signin" className="w-full">
@@ -211,7 +211,7 @@ export default function Auth() {
                 <CardHeader>
                   <CardTitle>Sign In</CardTitle>
                   <CardDescription>
-                    Enter your credentials to access the admin area
+                    Enter your credentials to access your dashboard and the telegram bot channel
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
