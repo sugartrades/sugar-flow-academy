@@ -37,7 +37,7 @@ export function PricingSection() {
   const presetAmounts = ['5', '10', '20', '50'];
 
   const handleFreeAccess = () => {
-    navigate('/auth');
+    navigate('/dashboard');
   };
 
   const handleTip = () => {
