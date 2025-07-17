@@ -82,6 +82,13 @@ serve(async (req) => {
                 border-radius: 5px;
                 margin: 20px 0;
               }
+              .telegram-section {
+                background: #f0f7ff;
+                padding: 15px;
+                border-radius: 5px;
+                margin: 20px 0;
+                border: 1px solid #cce5ff;
+              }
             </style>
           </head>
           <body>
@@ -99,6 +106,20 @@ serve(async (req) => {
                   <li>Get instant alerts when significant market activity happens</li>
                   <li>Stay ahead of market trends with our comprehensive dashboard</li>
                 </ul>
+
+                <div class="telegram-section">
+                  <h3>📱 Join Our Telegram Channel</h3>
+                  <p>For the best experience, join our Telegram channel to receive instant whale alerts and market updates:</p>
+                  <p><a href="https://t.me/your_whale_alerts_channel" class="button" style="background-color: #0088cc;">Join Telegram Channel</a></p>
+                  <p>You'll receive real-time notifications about:</p>
+                  <ul>
+                    <li>Large XRP movements</li>
+                    <li>Exchange deposits and withdrawals</li>
+                    <li>Market trend analysis</li>
+                    <li>Important whale activity</li>
+                  </ul>
+                </div>
+
                 <p>Ready to dive in?</p>
                 <a href="${supabaseUrl.replace('.supabase.co', '')}" class="button">Access Your Dashboard</a>
                 <p>If you have any questions or need assistance, feel free to reply to this email.</p>
