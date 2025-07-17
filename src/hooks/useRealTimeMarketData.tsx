@@ -84,13 +84,13 @@ export function useRealTimeMarketData() {
     return () => clearInterval(interval);
   }, []);
 
-  // Rotation logic - switch crypto every 5 seconds
+  // Rotation logic - switch crypto every 8 seconds (increased from 5 to reduce flashing)
   useEffect(() => {
     if (!marketData?.cryptos || marketData.cryptos.length <= 1) return;
 
     const rotationInterval = setInterval(() => {
       setCurrentCryptoIndex((prev) => (prev + 1) % marketData.cryptos.length);
-    }, 5000);
+    }, 8000); // Increased from 5000ms to 8000ms
 
     return () => clearInterval(rotationInterval);
   }, [marketData?.cryptos]);

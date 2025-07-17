@@ -142,7 +142,7 @@ export function MarketUpdate() {
             {/* Rotation info */}
             {totalCryptos > 1 && (
               <div className="text-xs text-muted-foreground">
-                Auto-rotating every 5 seconds • {currentCryptoIndex + 1} of {totalCryptos}
+                Auto-rotating every 8 seconds • {currentCryptoIndex + 1} of {totalCryptos}
               </div>
             )}
           </div>

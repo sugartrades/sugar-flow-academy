@@ -3,7 +3,7 @@ import { Header } from '@/components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MarketUpdate } from '@/components/MarketUpdate';
-import { Bell, Activity, TrendingUp, Clock, ExternalLink, RefreshCw } from 'lucide-react';
+import { Bell, Activity, TrendingUp, Clock, ExternalLink, RefreshCw, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
@@ -77,9 +77,14 @@ export default function Dashboard() {
 
       if (topWalletsError) throw topWalletsError;
 
-      // Process top wallets
+      // Process top wallets with reset counters for Chris and Arthur
       const walletCounts = topWallets?.reduce((acc, alert) => {
-        acc[alert.owner_name] = (acc[alert.owner_name] || 0) + 1;
+        // Reset alert counts for Chris and Arthur to 0
+        if (alert.owner_name === 'Chris' || alert.owner_name === 'Arthur') {
+          acc[alert.owner_name] = 0;
+        } else {
+          acc[alert.owner_name] = (acc[alert.owner_name] || 0) + 1;
+        }
         return acc;
       }, {} as Record<string, number>) || {};
 
@@ -296,6 +301,39 @@ export default function Dashboard() {
                       {formatDistanceToNow(lastUpdate, { addSuffix: true })}
                     </span>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Telegram Channel */}
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5" />
+                  📢 Telegram Channel
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Join our Telegram channel to receive real-time whale alerts and market updates
+                  </p>
+                  <Button 
+                    asChild 
+                    className="w-full"
+                    variant="default"
+                  >
+                    <a 
+                      href="https://t.me/your_whale_alerts_channel" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      Join Telegram Channel
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
