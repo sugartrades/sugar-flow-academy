@@ -77,18 +77,18 @@ export default function Dashboard() {
 
       if (topWalletsError) throw topWalletsError;
 
-      // Process top wallets with reset counters for Chris and Arthur
+      // Process top wallets with reset counters for Chris Larsen and Arthur Britto
       const walletCounts = topWallets?.reduce((acc, alert) => {
-        // Skip adding alerts for Chris and Arthur completely
-        if (alert.owner_name !== 'Chris' && alert.owner_name !== 'Arthur') {
+        // Skip adding alerts for Chris Larsen and Arthur Britto completely
+        if (alert.owner_name !== 'Chris Larsen' && alert.owner_name !== 'Arthur Britto') {
           acc[alert.owner_name] = (acc[alert.owner_name] || 0) + 1;
         }
         return acc;
       }, {} as Record<string, number>) || {};
       
-      // Explicitly set Chris and Arthur to 0 alerts
-      walletCounts['Chris'] = 0;
-      walletCounts['Arthur'] = 0;
+      // Explicitly set Chris Larsen and Arthur Britto to 0 alerts
+      walletCounts['Chris Larsen'] = 0;
+      walletCounts['Arthur Britto'] = 0;
 
       const topWalletsArray = Object.entries(walletCounts)
         .map(([owner_name, alert_count]) => ({ owner_name, alert_count }))
