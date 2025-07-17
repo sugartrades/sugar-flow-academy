@@ -79,14 +79,16 @@ export default function Dashboard() {
 
       // Process top wallets with reset counters for Chris and Arthur
       const walletCounts = topWallets?.reduce((acc, alert) => {
-        // Reset alert counts for Chris and Arthur to 0
-        if (alert.owner_name === 'Chris' || alert.owner_name === 'Arthur') {
-          acc[alert.owner_name] = 0;
-        } else {
+        // Skip adding alerts for Chris and Arthur completely
+        if (alert.owner_name !== 'Chris' && alert.owner_name !== 'Arthur') {
           acc[alert.owner_name] = (acc[alert.owner_name] || 0) + 1;
         }
         return acc;
       }, {} as Record<string, number>) || {};
+      
+      // Explicitly set Chris and Arthur to 0 alerts
+      walletCounts['Chris'] = 0;
+      walletCounts['Arthur'] = 0;
 
       const topWalletsArray = Object.entries(walletCounts)
         .map(([owner_name, alert_count]) => ({ owner_name, alert_count }))
