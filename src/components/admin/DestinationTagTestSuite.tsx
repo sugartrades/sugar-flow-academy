@@ -168,13 +168,21 @@ const DestinationTagTestSuite = () => {
           break;
           
         case 'db_create_whale_alert':
-          // Test whale alert creation
+          // Test whale alert creation - first ensure transaction exists
+          const txHash = `WHALE_DB_TEST_${Date.now()}`;
+          await supabase.rpc('ensure_wallet_transaction_exists', {
+            p_wallet_address: 'rTestWallet123',
+            p_transaction_hash: txHash,
+            p_amount: 50000,
+            p_transaction_type: 'Payment'
+          });
+          
           result = await supabase
             .from('whale_alerts')
             .insert({
               wallet_address: 'rTestWallet123',
               owner_name: 'Test User',
-              transaction_hash: `WHALE_DB_TEST_${Date.now()}`,
+              transaction_hash: txHash,
               amount: 50000,
               transaction_type: 'Payment',
               alert_type: 'whale_movement',
