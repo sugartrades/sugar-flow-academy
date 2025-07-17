@@ -152,7 +152,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header showAuth={false} />
+      <Header showAuth={false} isAuthenticated={true} />
       
       <div className="container py-8">
         <div className="mb-8 flex items-center justify-between">

@@ -2,17 +2,43 @@ import React from 'react';
 import { Logo } from './Logo';
 import { ThemeToggle } from './ThemeToggle';
 import { Button } from '@/components/ui/button';
-import { Menu } from 'lucide-react';
+import { Menu, LogOut } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface HeaderProps {
   showAuth?: boolean;
+  isAuthenticated?: boolean;
 }
 
-export function Header({ showAuth = true }: HeaderProps) {
+export function Header({ showAuth = true, isAuthenticated = false }: HeaderProps) {
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      // Clear all auth state from storage
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+          localStorage.removeItem(key);
+        }
+      });
+      Object.keys(sessionStorage || {}).forEach((key) => {
+        if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
+          sessionStorage.removeItem(key);
+        }
+      });
+
+      // Sign out from Supabase
+      await supabase.auth.signOut({ scope: 'global' });
+
+      // Force a page reload to clear all state
+      window.location.href = '/auth';
+    } catch (error) {
+      console.error('Error signing out:', error);
     }
   };
 
@@ -45,7 +71,17 @@ export function Header({ showAuth = true }: HeaderProps) {
         <div className="flex items-center space-x-4">
           <ThemeToggle />
           
-          {showAuth && (
+          {isAuthenticated ? (
+            <Button 
+              onClick={handleSignOut}
+              variant="ghost"
+              size="sm"
+              className="gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign Out
+            </Button>
+          ) : showAuth && (
             <Button 
               onClick={() => scrollToSection('pricing')}
               className="bg-primary hover:bg-primary/90"

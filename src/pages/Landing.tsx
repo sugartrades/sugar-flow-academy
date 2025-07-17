@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
@@ -10,11 +10,26 @@ import { PricingSection } from '@/components/landing/PricingSection';
 import { CTASection } from '@/components/landing/CTASection';
 import { Button } from '@/components/ui/button';
 import { Shield } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Landing() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAuthenticated(!!session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header isAuthenticated={isAuthenticated} />
       <HeroSection />
       <FeaturesSection />
       <HowItWorksSection />
