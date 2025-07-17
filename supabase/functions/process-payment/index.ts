@@ -246,29 +246,41 @@ async function checkPaymentStatus(paymentId: string) {
           const transactionHash = xamanStatus.response.txid;
           const ledgerIndex = xamanStatus.response.dispatched_to;
           
-          // Update payment request status
-          await supabase
+          // Check if confirmation email was already sent to prevent duplicates
+          const { data: existingRequest } = await supabase
             .from("payment_requests")
-            .update({
-              status: "completed",
-              transaction_hash: transactionHash,
-              ledger_index: ledgerIndex
-            })
-            .eq("id", paymentId);
+            .select("status")
+            .eq("id", paymentId)
+            .single();
+          
+          // Only send email if status wasn't already "completed" (prevents duplicates)
+          if (existingRequest?.status !== "completed") {
+            // Update payment request status
+            await supabase
+              .from("payment_requests")
+              .update({
+                status: "completed",
+                transaction_hash: transactionHash,
+                ledger_index: ledgerIndex
+              })
+              .eq("id", paymentId);
 
-          // Send confirmation email and Telegram alert
-          try {
-            await supabase.functions.invoke("send-payment-confirmation", {
-              body: {
-                email: paymentRequest.email,
-                amount: paymentRequest.amount,
-                transactionHash: transactionHash,
-                paymentId: paymentId
-              }
-            });
-            console.log("Payment confirmation email sent successfully");
-          } catch (error) {
-            console.error("Error sending payment confirmation:", error);
+            // Send confirmation email and Telegram alert
+            try {
+              await supabase.functions.invoke("send-payment-confirmation", {
+                body: {
+                  email: paymentRequest.email,
+                  amount: paymentRequest.amount,
+                  transactionHash: transactionHash,
+                  paymentId: paymentId
+                }
+              });
+              console.log("Payment confirmation email sent successfully");
+            } catch (error) {
+              console.error("Error sending payment confirmation:", error);
+            }
+          } else {
+            console.log("Confirmation email already sent, skipping duplicate (Xaman)");
           }
 
           return {
