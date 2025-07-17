@@ -6,8 +6,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Enhanced Telegram channels configuration
+const TELEGRAM_CHANNELS = {
+  whale_alerts: '-1002780142050',
+  exchange_deposits: '-1002780142050', 
+  critical_alerts: '-1002780142050',
+  system_alerts: '-1002780142050'
+};
+
 serve(async (req) => {
-  console.log('🚀 Whale alert function called, method:', req.method);
+  console.log('🚀 Enhanced whale alert function called, method:', req.method);
   
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -221,7 +229,7 @@ serve(async (req) => {
       })
       .eq('id', whale_alert_id);
 
-    // Send to Telegram
+    // Enhanced Telegram sending with multiple channels and retry logic
     const telegramBotToken = Deno.env.get('TELEGRAM_BOT_TOKEN');
     
     if (!telegramBotToken) {
@@ -243,48 +251,134 @@ serve(async (req) => {
     let telegramResult = { message_id: 'test-mode' };
     
     if (!isTestMode) {
-      // Using the provided Telegram channel chat ID
-      const telegramChatId = '-1002780142050'; // Your private Telegram channel ID
+      // Determine which channel to use based on alert type and severity
+      let selectedChannel = TELEGRAM_CHANNELS.whale_alerts;
+      
+      if (whaleAlert.alert_category === 'exchange_deposit') {
+        selectedChannel = TELEGRAM_CHANNELS.exchange_deposits;
+      } else if (severity === 'critical') {
+        selectedChannel = TELEGRAM_CHANNELS.critical_alerts;
+      }
       
       const telegramUrl = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
       const telegramPayload = {
-        chat_id: telegramChatId,
+        chat_id: selectedChannel,
         text: telegramMessage,
         parse_mode: 'HTML',
         disable_web_page_preview: true
       };
 
       console.log('📤 Sending to Telegram:', { 
-        chatId: telegramChatId, 
+        chatId: selectedChannel, 
         url: telegramUrl.replace(telegramBotToken, '[TOKEN]'),
-        messageLength: telegramMessage.length 
+        messageLength: telegramMessage.length,
+        alertType: whaleAlert.alert_category,
+        severity: severity
       });
       
-      const telegramResponse = await fetch(telegramUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(telegramPayload)
-      });
+      // Retry logic for Telegram sending
+      let attempts = 0;
+      const maxAttempts = 3;
+      let telegramResponse;
+      
+      while (attempts < maxAttempts) {
+        attempts++;
+        
+        // Record notification attempt
+        await supabase
+          .from('notification_attempts')
+          .insert({
+            whale_alert_id: whale_alert_id,
+            channel_type: 'telegram',
+            channel_id: selectedChannel,
+            attempt_number: attempts,
+            status: 'pending'
+          });
 
-      telegramResult = await telegramResponse.json();
-      
-      if (!telegramResponse.ok) {
-        console.error('❌ Telegram API error:', telegramResult);
-        return new Response(JSON.stringify({ 
-          error: 'Failed to send Telegram message',
-          details: telegramResult,
-          status: telegramResponse.status,
-          chatId: telegramChatId,
-          message: 'Make sure the Telegram channel exists and the bot has access'
-        }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+        try {
+          telegramResponse = await fetch(telegramUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(telegramPayload)
+          });
+
+          telegramResult = await telegramResponse.json();
+          
+          if (telegramResponse.ok) {
+            console.log(`✅ Telegram message sent successfully on attempt ${attempts}:`, telegramResult);
+            
+            // Update notification attempt as successful
+            await supabase
+              .from('notification_attempts')
+              .update({
+                status: 'success',
+                sent_at: new Date().toISOString()
+              })
+              .eq('whale_alert_id', whale_alert_id)
+              .eq('attempt_number', attempts);
+            
+            break; // Success, exit retry loop
+          } else {
+            console.error(`❌ Telegram API error on attempt ${attempts}:`, telegramResult);
+            
+            // Update notification attempt as failed
+            await supabase
+              .from('notification_attempts')
+              .update({
+                status: 'failed',
+                error_message: JSON.stringify(telegramResult)
+              })
+              .eq('whale_alert_id', whale_alert_id)
+              .eq('attempt_number', attempts);
+            
+            if (attempts === maxAttempts) {
+              // All attempts failed
+              return new Response(JSON.stringify({ 
+                error: 'Failed to send Telegram message after retries',
+                details: telegramResult,
+                status: telegramResponse.status,
+                chatId: selectedChannel,
+                attempts: attempts,
+                message: 'Make sure the Telegram channel exists and the bot has access'
+              }), {
+                status: 500,
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+              });
+            }
+            
+            // Wait before retry (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+          }
+        } catch (fetchError) {
+          console.error(`❌ Network error on attempt ${attempts}:`, fetchError);
+          
+          // Update notification attempt as failed
+          await supabase
+            .from('notification_attempts')
+            .update({
+              status: 'failed',
+              error_message: fetchError.message
+            })
+            .eq('whale_alert_id', whale_alert_id)
+            .eq('attempt_number', attempts);
+          
+          if (attempts === maxAttempts) {
+            return new Response(JSON.stringify({ 
+              error: 'Network error sending Telegram message',
+              details: fetchError.message,
+              attempts: attempts
+            }), {
+              status: 500,
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            });
+          }
+          
+          // Wait before retry
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempts));
+        }
       }
-
-      console.log('✅ Telegram message sent successfully:', telegramResult);
     } else {
       console.log('🧪 Test mode: Skipping Telegram send');
     }

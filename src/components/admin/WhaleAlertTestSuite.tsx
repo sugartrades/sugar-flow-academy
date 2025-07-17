@@ -250,8 +250,8 @@ export const WhaleAlertTestSuite = () => {
         type: 'status_check',
         status: data.is_sent ? 'success' : 'pending',
         message: data.is_sent 
-          ? `Alert sent successfully at ${new Date(data.sent_at).toLocaleString()}`
-          : 'Alert is still pending (Telegram notification may be processing)',
+          ? `✅ Enhanced alert sent successfully at ${new Date(data.sent_at).toLocaleString()}`
+          : '⏳ Alert is still pending (Enhanced Telegram notification may be processing)',
         alertData: data,
         timestamp: new Date().toISOString()
       };
