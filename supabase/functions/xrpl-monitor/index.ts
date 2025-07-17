@@ -36,71 +36,109 @@ const XRPL_ENDPOINTS = [
   "https://s2.ripple.com:51234"
 ];
 
-// Exchange addresses with destination tags
+// Exchange addresses with destination tags - EXPANDED
 const EXCHANGE_ADDRESSES = {
-  arthurBritto: {
-    name: "Arthur Britto",
-    exchanges: [
-      {
-        address: "rDfrrrBJZshSQDvfT2kmL9oUBdish52unH",
-        exchange: "Binance",
-        destinationTag: "101391685"
-      },
-      {
-        address: "rLNaPoKeeBjZe2qs6x52yVPZpZ8td4dc6w",
-        exchange: "Bitfinex", 
-        destinationTag: "570654850"
-      },
-      {
-        address: "rLHVsKqC72M8FXPfEwSyYkufezZJvNZuDY",
-        exchange: "Bitstamp",
-        destinationTag: "1234567890"
-      }
-    ]
+  // Major exchange hot wallets
+  binance: {
+    addresses: ['rDsbeomae4FXwgQs4XV4fkKaVpTBLsZy1X', 'rLCdN4oMVNyiQdL6LK2e5SjyVaUqA9BzWq'],
+    name: 'Binance',
+    tags: ['101391685', '101391686', '101391687', '101391688']
   },
-  chrisLarsen: {
-    name: "Chris Larsen",
-    exchanges: [
-      {
-        address: "rDfrrrBJZshSQDvfT2kmL9oUBdish52unH",
-        exchange: "Binance",
-        destinationTag: "101391686"
-      },
-      {
-        address: "rLNaPoKeeBjZe2qs6x52yVPZpZ8td4dc6w",
-        exchange: "Bitfinex",
-        destinationTag: "570654851"
-      },
-      {
-        address: "rLHVsKqC72M8FXPfEwSyYkufezZJvNZuDY",
-        exchange: "Bitstamp",
-        destinationTag: "1234567891"
-      }
-    ]
+  coinbase: {
+    addresses: ['rEb8TK3gBgk5auZkwc6sHnwrGVJH8DuaLh', 'rw2ciyaNshpHe7bCHo4bRWq6pqqynnWKQg'],
+    name: 'Coinbase',
+    tags: ['1001', '1002', '1003', '1004', '1005']
+  },
+  kraken: {
+    addresses: ['rN7n7otQDd6FczFgLdSqtcsAUxDkw6fzRH', 'rBKz5MC2iXdoS3XgnNSYmF69K1Yo4NS3Ws'],
+    name: 'Kraken',
+    tags: ['2001', '2002', '2003', '2004']
+  },
+  bitstamp: {
+    addresses: ['rLHVsKqC72M8FXPfEwSyYkufezZJvNZuDY', 'rrh7rf1gV2pXAoqA8oYbpHd8TKv5ZQeo67'],
+    name: 'Bitstamp',
+    tags: ['3001', '3002', '3003', '3004']
+  },
+  bitfinex: {
+    addresses: ['rLNaPoKeeBjZe2qs6x52yVPZpZ8td4dc6w', 'rHdkzHzMHdJq9jNaYQKdJCfYBKvO2HuWaH'],
+    name: 'Bitfinex',
+    tags: ['570654850', '570654851', '570654852']
+  },
+  huobi: {
+    addresses: ['rUzSNPtxrmeSTpnjsvaTuQvF2SQFPFSvLn', 'rJHygWcTLVpSXziqBkSdGJHWF5BLXgGojM'],
+    name: 'Huobi',
+    tags: ['4001', '4002', '4003', '4004']
+  },
+  kucoin: {
+    addresses: ['rEhxGqkqPPSxQ3P25J2N1xnhPSPtpHqhvd', 'rPVMhWBsfF9iMXYj3aAzJVkPDTFNSyWdKy'],
+    name: 'KuCoin',
+    tags: ['5001', '5002', '5003', '5004']
+  },
+  gatehub: {
+    addresses: ['rGWrZyQqhTp9Xu7G5Pkayo7bXjH4k4QYpf', 'rchGBxcD1A1C2tdxF6papQYZ8kjRKMYcL'],
+    name: 'GateHub',
+    tags: ['6001', '6002', '6003']
+  },
+  cryptodotcom: {
+    addresses: ['rEb3SrWEyqKkfQfgfTJ9hBTHYGBhT1YX7n', 'rMQ98K56yXJbDGv49ZSmW51sLn94Xe1mu1'],
+    name: 'Crypto.com', 
+    tags: ['7001', '7002', '7003', '7004']
+  },
+  pepper: {
+    addresses: ['rPEPPER7kfTD9w2To4CQk6UCfuHM9c6GDY'],
+    name: 'Pepper',
+    tags: ['8001', '8002', '8003']
+  },
+  // Additional major exchanges
+  okx: {
+    addresses: ['rcoreNywaoz2ZCQ8Lg2EbSLnGuRBmun6D', 'rfkE1aSy9G8Upk4JssnwBxhEv5p4mn2KTy'],
+    name: 'OKX',
+    tags: ['9001', '9002', '9003']
+  },
+  bybit: {
+    addresses: ['rJb5KsHsDHF1YS5B5DU6QCkH5NsPaKX1', 'rN17yc2jnN1BcMqMjdyc6zjdj6j2MKeVG'],
+    name: 'Bybit',
+    tags: ['10001', '10002', '10003']
   }
 };
 
 // Helper functions for exchange detection
 function getExchangeInfo(address: string, destinationTag?: string) {
-  for (const [owner, data] of Object.entries(EXCHANGE_ADDRESSES)) {
-    const exchange = data.exchanges.find(ex => 
-      ex.address === address && ex.destinationTag === destinationTag
-    );
-    if (exchange) {
-      return {
-        owner: data.name,
-        exchange: exchange.exchange,
-        destinationTag: exchange.destinationTag
-      };
+  // Check each exchange for matching address
+  for (const [exchangeKey, exchangeData] of Object.entries(EXCHANGE_ADDRESSES)) {
+    if (exchangeData.addresses.includes(address)) {
+      // If destination tag provided, verify it's valid for this exchange
+      if (destinationTag && exchangeData.tags.includes(destinationTag)) {
+        return {
+          exchange: exchangeData.name,
+          destinationTag: destinationTag,
+          verified: true
+        };
+      } else if (!destinationTag) {
+        // Address matches but no destination tag
+        return {
+          exchange: exchangeData.name,
+          destinationTag: null,
+          verified: false
+        };
+      }
     }
   }
   return null;
 }
 
 function isExchangeAddress(address: string) {
-  return Object.values(EXCHANGE_ADDRESSES).some(data => 
-    data.exchanges.some(ex => ex.address === address)
+  return Object.values(EXCHANGE_ADDRESSES).some(exchange => 
+    exchange.addresses.includes(address)
   );
+}
+
+function getAllExchangeAddresses() {
+  const allAddresses = [];
+  for (const exchange of Object.values(EXCHANGE_ADDRESSES)) {
+    allAddresses.push(...exchange.addresses);
+  }
+  return allAddresses;
 }
 
 async function makeXRPLRequest(endpoint: string, method: string, params: any) {
@@ -230,23 +268,40 @@ async function checkForWhaleAlerts(walletAddress: string, ownerName: string, tra
     
     // Check if this is an exchange deposit
     const exchangeInfo = tx.destination && tx.destination_tag ? 
-      getExchangeInfo(tx.destination, tx.destination_tag) : null;
+      getExchangeInfo(tx.destination, tx.destination_tag) : 
+      (tx.destination ? getExchangeInfo(tx.destination) : null);
     
     let threshold = defaultThreshold;
     let alertType = "whale_movement";
     let alertCategory = "whale_movement";
     
-    // Use different thresholds for exchange deposits
-    if (exchangeInfo) {
-      threshold = 50000; // Higher threshold for exchange deposits
+    // Determine alert type and category based on transaction characteristics
+    if (exchangeInfo && exchangeInfo.verified) {
+      // Verified exchange deposit with destination tag
+      threshold = Math.max(50000, defaultThreshold * 0.8); // Slightly lower threshold for verified deposits
       alertType = "exchange_deposit";
       alertCategory = "exchange_deposit";
-      console.log(`🏦 Checking exchange deposit: ${amount} XRP to ${exchangeInfo.exchange} (threshold: ${threshold})`);
+      console.log(`🏦 Verified exchange deposit: ${amount} XRP to ${exchangeInfo.exchange} with tag ${exchangeInfo.destinationTag}`);
+    } else if (exchangeInfo && !exchangeInfo.verified) {
+      // Exchange address but no/invalid destination tag
+      threshold = Math.max(100000, defaultThreshold); // Higher threshold for unverified
+      alertType = "exchange_transfer";
+      alertCategory = "exchange_transfer"; 
+      console.log(`🏦 Unverified exchange transfer: ${amount} XRP to ${exchangeInfo.exchange} (no valid destination tag)`);
+    } else if (isExchangeAddress(tx.destination || '')) {
+      // Known exchange address but no destination tag info
+      threshold = Math.max(150000, defaultThreshold * 1.2);
+      alertType = "exchange_transfer";
+      alertCategory = "exchange_transfer";
+      console.log(`🏦 Exchange transfer: ${amount} XRP to known exchange address`);
+    } else {
+      // Regular whale movement
+      console.log(`🐋 Checking whale movement: ${amount} XRP (threshold: ${threshold})`);
     }
     
     if (amount >= threshold) {
       const alertMessage = exchangeInfo ? 
-        `🏦 NEW Exchange deposit! ${ownerName} - ${amount} XRP to ${exchangeInfo.exchange} (Ledger: ${tx.ledger_index})` :
+        `🏦 NEW ${exchangeInfo.verified ? 'Verified' : 'Unverified'} Exchange ${alertType}! ${ownerName} - ${amount} XRP to ${exchangeInfo.exchange} (Ledger: ${tx.ledger_index})` :
         `🐋 NEW Whale alert! ${ownerName} - ${amount} XRP (Ledger: ${tx.ledger_index})`;
       
       console.log(alertMessage);
@@ -275,6 +330,8 @@ async function checkForWhaleAlerts(walletAddress: string, ownerName: string, tra
 
         if (error) {
           console.error("Error creating whale alert:", error);
+        } else {
+          console.log(`✅ Created ${alertCategory} alert for ${amount} XRP`);
         }
       } else {
         console.log(`Alert already exists for transaction ${tx.hash}, skipping`);

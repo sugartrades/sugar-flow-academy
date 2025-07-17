@@ -421,16 +421,64 @@ export type Database = {
         }
         Relationships: []
       }
+      whale_activity_trends: {
+        Row: {
+          average_amount: number | null
+          created_at: string | null
+          exchange_deposits: number | null
+          id: string
+          internal_transfers: number | null
+          largest_amount: number | null
+          period_end: string
+          period_start: string
+          time_window: string
+          total_volume: number | null
+          transaction_count: number | null
+          wallet_address: string
+        }
+        Insert: {
+          average_amount?: number | null
+          created_at?: string | null
+          exchange_deposits?: number | null
+          id?: string
+          internal_transfers?: number | null
+          largest_amount?: number | null
+          period_end: string
+          period_start: string
+          time_window: string
+          total_volume?: number | null
+          transaction_count?: number | null
+          wallet_address: string
+        }
+        Update: {
+          average_amount?: number | null
+          created_at?: string | null
+          exchange_deposits?: number | null
+          id?: string
+          internal_transfers?: number | null
+          largest_amount?: number | null
+          period_end?: string
+          period_start?: string
+          time_window?: string
+          total_volume?: number | null
+          transaction_count?: number | null
+          wallet_address?: string
+        }
+        Relationships: []
+      }
       whale_alerts: {
         Row: {
           alert_category: string | null
+          alert_severity: string | null
           alert_type: string
           amount: number
           created_at: string
           destination_tag: string | null
           exchange_name: string | null
+          explorer_links: Json | null
           id: string
           is_sent: boolean
+          metadata: Json | null
           owner_name: string
           sent_at: string | null
           transaction_hash: string
@@ -439,13 +487,16 @@ export type Database = {
         }
         Insert: {
           alert_category?: string | null
+          alert_severity?: string | null
           alert_type?: string
           amount: number
           created_at?: string
           destination_tag?: string | null
           exchange_name?: string | null
+          explorer_links?: Json | null
           id?: string
           is_sent?: boolean
+          metadata?: Json | null
           owner_name: string
           sent_at?: string | null
           transaction_hash: string
@@ -454,13 +505,16 @@ export type Database = {
         }
         Update: {
           alert_category?: string | null
+          alert_severity?: string | null
           alert_type?: string
           amount?: number
           created_at?: string
           destination_tag?: string | null
           exchange_name?: string | null
+          explorer_links?: Json | null
           id?: string
           is_sent?: boolean
+          metadata?: Json | null
           owner_name?: string
           sent_at?: string | null
           transaction_hash?: string
@@ -482,6 +536,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      analyze_whale_trends: {
+        Args: { p_wallet_address: string; p_time_window?: string }
+        Returns: Json
+      }
       cleanup_destination_tag_test_data: {
         Args: Record<PropertyKey, never>
         Returns: Json

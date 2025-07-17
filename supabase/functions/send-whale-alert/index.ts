@@ -88,13 +88,23 @@ serve(async (req) => {
     
     console.log(`🔍 Processing whale alert notification: ${whale_alert_id}`);
 
-    // Fetch the whale alert details
+    // Fetch the whale alert details with trend analysis
     const { data: whaleAlert, error: fetchError } = await supabase
       .from('whale_alerts')
       .select('*')
       .eq('id', whale_alert_id)
       .eq('is_sent', false)
       .single();
+    
+    // Get trend analysis for this wallet
+    let trendData = null;
+    if (whaleAlert) {
+      const { data: trends } = await supabase.rpc('analyze_whale_trends', {
+        p_wallet_address: whaleAlert.wallet_address,
+        p_time_window: 'hour'
+      });
+      trendData = trends;
+    }
 
     if (fetchError) {
       console.error('❌ Failed to fetch whale alert:', fetchError);
@@ -127,14 +137,56 @@ serve(async (req) => {
       minimumFractionDigits: 0
     }).format(Number(whaleAlert.amount));
 
-    // Create the Telegram message
-    const telegramMessage = `🐋 <b>WHALE ALERT!</b>
+    // Determine alert severity and emoji
+    const amount = Number(whaleAlert.amount);
+    let alertEmoji = '🐋';
+    let severity = 'medium';
+    
+    if (amount >= 1000000) {
+      alertEmoji = '🚨🐋'; // Critical whale
+      severity = 'critical';
+    } else if (amount >= 500000) {
+      alertEmoji = '⚠️🐋'; // High whale  
+      severity = 'high';
+    } else if (amount >= 100000) {
+      alertEmoji = '🔥🐋'; // Medium whale
+      severity = 'medium';
+    }
+
+    // Create explorer links
+    const explorerLinks = {
+      xrpscan: `https://xrpscan.com/tx/${whaleAlert.transaction_hash}`,
+      xrplorer: `https://xrplorer.com/transaction/${whaleAlert.transaction_hash}`,
+      bithomp: `https://bithomp.com/explorer/${whaleAlert.transaction_hash}`
+    };
+
+    // Determine alert category specific formatting
+    let categoryInfo = '';
+    let alertTitle = `${alertEmoji} <b>WHALE ALERT!</b>`;
+    
+    if (whaleAlert.alert_category === 'exchange_deposit' && whaleAlert.exchange_name) {
+      categoryInfo = `\n🏦 <b>Exchange:</b> ${whaleAlert.exchange_name}`;
+      if (whaleAlert.destination_tag) {
+        categoryInfo += `\n🏷️ <b>Destination Tag:</b> <code>${whaleAlert.destination_tag}</code>`;
+      }
+      alertTitle = `${alertEmoji} <b>EXCHANGE DEPOSIT ALERT!</b>`;
+    }
+
+    // Add trend analysis if available
+    let trendInfo = '';
+    if (trendData && trendData.recent_transactions > 1) {
+      const recentVol = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(Number(trendData.recent_volume));
+      trendInfo = `\n📊 <b>Trend:</b> ${trendData.recent_transactions} transactions (${recentVol} XRP) this hour`;
+    }
+
+    // Create the enhanced Telegram message
+    const telegramMessage = `${alertTitle}
 
 💰 <b>Amount:</b> ${formattedAmount} XRP
 👤 <b>Wallet Owner:</b> ${whaleAlert.owner_name}
 📱 <b>Wallet:</b> <code>${whaleAlert.wallet_address}</code>
-🔄 <b>Type:</b> ${whaleAlert.transaction_type}
-🔗 <b>TX Hash:</b> <code>${whaleAlert.transaction_hash}</code>
+🔄 <b>Type:</b> ${whaleAlert.transaction_type}${categoryInfo}
+🔗 <b>TX Hash:</b> <code>${whaleAlert.transaction_hash}</code>${trendInfo}
 
 ⏰ <b>Detected:</b> ${new Date(whaleAlert.created_at).toLocaleString('en-US', {
       timeZone: 'UTC',
@@ -145,7 +197,29 @@ serve(async (req) => {
       minute: '2-digit'
     })} UTC
 
-🌊 Large XRP movements detected by Sugar Whale Pro`;
+🔍 <b>Explorer Links:</b>
+• <a href="${explorerLinks.xrpscan}">XRPScan</a>
+• <a href="${explorerLinks.xrplorer}">XRPlorer</a>  
+• <a href="${explorerLinks.bithomp}">Bithomp</a>
+
+🌊 Powered by Sugar Whale Pro - Real-time XRP monitoring`;
+
+    // Update whale alert with additional metadata
+    await supabase
+      .from('whale_alerts')  
+      .update({
+        alert_severity: severity,
+        explorer_links: explorerLinks,
+        metadata: {
+          trend_analysis: trendData,
+          formatted_amount: formattedAmount,
+          category_details: whaleAlert.alert_category === 'exchange_deposit' ? {
+            exchange: whaleAlert.exchange_name,
+            destination_tag: whaleAlert.destination_tag
+          } : null
+        }
+      })
+      .eq('id', whale_alert_id);
 
     // Send to Telegram
     const telegramBotToken = Deno.env.get('TELEGRAM_BOT_TOKEN');
