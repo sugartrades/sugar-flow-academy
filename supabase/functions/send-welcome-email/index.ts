@@ -15,13 +15,33 @@ interface WelcomeEmailRequest {
 }
 
 serve(async (req) => {
+  console.log("Welcome email function triggered");
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
+    console.log("Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email, userId } = await req.json() as WelcomeEmailRequest;
+    // Get the request body as text
+    const bodyText = await req.text();
+    console.log("Request body text:", bodyText);
+    
+    // Parse the body
+    let bodyData;
+    try {
+      bodyData = JSON.parse(bodyText);
+      console.log("Parsed request body:", bodyData);
+    } catch (e) {
+      console.error("Error parsing request body:", e);
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON in request body" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+    
+    const { email, userId } = bodyData as WelcomeEmailRequest;
 
     if (!email) {
       return new Response(
