@@ -37,7 +37,14 @@ export function useRealTimeMarketData() {
       setError(null);
     } catch (error) {
       console.error('Error fetching market data:', error);
-      setError(error instanceof Error ? error.message : 'Failed to fetch market data');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch market data';
+      
+      // Check if it's a rate limiting error
+      if (errorMessage.includes('429') || errorMessage.toLowerCase().includes('rate limit')) {
+        setError('Rate limit exceeded. Using cached data.');
+      } else {
+        setError(`API Error: ${errorMessage}`);
+      }
       
       // Set fallback data
       setMarketData({
@@ -48,7 +55,7 @@ export function useRealTimeMarketData() {
             price: 42000,
             change24h: 0,
             marketCap: 800000000000,
-            sentiment: 'Neutral'
+            sentiment: 'Data temporarily unavailable'
           },
           {
             symbol: 'ETH',
@@ -56,7 +63,7 @@ export function useRealTimeMarketData() {
             price: 2500,
             change24h: 0,
             marketCap: 300000000000,
-            sentiment: 'Neutral'
+            sentiment: 'Data temporarily unavailable'
           },
           {
             symbol: 'XRP',
@@ -64,7 +71,7 @@ export function useRealTimeMarketData() {
             price: 0.50,
             change24h: 0,
             marketCap: 25000000000,
-            sentiment: 'Neutral'
+            sentiment: 'Data temporarily unavailable'
           }
         ],
         lastUpdated: new Date().toISOString()
@@ -78,8 +85,8 @@ export function useRealTimeMarketData() {
     // Initial fetch
     fetchMarketData();
 
-    // Set up auto-refresh every 30 seconds
-    const interval = setInterval(fetchMarketData, 30000);
+    // Set up auto-refresh every 2 minutes to avoid rate limiting
+    const interval = setInterval(fetchMarketData, 120000);
 
     return () => clearInterval(interval);
   }, []);
