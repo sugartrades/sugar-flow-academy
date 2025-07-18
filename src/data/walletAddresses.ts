@@ -62,9 +62,24 @@ export const EXCHANGE_ADDRESSES = {
         destinationTag: "252006006"
       },
       {
+        address: "rNxp4h8apvRis6mJf9Sh8C6iRxfrDWN7AV",
+        exchange: "Binance",
+        destinationTag: "323022239"
+      },
+      {
         address: "rJn2zAPdFA193sixJwuFixRkYDUtx3apQh",
         exchange: "Bybit",
         destinationTag: "2496734"
+      },
+      {
+        address: "rJn2zAPdFA193sixJwuFixRkYDUtx3apQh",
+        exchange: "Bybit",
+        destinationTag: "13240925"
+      },
+      {
+        address: "rDsbeomae4FXwgQTJp9Rs64Qg9vDiTCdBv",
+        exchange: "Bitstamp",
+        destinationTag: "35064548"
       },
       {
         address: "rnBKit9uv2L3pH8HQwPKpDJhhwACKct3ro",
