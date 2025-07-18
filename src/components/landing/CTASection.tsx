@@ -50,7 +50,7 @@ export function CTASection() {
         </div>
         
         <p className="text-sm text-muted-foreground mt-6">
-          ⚡ Free forever • Lifetime access • Chris Larsen & Arthur Britto wallets monitored
+          ⚡ Free For Now • Lifetime access • Chris Larsen & Arthur Britto wallets monitored
         </p>
       </div>
     </section>

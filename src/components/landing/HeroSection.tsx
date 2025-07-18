@@ -75,7 +75,7 @@ export function HeroSection() {
         </div>
         
         <p className="text-sm text-muted-foreground">
-          ⚡ Free forever • Real-time monitoring • Telegram channel access
+          ⚡ Free For Now • Real-time monitoring • Telegram channel access
         </p>
       </div>
     </section>
