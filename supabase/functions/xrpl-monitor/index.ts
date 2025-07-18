@@ -141,29 +141,72 @@ function getAllExchangeAddresses() {
   return allAddresses;
 }
 
-async function makeXRPLRequest(endpoint: string, method: string, params: any) {
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      method,
-      params: [params],
-    }),
-  });
+async function makeXRPLRequest(endpoint: string, method: string, params: any, retries = 3) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          method,
+          params: [params],
+        }),
+      });
 
-  if (!response.ok) {
-    throw new Error(`XRPL API request failed: ${response.statusText}`);
+      if (response.status === 429) {
+        // Rate limited, wait longer before retrying
+        const waitTime = Math.min(1000 * Math.pow(2, attempt), 10000); // Exponential backoff, max 10s
+        console.log(`Rate limited by ${endpoint}, waiting ${waitTime}ms before retry ${attempt}/${retries}`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+        continue;
+      }
+
+      if (!response.ok) {
+        throw new Error(`XRPL API request failed: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      // Check for XRPL protocol errors
+      if (data.result && data.result.error) {
+        throw new Error(`XRPL Error: ${data.result.error} - ${data.result.error_message || ''}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error(`Attempt ${attempt}/${retries} failed for ${endpoint}:`, error.message);
+      
+      if (attempt === retries) {
+        throw error;
+      }
+      
+      // Wait before retrying (progressive delay)
+      const waitTime = 500 * attempt;
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+    }
   }
-
-  return await response.json();
 }
 
 async function getWalletTransactions(address: string, limit: number = 50, lastLedgerIndex?: number): Promise<Transaction[]> {
-  for (const endpoint of XRPL_ENDPOINTS) {
+  // Add delay between endpoint attempts to avoid rate limiting
+  let lastEndpointTime = 0;
+  
+  for (let i = 0; i < XRPL_ENDPOINTS.length; i++) {
+    const endpoint = XRPL_ENDPOINTS[i];
+    
+    // Add 200ms delay between different endpoint calls
+    if (i > 0) {
+      const timeSinceLastCall = Date.now() - lastEndpointTime;
+      if (timeSinceLastCall < 200) {
+        await new Promise(resolve => setTimeout(resolve, 200 - timeSinceLastCall));
+      }
+    }
+    
     try {
       console.log(`Fetching transactions for ${address} from ${endpoint}${lastLedgerIndex ? ` starting from ledger ${lastLedgerIndex + 1}` : ''}`);
+      lastEndpointTime = Date.now();
       
       const response = await makeXRPLRequest(endpoint, "account_tx", {
         account: address,
@@ -189,9 +232,18 @@ async function getWalletTransactions(address: string, limit: number = 50, lastLe
           destination_tag: tx.tx.DestinationTag ? tx.tx.DestinationTag.toString() : undefined,
           ledger_index: tx.tx.ledger_index || tx.ledger_index,
         }));
+      } else if (response.result && response.result.account === address) {
+        // Valid account but no transactions
+        return [];
       }
     } catch (error) {
-      console.error(`Error fetching from ${endpoint}:`, error);
+      console.error(`Error fetching from ${endpoint}:`, error.message);
+      
+      // If this looks like an invalid account error, don't try other endpoints
+      if (error.message.includes('actNotFound') || error.message.includes('Account not found')) {
+        throw new Error(`Invalid wallet address: ${address}`);
+      }
+      
       continue;
     }
   }
@@ -199,8 +251,22 @@ async function getWalletTransactions(address: string, limit: number = 50, lastLe
 }
 
 async function getWalletBalance(address: string): Promise<string> {
-  for (const endpoint of XRPL_ENDPOINTS) {
+  // Add delay between endpoint attempts to avoid rate limiting
+  let lastEndpointTime = 0;
+  
+  for (let i = 0; i < XRPL_ENDPOINTS.length; i++) {
+    const endpoint = XRPL_ENDPOINTS[i];
+    
+    // Add 200ms delay between different endpoint calls
+    if (i > 0) {
+      const timeSinceLastCall = Date.now() - lastEndpointTime;
+      if (timeSinceLastCall < 200) {
+        await new Promise(resolve => setTimeout(resolve, 200 - timeSinceLastCall));
+      }
+    }
+    
     try {
+      lastEndpointTime = Date.now();
       const response = await makeXRPLRequest(endpoint, "account_info", {
         account: address,
       });
@@ -210,7 +276,13 @@ async function getWalletBalance(address: string): Promise<string> {
         return balance.toString();
       }
     } catch (error) {
-      console.error(`Error fetching balance from ${endpoint}:`, error);
+      console.error(`Error fetching balance from ${endpoint}:`, error.message);
+      
+      // If this looks like an invalid account error, don't try other endpoints
+      if (error.message.includes('actNotFound') || error.message.includes('Account not found')) {
+        throw new Error(`Invalid wallet address: ${address}`);
+      }
+      
       continue;
     }
   }
@@ -361,6 +433,11 @@ async function monitorWallet(address: string, ownerName: string): Promise<Wallet
   try {
     console.log(`🔍 Monitoring wallet ${address} (${ownerName})`);
     
+    // Validate wallet address format
+    if (!address || !address.startsWith('r') || address.length < 25 || address.length > 35) {
+      throw new Error(`Invalid wallet address format: ${address}`);
+    }
+    
     // Get wallet monitoring info to determine last checked ledger
     const { data: monitoringData } = await supabase
       .from("wallet_monitoring")
@@ -375,7 +452,7 @@ async function monitorWallet(address: string, ownerName: string): Promise<Wallet
       console.log('Initializing last_ledger_index for first-time setup');
       // Get current ledger index from database function
       const { data: currentLedger } = await supabase.rpc('get_current_ledger_index');
-      lastLedgerIndex = currentLedger || 89500000;
+      lastLedgerIndex = currentLedger || 97000000; // Updated to a more recent baseline
       
       // Update the wallet monitoring record
       await supabase
@@ -385,6 +462,9 @@ async function monitorWallet(address: string, ownerName: string): Promise<Wallet
     }
     
     console.log(`Last checked ledger index: ${lastLedgerIndex}`);
+
+    // Add small delay before making API calls to prevent overwhelming endpoints
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     const [transactions, balance] = await Promise.all([
       getWalletTransactions(address, 50, lastLedgerIndex),
@@ -431,7 +511,18 @@ async function monitorWallet(address: string, ownerName: string): Promise<Wallet
     };
   } catch (error) {
     const responseTime = Date.now() - startTime;
+    console.error(`Error monitoring ${address}:`, error.message);
     await updateMonitoringHealth(`wallet_monitor_${address}`, "error", responseTime, error.message);
+    
+    // For invalid wallet addresses, we should consider disabling monitoring
+    if (error.message.includes('Invalid wallet address')) {
+      console.log(`Disabling monitoring for invalid wallet: ${address}`);
+      await supabase
+        .from('wallet_monitoring')
+        .update({ is_active: false })
+        .eq('wallet_address', address);
+    }
+    
     throw error;
   }
 }
