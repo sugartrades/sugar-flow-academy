@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 const plan = {
   name: "Whale Alert Pro",
   price: "Free",
-  period: "forever",
+  period: "For Now",
   description: "Free access to whale movement alerts for all XRP traders",
   features: [
     "Real-time monitoring of 20+ whale wallets (and counting)",
