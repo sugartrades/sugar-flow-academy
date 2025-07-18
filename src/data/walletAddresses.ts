@@ -37,19 +37,14 @@ export const EXCHANGE_ADDRESSES = {
     name: "Arthur Britto",
     exchanges: [
       {
-        address: "rDfrrrBJZshSQDvfT2kmL9oUBdish52unH",
-        exchange: "Binance",
-        destinationTag: "101391685"
+        address: "rLHzPsX6oXkzU2qL12kHCH8G8cnZv1rBJh",
+        exchange: "Kraken",
+        destinationTag: "2497629214"
       },
       {
-        address: "rLNaPoKeeBjZe2qs6x52yVPZpZ8td4dc6w",
-        exchange: "Bitfinex", 
-        destinationTag: "570654850"
-      },
-      {
-        address: "rLHVsKqC72M8FXPfEwSyYkufezZJvNZuDY",
+        address: "rDsbeomae4FXwgQTJp9Rs64Qg9vDiTCdBv",
         exchange: "Bitstamp",
-        destinationTag: "1234567890"
+        destinationTag: "70910611"
       }
     ]
   },
@@ -57,19 +52,24 @@ export const EXCHANGE_ADDRESSES = {
     name: "Chris Larsen",
     exchanges: [
       {
-        address: "rDfrrrBJZshSQDvfT2kmL9oUBdish52unH",
+        address: "rw2ciyaNshpHe7bCHo4bRWq6pqqynnWKQg",
+        exchange: "Coinbase",
+        destinationTag: "371918471"
+      },
+      {
+        address: "rNxp4h8apvRis6mJf9Sh8C6iRxfrDWN7AV",
         exchange: "Binance",
-        destinationTag: "101391686"
+        destinationTag: "252006006"
       },
       {
-        address: "rLNaPoKeeBjZe2qs6x52yVPZpZ8td4dc6w",
-        exchange: "Bitfinex",
-        destinationTag: "570654851"
+        address: "rJn2zAPdFA193sixJwuFixRkYDUtx3apQh",
+        exchange: "Bybit",
+        destinationTag: "2496734"
       },
       {
-        address: "rLHVsKqC72M8FXPfEwSyYkufezZJvNZuDY",
-        exchange: "Bitstamp",
-        destinationTag: "1234567891"
+        address: "rnBKit9uv2L3pH8HQwPKpDJhhwACKct3ro",
+        exchange: "Whitebit",
+        destinationTag: "3084217433"
       }
     ]
   }
