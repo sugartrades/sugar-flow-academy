@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useXRPLMonitoring } from '@/hooks/useXRPLMonitoring';
 import { WhaleAlertTestSuite } from './WhaleAlertTestSuite';
+import { ExplorerLinks } from './ExplorerLinks';
+import { XRPscanLink } from '@/components/XRPscanLink';
 import { Activity, AlertTriangle, CheckCircle, Play, Settings, Wallet, XCircle } from 'lucide-react';
 
 export const XRPLMonitoringDashboard = () => {
@@ -226,13 +228,18 @@ export const XRPLMonitoringDashboard = () => {
                 {transactions.slice(0, 20).map((tx) => (
                   <div key={tx.id} className="flex items-center justify-between p-3 border rounded-lg">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <code className="text-xs bg-muted px-2 py-1 rounded">
                           {tx.transaction_hash.substring(0, 16)}...
                         </code>
                         <Badge variant={tx.transaction_type === 'sent' ? 'destructive' : 'default'}>
                           {tx.transaction_type}
                         </Badge>
+                        <ExplorerLinks 
+                          transactionHash={tx.transaction_hash}
+                          variant="compact"
+                          showLabels={false}
+                        />
                       </div>
                       <div className="text-sm text-muted-foreground mt-1">
                         {formatDate(tx.transaction_date)}
@@ -264,14 +271,19 @@ export const XRPLMonitoringDashboard = () => {
                 {alerts.map((alert) => (
                   <div key={alert.id} className="flex items-center justify-between p-3 border rounded-lg bg-orange-50 dark:bg-orange-900/20">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap mb-2">
                         <AlertTriangle className="w-4 h-4 text-orange-500" />
                         <Badge variant="outline">{alert.owner_name}</Badge>
                         <Badge variant={alert.is_sent ? 'default' : 'secondary'}>
                           {alert.is_sent ? 'Sent' : 'Pending'}
                         </Badge>
+                        <ExplorerLinks 
+                          transactionHash={alert.transaction_hash}
+                          variant="compact"
+                          showLabels={false}
+                        />
                       </div>
-                      <div className="text-sm text-muted-foreground mt-1">
+                      <div className="text-sm text-muted-foreground">
                         {formatDate(alert.created_at)}
                       </div>
                     </div>

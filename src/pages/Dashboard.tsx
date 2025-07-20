@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Header } from '@/components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MarketUpdate } from '@/components/MarketUpdate';
-import { Bell, Activity, TrendingUp, Clock, ExternalLink, RefreshCw, MessageCircle } from 'lucide-react';
+import { XRPscanLink } from '@/components/XRPscanLink';
+import { Bell, Activity, TrendingUp, Clock, RefreshCw, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { formatDistanceToNow } from 'date-fns';
@@ -208,7 +210,7 @@ export default function Dashboard() {
                     {recentAlerts.map((alert) => (
                       <div key={alert.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                         <div className="space-y-2 flex-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <Badge variant={getBadgeVariant(alert.alert_severity)}>
                               {getBadgeText(alert.alert_severity, alert.amount)}
                             </Badge>
@@ -218,47 +220,51 @@ export default function Dashboard() {
                             {alert.owner_name?.startsWith('Test') && (
                               <Badge variant="outline" className="text-xs">TEST DATA</Badge>
                             )}
+                            <div className="flex items-center gap-1">
+                              <XRPscanLink 
+                                transactionHash={alert.transaction_hash}
+                                showCopyButton={true}
+                                className="ml-2"
+                              />
+                            </div>
                           </div>
                           <h3 className="font-semibold">
                             {alert.owner_name} moved {formatAmount(alert.amount)} XRP
                           </h3>
-                          <p className="text-sm text-muted-foreground">
-                            <span 
-                              className="font-mono cursor-pointer hover:bg-muted px-1 py-0.5 rounded select-all break-all"
-                              title="Click to select full transaction hash"
-                              onClick={(e) => {
-                                const selection = window.getSelection();
-                                const range = document.createRange();
-                                range.selectNodeContents(e.currentTarget);
-                                selection?.removeAllRanges();
-                                selection?.addRange(range);
-                              }}
-                            >
-                              {alert.transaction_hash}
-                            </span>
+                          <div className="text-sm text-muted-foreground space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-mono text-xs bg-muted px-2 py-1 rounded">
+                                {alert.transaction_hash.substring(0, 12)}...
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigator.clipboard.writeText(alert.transaction_hash);
+                                }}
+                                className="h-6 px-2 text-xs"
+                                title="Copy full transaction hash"
+                              >
+                                Copy Full Hash
+                              </Button>
+                            </div>
                             {alert.exchange_name && (
-                              <span className="block mt-1">→ {alert.exchange_name} detected</span>
+                              <div className="flex items-center gap-2">
+                                <span>→ {alert.exchange_name} detected</span>
+                                <Badge variant="secondary" className="text-xs">Exchange</Badge>
+                              </div>
                             )}
                             {alert.destination_tag && (
                               <span className="block">Tag: {alert.destination_tag}</span>
                             )}
-                          </p>
+                          </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right ml-4">
                           <div className={`text-2xl font-bold ${getAmountColor(alert.amount)}`}>
                             {formatAmount(alert.amount)}
                           </div>
                           <div className="text-sm text-muted-foreground">XRP</div>
-                          {alert.explorer_links?.xrpscan && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openExplorer(alert)}
-                              className="mt-1 h-6 px-2"
-                            >
-                              <ExternalLink className="h-3 w-3" />
-                            </Button>
-                          )}
                         </div>
                       </div>
                     ))}
@@ -336,18 +342,13 @@ export default function Dashboard() {
                   <p className="text-sm text-muted-foreground">
                     Join our Telegram channel to receive real-time whale alerts and market updates
                   </p>
-                  <a 
-                    href="#"
-                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      window.open("https://t.me/xrpwhalealerts", "_blank", "noopener,noreferrer");
-                    }}
+                  <Button 
+                    className="w-full"
+                    onClick={() => window.open("https://t.me/xrpwhalealerts", "_blank", "noopener,noreferrer")}
                   >
-                    <MessageCircle className="h-4 w-4" />
+                    <MessageCircle className="h-4 w-4 mr-2" />
                     Join Telegram Channel
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
