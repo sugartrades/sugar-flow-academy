@@ -20,8 +20,8 @@ export function HeroSection() {
         </Badge>
         
         <h1 className="text-4xl md:text-6xl font-bold tracking-tight">
-          Never Miss a{' '}
-          <span className="text-primary">Whale Movement</span> on the XRPL Again
+          Never a{' '}
+          <span className="text-primary">Whale Movement</span> Again
         </h1>
         
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
