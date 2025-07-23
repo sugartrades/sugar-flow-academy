@@ -67,6 +67,11 @@ export const EXCHANGE_ADDRESSES = {
         destinationTag: "323022239"
       },
       {
+        address: "rNxp4h8apvRis6mJf9Sh8C6iRxfrDWN7AV",
+        exchange: "Binance",
+        destinationTag: "469965402"
+      },
+      {
         address: "rJn2zAPdFA193sixJwuFixRkYDUtx3apQh",
         exchange: "Bybit",
         destinationTag: "2496734"
