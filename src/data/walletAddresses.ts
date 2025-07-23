@@ -98,6 +98,11 @@ export const EXCHANGE_ADDRESSES = {
         address: "rnBKit9uv2L3pH8HQwPKpDJhhwACKct3ro",
         exchange: "Whitebit",
         destinationTag: "3084217433"
+      },
+      {
+        address: "rarG6FaeYhnzSKSS5EEPofo4gFsPn2bZKk",
+        exchange: "Binance",
+        destinationTag: "2320507410"
       }
     ]
   }
