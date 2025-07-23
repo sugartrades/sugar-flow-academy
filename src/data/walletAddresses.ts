@@ -26,7 +26,8 @@ export const MONITORED_WALLETS = {
       "rPoJNiCk7XSFLR28nH2hAbkYqjtMC3hK2k",
       "raorBmbzraA6TooLQ6kGWRSx1HQq7d4gzS",
       "rJNLz3A1qPKfWCtJLPhmMZAfBkutC2Qojm",
-      "rB5TihdPbKgMrkFqrqUC3yLdE8hhv4BdeY"
+      "rB5TihdPbKgMrkFqrqUC3yLdE8hhv4BdeY",
+      "rHnx565xVcKadSuxJbAHXv9QSj6ANVRMUB"
     ]
   },
   ripple: {
