@@ -28,6 +28,13 @@ export const MONITORED_WALLETS = {
       "rJNLz3A1qPKfWCtJLPhmMZAfBkutC2Qojm",
       "rB5TihdPbKgMrkFqrqUC3yLdE8hhv4BdeY"
     ]
+  },
+  ripple: {
+    name: "Ripple",
+    addresses: [
+      "rLBHKfeHUf6RK3y3ij3y6Ea3b7MxqaLgK3",
+      "rB5AptBVH8nzavopD9PCbkPgj1DHSkau1w"
+    ]
   }
 };
 
@@ -107,7 +114,8 @@ export const MONITORING_CONFIG = {
 export const getAllWalletAddresses = () => {
   return [
     ...MONITORED_WALLETS.arthurBritto.addresses,
-    ...MONITORED_WALLETS.chrisLarsen.addresses
+    ...MONITORED_WALLETS.chrisLarsen.addresses,
+    ...MONITORED_WALLETS.ripple.addresses
   ];
 };
 
@@ -126,6 +134,9 @@ export const getWalletOwner = (address: string) => {
   }
   if (MONITORED_WALLETS.chrisLarsen.addresses.includes(address)) {
     return MONITORED_WALLETS.chrisLarsen.name;
+  }
+  if (MONITORED_WALLETS.ripple.addresses.includes(address)) {
+    return MONITORED_WALLETS.ripple.name;
   }
   return "Unknown";
 };
