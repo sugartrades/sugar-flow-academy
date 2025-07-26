@@ -66,6 +66,12 @@ export function Header({ showAuth = true, isAuthenticated = false }: HeaderProps
           >
             How It Works
           </button>
+          <a 
+            href="/leverage-calculator"
+            className="text-sm font-medium hover:text-primary transition-colors"
+          >
+            Calculator
+          </a>
         </nav>
 
         <div className="flex items-center space-x-4">
