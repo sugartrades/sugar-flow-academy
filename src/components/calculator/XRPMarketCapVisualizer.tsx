@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { useXRPMarketData } from '@/hooks/useXRPMarketData';
-import { useXRPFloatSlider } from '@/hooks/useXRPFloatSlider';
 import { Skeleton } from '@/components/ui/skeleton';
+import { UseXRPFloatSliderReturn } from '@/hooks/useXRPFloatSlider';
 import { Separator } from '@/components/ui/separator';
 import { 
   TrendingUp, 
@@ -32,10 +32,14 @@ interface SimulationResults {
   averageExecutionPrice: number;
 }
 
-export function XRPMarketCapVisualizer() {
+interface XRPMarketCapVisualizerProps {
+  xrpFloatSlider: UseXRPFloatSliderReturn;
+}
+
+export function XRPMarketCapVisualizer({ xrpFloatSlider }: XRPMarketCapVisualizerProps) {
   const [buyOrderSize, setBuyOrderSize] = useState([100000000]); // $100M default
   const { xrpData, loading: marketDataLoading } = useXRPMarketData();
-  const { xrpFloat, generateSyntheticOrderBook } = useXRPFloatSlider();
+  const { xrpFloat, generateSyntheticOrderBook } = xrpFloatSlider;
   
   // XRP constants
   const XRP_SUPPLY = 99987000000; // ~99.987 billion XRP in circulation

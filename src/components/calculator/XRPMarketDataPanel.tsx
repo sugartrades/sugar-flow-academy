@@ -5,12 +5,16 @@ import { RefreshCw, TrendingUp, TrendingDown, Minus, Sliders } from 'lucide-reac
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import { useXRPMarketData } from '@/hooks/useXRPMarketData';
-import { useXRPFloatSlider } from '@/hooks/useXRPFloatSlider';
 import { Skeleton } from '@/components/ui/skeleton';
+import { UseXRPFloatSliderReturn } from '@/hooks/useXRPFloatSlider';
 
-export function XRPMarketDataPanel() {
+interface XRPMarketDataPanelProps {
+  xrpFloatSlider: UseXRPFloatSliderReturn;
+}
+
+export function XRPMarketDataPanel({ xrpFloatSlider }: XRPMarketDataPanelProps) {
   const { xrpData, loading, error, lastUpdated, refetch } = useXRPMarketData();
-  const { xrpFloat, setXrpFloat, formatFloat } = useXRPFloatSlider();
+  const { xrpFloat, setXrpFloat, formatFloat } = xrpFloatSlider;
 
   const formatPrice = (price: number): string => {
     return `$${price.toFixed(4)}`;

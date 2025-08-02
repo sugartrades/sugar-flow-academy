@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 
-interface UseXRPFloatSliderReturn {
+export interface UseXRPFloatSliderReturn {
   xrpFloat: number;
   setXrpFloat: (value: number) => void;
   formatFloat: (value: number) => string;
