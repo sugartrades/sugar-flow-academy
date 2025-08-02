@@ -103,26 +103,46 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in fetch-market-data function:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: error.message,
-        cryptos: [
-          {
-            symbol: 'BTC',
-            name: 'Bitcoin',
-            price: 42000,
-            change24h: 0,
-            marketCap: 800000000000,
-            sentiment: 'Neutral'
-          }
-        ],
-        lastUpdated: new Date().toISOString()
-      }), 
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    
+    // Return a successful response with fallback data instead of a 500 error
+    const fallbackData = {
+      cryptos: [
+        {
+          symbol: 'BTC',
+          name: 'Bitcoin',
+          price: 42000,
+          change24h: 0,
+          marketCap: 800000000000,
+          sentiment: 'Neutral'
+        },
+        {
+          symbol: 'ETH',
+          name: 'Ethereum',
+          price: 2500,
+          change24h: 0,
+          marketCap: 300000000000,
+          sentiment: 'Neutral'
+        },
+        {
+          symbol: 'XRP',
+          name: 'XRP',
+          price: 0.60,
+          change24h: 0,
+          marketCap: 35000000000,
+          sentiment: 'Neutral'
+        }
+      ],
+      lastUpdated: new Date().toISOString(),
+      error: `API Error: ${error.message}`,
+      usingFallback: true
+    };
+    
+    console.log('Returning fallback data due to error:', fallbackData);
+    
+    return new Response(JSON.stringify(fallbackData), {
+      status: 200, // Always return 200 to avoid client-side errors
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
 

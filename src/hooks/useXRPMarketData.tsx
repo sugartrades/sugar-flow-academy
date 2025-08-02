@@ -38,6 +38,12 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
         throw new Error(`Failed to fetch market data: ${fetchError.message}`);
       }
 
+      // Check if the response indicates an API error
+      if (data?.error || data?.usingFallback) {
+        console.warn('API returned fallback data:', data.error);
+        setError(`API Error: ${data.error || 'Using fallback data'}`);
+      }
+
       // Check if we have valid data
       if (data?.cryptos && Array.isArray(data.cryptos)) {
         // Find XRP data from the response
@@ -51,6 +57,11 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
             lastUpdated: data.lastUpdated
           });
           setLastUpdated(new Date());
+          
+          // Clear error if we successfully got data
+          if (!data?.error && !data?.usingFallback) {
+            setError(null);
+          }
         } else {
           throw new Error('XRP data not found in market response');
         }
