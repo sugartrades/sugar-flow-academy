@@ -1,13 +1,23 @@
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { RefreshCw, TrendingUp, TrendingDown, Minus, Waves } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useXRPMarketData } from '@/hooks/useXRPMarketData';
+import { useXRPOrderBookData } from '@/hooks/useXRPOrderBookData';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function XRPMarketDataPanel() {
   const { xrpData, loading, error, lastUpdated, refetch } = useXRPMarketData();
+  const { 
+    orderBookData, 
+    loading: orderBookLoading, 
+    error: orderBookError, 
+    refetch: refetchOrderBook,
+    selectedExchange,
+    setSelectedExchange
+  } = useXRPOrderBookData();
 
   const formatPrice = (price: number): string => {
     return `$${price.toFixed(4)}`;
@@ -51,6 +61,33 @@ export function XRPMarketDataPanel() {
     return `${diffHours}h ago`;
   };
 
+  const formatFloat = (float: number) => {
+    if (float >= 1000000) {
+      return `${(float / 1000000).toFixed(1)}M`;
+    } else if (float >= 1000) {
+      return `${(float / 1000).toFixed(1)}K`;
+    }
+    return float.toLocaleString();
+  };
+
+  const getSelectedExchangeData = () => {
+    if (!orderBookData || !selectedExchange) return null;
+    return orderBookData.exchanges.find(ex => ex.exchange === selectedExchange);
+  };
+
+  const getDisplayFloat = () => {
+    if (!orderBookData) return 0;
+    
+    if (selectedExchange === 'average') {
+      return orderBookData.averageFloat;
+    } else if (selectedExchange === 'aggregated') {
+      return orderBookData.aggregatedFloat;
+    } else {
+      const exchangeData = getSelectedExchangeData();
+      return exchangeData?.xrpFloat || 0;
+    }
+  };
+
   if (loading && !xrpData) {
     return (
       <Card>
@@ -72,62 +109,156 @@ export function XRPMarketDataPanel() {
   }
 
   return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">🪙</span>
-              <h3 className="font-semibold text-lg">XRP Live Price</h3>
+    <div className="space-y-4 mb-8">
+      {/* Market Data Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">XRP Price</CardTitle>
+            <div className="flex items-center space-x-1">
+              {getChangeIcon(xrpData?.change24h || 0)}
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-3xl font-bold">
-                {xrpData ? formatPrice(xrpData.price) : '$0.60'}
-              </span>
-              <div className={`flex items-center gap-1 ${getChangeColor(xrpData?.change24h || 0)}`}>
-                {getChangeIcon(xrpData?.change24h || 0)}
-                <span className="font-medium">
-                  {xrpData?.change24h !== undefined 
-                    ? `${xrpData.change24h > 0 ? '+' : ''}${xrpData.change24h.toFixed(2)}%`
-                    : '0.00%'
-                  }
-                </span>
-              </div>
-            </div>
-          </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatPrice(xrpData?.price || 0)}</div>
+            <p className={`text-xs ${getChangeColor(xrpData?.change24h || 0)}`}>
+              {xrpData?.change24h > 0 ? '+' : ''}{xrpData?.change24h?.toFixed(2)}% 24h
+            </p>
+          </CardContent>
+        </Card>
 
-          <div className="text-right space-y-1">
-            <div className="text-sm text-muted-foreground">Market Cap</div>
-            <div className="font-semibold">
-              {xrpData?.marketCap ? formatMarketCap(xrpData.marketCap) : 'N/A'}
-            </div>
-            <Badge variant={getSentimentBadgeVariant(xrpData?.sentiment || 'neutral')}>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Market Cap</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatMarketCap(xrpData?.marketCap || 0)}</div>
+            <p className="text-xs text-muted-foreground">
+              Last updated {lastUpdated ? formatTimeAgo(lastUpdated) : 'Never'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Sentiment</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Badge variant={getSentimentBadgeVariant(xrpData?.sentiment || 'neutral')} className="mb-2">
               {xrpData?.sentiment || 'neutral'}
             </Badge>
-          </div>
+            {error && (
+              <p className="text-xs text-muted-foreground">
+                Using fallback data
+              </p>
+            )}
+          </CardContent>
+        </Card>
 
-          <div className="flex flex-col items-end gap-2">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Data Status</CardTitle>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={refetch}
-              disabled={loading}
-              className="h-10 w-10 p-0"
+              className="h-8 w-8 p-0"
             >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className="h-4 w-4" />
             </Button>
-            <div className="text-xs text-muted-foreground">
-              {lastUpdated ? formatTimeAgo(lastUpdated) : 'Never'}
-            </div>
-          </div>
-        </div>
-        
-        {error && (
-          <div className="mt-3 text-sm text-amber-600 bg-amber-50 p-2 rounded">
-            ⚠️ Using fallback data: {error}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          </CardHeader>
+          <CardContent>
+            <div className="text-sm font-medium text-green-600">Live Data</div>
+            <p className="text-xs text-muted-foreground">
+              Auto-refresh: 2min
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* XRP Float Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Exchange Selection</CardTitle>
+            <Waves className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <Select value={selectedExchange || ''} onValueChange={setSelectedExchange}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select exchange or view" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="average">Average Float</SelectItem>
+                <SelectItem value="aggregated">Aggregated Float</SelectItem>
+                {orderBookData?.exchanges.map((exchange) => (
+                  <SelectItem key={exchange.exchange} value={exchange.exchange}>
+                    {exchange.exchange.charAt(0).toUpperCase() + exchange.exchange.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-2">
+              Available XRP within 5% of current price
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">XRP Float</CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={refetchOrderBook}
+              className="h-8 w-8 p-0"
+              disabled={orderBookLoading}
+            >
+              <RefreshCw className={`h-4 w-4 ${orderBookLoading ? 'animate-spin' : ''}`} />
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {orderBookLoading ? (
+              <Skeleton className="h-8 w-24 mb-2" />
+            ) : (
+              <div className="text-2xl font-bold">{formatFloat(getDisplayFloat())} XRP</div>
+            )}
+            <p className="text-xs text-muted-foreground">
+              {selectedExchange === 'average' && 'Average across exchanges'}
+              {selectedExchange === 'aggregated' && 'Total across exchanges'}
+              {selectedExchange && !['average', 'aggregated'].includes(selectedExchange) && 
+                `From ${selectedExchange.charAt(0).toUpperCase() + selectedExchange.slice(1)}`}
+              {!selectedExchange && 'Select an exchange to view'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Liquidity Status</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {orderBookLoading ? (
+              <Skeleton className="h-4 w-16 mb-2" />
+            ) : (
+              <div className="text-sm font-medium text-green-600">
+                {orderBookData?.exchanges.length || 0} Exchanges
+              </div>
+            )}
+            {orderBookError && (
+              <p className="text-xs text-red-500 mb-1">
+                {orderBookError}
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              {orderBookData?.lastUpdated ? 
+                `Updated ${formatTimeAgo(new Date(orderBookData.lastUpdated))}` : 
+                'No data available'
+              }
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 }
