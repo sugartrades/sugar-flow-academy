@@ -39,11 +39,11 @@ export function useXRPFloatSlider(): UseXRPFloatSliderReturn {
       const priceDistance = (price - currentPrice) / currentPrice;
       
       // Exponentially decreasing liquidity based on price distance and total float
-      const baseSize = totalFloat * 0.001 * Math.exp(-priceDistance * 15); // Adjust these multipliers for realistic distribution
+      const baseSize = totalFloat * 0.001 * Math.exp(-priceDistance * 15);
       
-      // Add some variance but keep it realistic
-      const variance = 0.8 + Math.random() * 0.4;
-      const size = Math.max(1000, baseSize * variance); // Minimum 1000 XRP per level
+      // Use deterministic variance based on price for consistency
+      const priceVariance = 0.8 + (0.4 * Math.sin(price * 100)); // Deterministic but varied
+      const size = Math.max(1000, baseSize * priceVariance); // Minimum 1000 XRP per level
       
       cumulative += size;
       
