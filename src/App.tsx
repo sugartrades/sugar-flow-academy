@@ -15,6 +15,7 @@ import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
 import RiskDisclosure from "./pages/RiskDisclosure";
 import LeverageCalculator from "./pages/LeverageCalculator";
+import MarketCapMultiplier from "./pages/MarketCapMultiplier";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/terms" element={<Terms />} />
             <Route path="/risk-disclosure" element={<RiskDisclosure />} />
             <Route path="/leverage-calculator" element={<LeverageCalculator />} />
+            <Route path="/market-cap-multiplier" element={<MarketCapMultiplier />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<Admin />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

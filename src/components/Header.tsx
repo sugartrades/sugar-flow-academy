@@ -72,6 +72,12 @@ export function Header({ showAuth = true, isAuthenticated = false }: HeaderProps
           >
             Calculator
           </a>
+          <a 
+            href="/market-cap-multiplier"
+            className="text-sm font-medium hover:text-primary transition-colors"
+          >
+            Market Cap
+          </a>
         </nav>
 
         <div className="flex items-center space-x-4">
