@@ -42,9 +42,10 @@ serve(async (req) => {
     const ccxt = await import('https://esm.sh/ccxt@4.1.77');
 
     const exchanges = [
-      { name: 'binance', exchange: new ccxt.binance({ enableRateLimit: true }) },
-      { name: 'coinbasepro', exchange: new ccxt.coinbasepro({ enableRateLimit: true }) },
-      { name: 'kraken', exchange: new ccxt.kraken({ enableRateLimit: true }) }
+      { name: 'kraken', exchange: new ccxt.kraken({ enableRateLimit: true }) },
+      { name: 'coinbase', exchange: new ccxt.coinbase({ enableRateLimit: true }) },
+      { name: 'gate', exchange: new ccxt.gate({ enableRateLimit: true }) },
+      { name: 'bitrue', exchange: new ccxt.bitrue({ enableRateLimit: true }) }
     ];
 
     const symbol = 'XRP/USDT';
