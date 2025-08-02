@@ -31,19 +31,39 @@ export function useXRPFloatSlider(): UseXRPFloatSliderReturn {
     let cumulative = 0;
     
     // Convert billions to actual XRP amount
-    const totalFloat = floatBillions * 1000000000; // Convert to actual XRP count
+    const totalFloat = floatBillions * 1000000000;
     
-    // Generate order book levels from current price upward
-    for (let price = currentPrice; price <= Math.min(currentPrice * 10, 1000); price += 0.01) {
-      // Calculate distance from current price as percentage
+    // Psychological resistance levels where major liquidity pools exist
+    const psychologicalLevels = [1, 2, 3, 5, 10, 20, 50, 100];
+    
+    // Generate order book levels from current price upward with realistic ranges
+    const maxPrice = Math.min(currentPrice * 50, 1000); // Extend range to 50x for large orders
+    let stepSize = 0.001; // Start with smaller steps for precision
+    
+    for (let price = currentPrice; price <= maxPrice; price += stepSize) {
       const priceDistance = (price - currentPrice) / currentPrice;
       
-      // Exponentially decreasing liquidity based on price distance and total float
-      const baseSize = totalFloat * 0.001 * Math.exp(-priceDistance * 15);
+      // More gradual exponential decay (factor of 6 instead of 15)
+      let baseSize = totalFloat * 0.0025 * Math.exp(-priceDistance * 6);
       
-      // Use deterministic variance based on price for consistency
-      const priceVariance = 0.8 + (0.4 * Math.sin(price * 100)); // Deterministic but varied
-      const size = Math.max(1000, baseSize * priceVariance); // Minimum 1000 XRP per level
+      // Add concentrated liquidity at psychological levels
+      const nearPsychLevel = psychologicalLevels.find(level => 
+        Math.abs(price - level) / level < 0.02 // Within 2% of psychological level
+      );
+      
+      if (nearPsychLevel) {
+        // 3x more liquidity at psychological resistance levels
+        baseSize *= 3;
+      }
+      
+      // Add market maker clustering near current price (within 5%)
+      if (priceDistance < 0.05) {
+        baseSize *= 2; // Double liquidity for market makers near spot
+      }
+      
+      // Deterministic variance for consistency
+      const priceVariance = 0.7 + (0.6 * Math.sin(price * 50));
+      const size = Math.max(5000, baseSize * priceVariance); // Higher minimum for realism
       
       cumulative += size;
       
@@ -53,12 +73,14 @@ export function useXRPFloatSlider(): UseXRPFloatSliderReturn {
         cumulative
       });
       
-      // Stop if we've distributed enough of the float or reached reasonable limits
-      if (cumulative > totalFloat * 0.1 || levels.length > 10000) break;
+      // Distribute 25% of float instead of 10% for deeper liquidity
+      if (cumulative > totalFloat * 0.25 || levels.length > 15000) break;
       
-      // Increase step size for higher prices for better performance
-      if (price > currentPrice * 2) price += 0.04;
-      if (price > currentPrice * 5) price += 0.20;
+      // Dynamic step sizing for efficiency
+      if (price > currentPrice * 1.5) stepSize = 0.005;
+      if (price > currentPrice * 3) stepSize = 0.01;
+      if (price > currentPrice * 10) stepSize = 0.05;
+      if (price > currentPrice * 25) stepSize = 0.1;
     }
     
     return levels;
