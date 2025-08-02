@@ -32,11 +32,14 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
       
       const { data, error: fetchError } = await supabase.functions.invoke('fetch-market-data');
       
+      // Check for Supabase client errors first
       if (fetchError) {
+        console.error('Supabase client error:', fetchError);
         throw new Error(`Failed to fetch market data: ${fetchError.message}`);
       }
 
-      if (data?.cryptos) {
+      // Check if we have valid data
+      if (data?.cryptos && Array.isArray(data.cryptos)) {
         // Find XRP data from the response
         const xrpCrypto = data.cryptos.find((crypto: any) => 
           crypto.symbol.toLowerCase() === 'xrp'
@@ -52,27 +55,31 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
           throw new Error('XRP data not found in market response');
         }
       } else {
-        throw new Error('Invalid market data response');
+        console.error('Invalid response structure:', data);
+        throw new Error('Invalid market data response structure');
       }
     } catch (err) {
       console.error('Error fetching XRP data:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch XRP data');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch XRP data';
+      setError(errorMessage);
       
-      // Fallback data
-      setXrpData({
-        symbol: 'XRP',
-        name: 'XRP',
-        price: 0.60, // Fallback price
-        change24h: 0,
-        marketCap: 0,
-        sentiment: 'neutral',
-        lastUpdated: new Date().toISOString()
-      });
-      setLastUpdated(new Date());
+      // Only set fallback data if we don't already have data
+      if (!xrpData) {
+        setXrpData({
+          symbol: 'XRP',
+          name: 'XRP',
+          price: 0.60, // Fallback price
+          change24h: 0,
+          marketCap: 0,
+          sentiment: 'neutral',
+          lastUpdated: new Date().toISOString()
+        });
+        setLastUpdated(new Date());
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [xrpData]); // Include xrpData in dependencies to prevent unnecessary fallback
 
   useEffect(() => {
     fetchXRPData();
