@@ -32,6 +32,7 @@ interface SimulationResults {
 }
 
 export function XRPMarketCapVisualizer() {
+  const [xrpFloat, setXrpFloat] = useState([5000000000]); // 5B XRP default (5% of total supply)
   const [buyOrderSize, setBuyOrderSize] = useState([100000000]); // $100M default
   const { xrpData, loading: marketDataLoading } = useXRPMarketData();
   
@@ -39,15 +40,23 @@ export function XRPMarketCapVisualizer() {
   const XRP_SUPPLY = 99987000000; // ~99.987 billion XRP in circulation
   const INITIAL_XRP_PRICE = xrpData?.price || 0.60; // Use live price or fallback
   
-  // Generate realistic order book data
+  // Generate realistic order book data based on XRP float
   const orderBook = useMemo((): OrderBookLevel[] => {
     const levels: OrderBookLevel[] = [];
     let cumulative = 0;
+    const availableFloat = xrpFloat[0]; // XRP available for trading
     
     // Generate order book levels from current XRP price to $1000+
     for (let price = INITIAL_XRP_PRICE; price <= 1000; price += 0.01) {
-      // Exponentially decreasing liquidity as price increases
-      const baseSize = Math.max(100000, 10000000 * Math.exp(-(price - INITIAL_XRP_PRICE) * 0.5));
+      // Base liquidity scaled by available float (as a fraction of total supply)
+      const floatRatio = availableFloat / XRP_SUPPLY;
+      const priceDistance = price - INITIAL_XRP_PRICE;
+      
+      // Exponentially decreasing liquidity as price increases, scaled by float
+      const baseSize = Math.max(
+        100000, 
+        (availableFloat * 0.01) * Math.exp(-priceDistance * 0.3) * floatRatio
+      );
       
       // Add some randomness but keep it realistic
       const randomFactor = 0.7 + Math.random() * 0.6;
@@ -68,7 +77,7 @@ export function XRPMarketCapVisualizer() {
     }
     
     return levels;
-  }, [INITIAL_XRP_PRICE]); // Include INITIAL_XRP_PRICE in dependencies
+  }, [INITIAL_XRP_PRICE, xrpFloat]); // Include both dependencies
 
   // Calculate simulation results
   const simulationResults = useMemo((): SimulationResults => {
@@ -132,6 +141,13 @@ export function XRPMarketCapVisualizer() {
     return formatCurrency(value);
   };
 
+  const formatXRPValue = (value: number) => {
+    if (value >= 1e9) return `${(value / 1e9).toFixed(1)}B XRP`;
+    if (value >= 1e6) return `${(value / 1e6).toFixed(0)}M XRP`;
+    if (value >= 1e3) return `${(value / 1e3).toFixed(0)}K XRP`;
+    return `${value.toFixed(0)} XRP`;
+  };
+
   if (marketDataLoading && !xrpData) {
     return (
       <div className="space-y-8">
@@ -149,6 +165,41 @@ export function XRPMarketCapVisualizer() {
 
   return (
     <div className="space-y-8">
+      {/* XRP Float Slider */}
+      <Card className="border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 backdrop-blur">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-blue-500" />
+            Exchange Float Estimate
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Estimate the total XRP available for trading across all worldwide exchanges
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">1B XRP</span>
+              <div className="text-2xl font-bold text-blue-500">
+                {formatXRPValue(xrpFloat[0])}
+              </div>
+              <span className="text-sm text-muted-foreground">20B XRP</span>
+            </div>
+            <Slider
+              value={xrpFloat}
+              onValueChange={setXrpFloat}
+              min={1000000000}
+              max={20000000000}
+              step={100000000}
+              className="w-full"
+            />
+            <div className="text-xs text-muted-foreground text-center">
+              ~{((xrpFloat[0] / XRP_SUPPLY) * 100).toFixed(1)}% of total XRP supply
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Buy Order Size Slider */}
       <Card className="border-primary/20 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur">
         <CardHeader>
