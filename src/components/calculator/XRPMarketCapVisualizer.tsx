@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
+import { useXRPMarketData } from '@/hooks/useXRPMarketData';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { 
   TrendingUp, 
@@ -30,11 +32,12 @@ interface SimulationResults {
 }
 
 export function XRPMarketCapVisualizer() {
-  const [buyOrderSize, setBuyOrderSize] = useState([1000000000]); // $1B default
+  const [buyOrderSize, setBuyOrderSize] = useState([100000000]); // $100M default
+  const { xrpData, loading: marketDataLoading } = useXRPMarketData();
   
   // XRP constants
   const XRP_SUPPLY = 99987000000; // ~99.987 billion XRP in circulation
-  const INITIAL_XRP_PRICE = 3.00; // Starting price assumption
+  const INITIAL_XRP_PRICE = xrpData?.price || 0.60; // Use live price or fallback
   
   // Generate realistic order book data
   const orderBook = useMemo((): OrderBookLevel[] => {
@@ -129,6 +132,21 @@ export function XRPMarketCapVisualizer() {
     return formatCurrency(value);
   };
 
+  if (marketDataLoading && !xrpData) {
+    return (
+      <div className="space-y-8">
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-48" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-32 w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* Buy Order Size Slider */}
@@ -138,6 +156,11 @@ export function XRPMarketCapVisualizer() {
             <DollarSign className="w-5 h-5 text-primary" />
             Buy Order Size
           </CardTitle>
+          {xrpData && (
+            <p className="text-sm text-muted-foreground">
+              Using live XRP price: ${xrpData.price.toFixed(4)}
+            </p>
+          )}
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
@@ -146,14 +169,14 @@ export function XRPMarketCapVisualizer() {
               <div className="text-2xl font-bold text-primary">
                 {formatSliderValue(buyOrderSize[0])}
               </div>
-              <span className="text-sm text-muted-foreground">$10B</span>
+              <span className="text-sm text-muted-foreground">$5B</span>
             </div>
             <Slider
               value={buyOrderSize}
               onValueChange={setBuyOrderSize}
               min={10000000}
-              max={10000000000}
-              step={50000000}
+              max={5000000000}
+              step={25000000}
               className="w-full"
             />
           </div>

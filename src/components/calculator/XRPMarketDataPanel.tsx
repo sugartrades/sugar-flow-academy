@@ -1,0 +1,133 @@
+import React from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { RefreshCw, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { useXRPMarketData } from '@/hooks/useXRPMarketData';
+import { Skeleton } from '@/components/ui/skeleton';
+
+export function XRPMarketDataPanel() {
+  const { xrpData, loading, error, lastUpdated, refetch } = useXRPMarketData();
+
+  const formatPrice = (price: number): string => {
+    return `$${price.toFixed(4)}`;
+  };
+
+  const formatMarketCap = (marketCap: number): string => {
+    if (marketCap >= 1e9) {
+      return `$${(marketCap / 1e9).toFixed(2)}B`;
+    }
+    return `$${(marketCap / 1e6).toFixed(2)}M`;
+  };
+
+  const getChangeIcon = (change: number) => {
+    if (change > 0) return <TrendingUp className="h-4 w-4 text-green-500" />;
+    if (change < 0) return <TrendingDown className="h-4 w-4 text-red-500" />;
+    return <Minus className="h-4 w-4 text-muted-foreground" />;
+  };
+
+  const getChangeColor = (change: number): string => {
+    if (change > 0) return "text-green-500";
+    if (change < 0) return "text-red-500";
+    return "text-muted-foreground";
+  };
+
+  const getSentimentBadgeVariant = (sentiment: string) => {
+    switch (sentiment.toLowerCase()) {
+      case 'bullish': return 'default';
+      case 'bearish': return 'destructive';
+      default: return 'secondary';
+    }
+  };
+
+  const formatTimeAgo = (date: Date): string => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    return `${diffHours}h ago`;
+  };
+
+  if (loading && !xrpData) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-16" />
+              <Skeleton className="h-8 w-24" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-6 w-16" />
+            </div>
+            <Skeleton className="h-10 w-10 rounded-md" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">🪙</span>
+              <h3 className="font-semibold text-lg">XRP Live Price</h3>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-3xl font-bold">
+                {xrpData ? formatPrice(xrpData.price) : '$0.60'}
+              </span>
+              <div className={`flex items-center gap-1 ${getChangeColor(xrpData?.change24h || 0)}`}>
+                {getChangeIcon(xrpData?.change24h || 0)}
+                <span className="font-medium">
+                  {xrpData?.change24h !== undefined 
+                    ? `${xrpData.change24h > 0 ? '+' : ''}${xrpData.change24h.toFixed(2)}%`
+                    : '0.00%'
+                  }
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="text-right space-y-1">
+            <div className="text-sm text-muted-foreground">Market Cap</div>
+            <div className="font-semibold">
+              {xrpData?.marketCap ? formatMarketCap(xrpData.marketCap) : 'N/A'}
+            </div>
+            <Badge variant={getSentimentBadgeVariant(xrpData?.sentiment || 'neutral')}>
+              {xrpData?.sentiment || 'neutral'}
+            </Badge>
+          </div>
+
+          <div className="flex flex-col items-end gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refetch}
+              disabled={loading}
+              className="h-10 w-10 p-0"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+            <div className="text-xs text-muted-foreground">
+              {lastUpdated ? formatTimeAgo(lastUpdated) : 'Never'}
+            </div>
+          </div>
+        </div>
+        
+        {error && (
+          <div className="mt-3 text-sm text-amber-600 bg-amber-50 p-2 rounded">
+            ⚠️ Using fallback data: {error}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
