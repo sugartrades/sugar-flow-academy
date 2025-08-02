@@ -44,7 +44,7 @@ export function XRPMarketCapVisualizer() {
     const levels: OrderBookLevel[] = [];
     let cumulative = 0;
     
-    // Generate order book levels from $3 to $1000+
+    // Generate order book levels from current XRP price to $1000+
     for (let price = INITIAL_XRP_PRICE; price <= 1000; price += 0.01) {
       // Exponentially decreasing liquidity as price increases
       const baseSize = Math.max(100000, 10000000 * Math.exp(-(price - INITIAL_XRP_PRICE) * 0.5));
@@ -68,7 +68,7 @@ export function XRPMarketCapVisualizer() {
     }
     
     return levels;
-  }, []);
+  }, [INITIAL_XRP_PRICE]); // Include INITIAL_XRP_PRICE in dependencies
 
   // Calculate simulation results
   const simulationResults = useMemo((): SimulationResults => {
@@ -112,7 +112,7 @@ export function XRPMarketCapVisualizer() {
       ordersExecuted,
       averageExecutionPrice
     };
-  }, [buyOrderSize, orderBook]);
+  }, [buyOrderSize, orderBook, INITIAL_XRP_PRICE]); // Include INITIAL_XRP_PRICE in dependencies
 
   const formatCurrency = (value: number) => {
     if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
