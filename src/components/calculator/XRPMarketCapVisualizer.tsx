@@ -169,14 +169,14 @@ export function XRPMarketCapVisualizer() {
               <div className="text-2xl font-bold text-primary">
                 {formatSliderValue(buyOrderSize[0])}
               </div>
-              <span className="text-sm text-muted-foreground">$5B</span>
+              <span className="text-sm text-muted-foreground">$50B</span>
             </div>
             <Slider
               value={buyOrderSize}
               onValueChange={setBuyOrderSize}
               min={10000000}
-              max={5000000000}
-              step={25000000}
+              max={50000000000}
+              step={100000000}
               className="w-full"
             />
           </div>
