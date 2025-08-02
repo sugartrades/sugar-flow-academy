@@ -47,11 +47,14 @@ export function XRPMarketCapVisualizer({ xrpFloatSlider }: XRPMarketCapVisualize
   
   // Generate synthetic order book based on user-controlled XRP float
   const orderBook = useMemo((): OrderBookLevel[] => {
+    console.log('Regenerating order book - Price:', INITIAL_XRP_PRICE, 'Float:', xrpFloat);
     return generateSyntheticOrderBook(INITIAL_XRP_PRICE, xrpFloat);
   }, [INITIAL_XRP_PRICE, xrpFloat, generateSyntheticOrderBook]);
 
   // Calculate simulation results
   const simulationResults = useMemo((): SimulationResults => {
+    console.log('Recalculating simulation - Buy Order:', buyOrderSize[0], 'Order Book Levels:', orderBook.length);
+    
     const buyOrder = buyOrderSize[0];
     let remainingBuyOrder = buyOrder;
     let totalXRPBought = 0;
@@ -92,7 +95,7 @@ export function XRPMarketCapVisualizer({ xrpFloatSlider }: XRPMarketCapVisualize
       ordersExecuted,
       averageExecutionPrice
     };
-  }, [buyOrderSize, orderBook, INITIAL_XRP_PRICE]); // Include INITIAL_XRP_PRICE in dependencies
+  }, [buyOrderSize, orderBook, INITIAL_XRP_PRICE, xrpData]); // Add xrpData to ensure updates when price changes
 
   const formatCurrency = (value: number) => {
     if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
