@@ -1,23 +1,16 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, TrendingUp, TrendingDown, Minus, Waves } from 'lucide-react';
+import { RefreshCw, TrendingUp, TrendingDown, Minus, Sliders } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Slider } from '@/components/ui/slider';
 import { useXRPMarketData } from '@/hooks/useXRPMarketData';
-import { useXRPOrderBookData } from '@/hooks/useXRPOrderBookData';
+import { useXRPFloatSlider } from '@/hooks/useXRPFloatSlider';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function XRPMarketDataPanel() {
   const { xrpData, loading, error, lastUpdated, refetch } = useXRPMarketData();
-  const { 
-    orderBookData, 
-    loading: orderBookLoading, 
-    error: orderBookError, 
-    refetch: refetchOrderBook,
-    selectedExchange,
-    setSelectedExchange
-  } = useXRPOrderBookData();
+  const { xrpFloat, setXrpFloat, formatFloat } = useXRPFloatSlider();
 
   const formatPrice = (price: number): string => {
     return `$${price.toFixed(4)}`;
@@ -61,32 +54,6 @@ export function XRPMarketDataPanel() {
     return `${diffHours}h ago`;
   };
 
-  const formatFloat = (float: number) => {
-    if (float >= 1000000) {
-      return `${(float / 1000000).toFixed(1)}M`;
-    } else if (float >= 1000) {
-      return `${(float / 1000).toFixed(1)}K`;
-    }
-    return float.toLocaleString();
-  };
-
-  const getSelectedExchangeData = () => {
-    if (!orderBookData || !selectedExchange) return null;
-    return orderBookData.exchanges.find(ex => ex.exchange === selectedExchange);
-  };
-
-  const getDisplayFloat = () => {
-    if (!orderBookData) return 0;
-    
-    if (selectedExchange === 'average') {
-      return orderBookData.averageFloat;
-    } else if (selectedExchange === 'aggregated') {
-      return orderBookData.aggregatedFloat;
-    } else {
-      const exchangeData = getSelectedExchangeData();
-      return exchangeData?.xrpFloat || 0;
-    }
-  };
 
   if (loading && !xrpData) {
     return (
@@ -176,89 +143,44 @@ export function XRPMarketDataPanel() {
         </Card>
       </div>
 
-      {/* XRP Float Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Exchange Selection</CardTitle>
-            <Waves className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <Select value={selectedExchange || ''} onValueChange={setSelectedExchange}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select exchange or view" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="average">Average Float</SelectItem>
-                <SelectItem value="aggregated">Aggregated Float</SelectItem>
-                {orderBookData?.exchanges.map((exchange) => (
-                  <SelectItem key={exchange.exchange} value={exchange.exchange}>
-                    {exchange.exchange.charAt(0).toUpperCase() + exchange.exchange.slice(1)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground mt-2">
-              Available XRP within 5% of current price
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">XRP Float</CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={refetchOrderBook}
-              className="h-8 w-8 p-0"
-              disabled={orderBookLoading}
-            >
-              <RefreshCw className={`h-4 w-4 ${orderBookLoading ? 'animate-spin' : ''}`} />
-            </Button>
-          </CardHeader>
-          <CardContent>
-            {orderBookLoading ? (
-              <Skeleton className="h-8 w-24 mb-2" />
-            ) : (
-              <div className="text-2xl font-bold">{formatFloat(getDisplayFloat())} XRP</div>
-            )}
-            <p className="text-xs text-muted-foreground">
-              {selectedExchange === 'average' && 'Average across exchanges'}
-              {selectedExchange === 'aggregated' && 'Total across exchanges'}
-              {selectedExchange && !['average', 'aggregated'].includes(selectedExchange) && 
-                `From ${selectedExchange.charAt(0).toUpperCase() + selectedExchange.slice(1)}`}
-              {!selectedExchange && 'Select an exchange to view'}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Liquidity Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {orderBookLoading ? (
-              <Skeleton className="h-4 w-16 mb-2" />
-            ) : (
-              <div className="text-sm font-medium text-green-600">
-                {orderBookData?.exchanges.length || 0} Exchanges
+      {/* XRP Float Control */}
+      <Card className="border-primary/20 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="flex items-center gap-2">
+            <Sliders className="h-4 w-4 text-primary" />
+            Manual XRP Float Estimation
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">1B XRP</span>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-primary">{formatFloat(xrpFloat)} XRP</div>
+                <p className="text-xs text-muted-foreground">Available liquidity estimate</p>
               </div>
-            )}
-            {orderBookError && (
-              <p className="text-xs text-red-500 mb-1">
-                {orderBookError}
-              </p>
-            )}
-            <p className="text-xs text-muted-foreground">
-              {orderBookData?.lastUpdated ? 
-                `Updated ${formatTimeAgo(new Date(orderBookData.lastUpdated))}` : 
-                'No data available'
-              }
+              <span className="text-sm text-muted-foreground">30B XRP</span>
+            </div>
+            <Slider
+              value={[xrpFloat]}
+              onValueChange={(value) => setXrpFloat(value[0])}
+              min={1}
+              max={30}
+              step={0.5}
+              className="w-full"
+            />
+          </div>
+          <div className="text-sm text-muted-foreground">
+            <p className="mb-2">
+              <strong>Manual Control:</strong> Set your estimate for available XRP liquidity in the order book.
             </p>
-          </CardContent>
-        </Card>
-      </div>
+            <p>
+              This represents XRP available within reasonable price ranges (~5-10% above current price) 
+              for large buy orders. Higher values = deeper liquidity = less price impact.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

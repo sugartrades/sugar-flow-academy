@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { useXRPMarketData } from '@/hooks/useXRPMarketData';
-import { useXRPOrderBookData } from '@/hooks/useXRPOrderBookData';
+import { useXRPFloatSlider } from '@/hooks/useXRPFloatSlider';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { 
@@ -35,59 +35,16 @@ interface SimulationResults {
 export function XRPMarketCapVisualizer() {
   const [buyOrderSize, setBuyOrderSize] = useState([100000000]); // $100M default
   const { xrpData, loading: marketDataLoading } = useXRPMarketData();
-  const { orderBookData, selectedExchange } = useXRPOrderBookData();
+  const { xrpFloat, generateSyntheticOrderBook } = useXRPFloatSlider();
   
   // XRP constants
   const XRP_SUPPLY = 99987000000; // ~99.987 billion XRP in circulation
   const INITIAL_XRP_PRICE = xrpData?.price || 0.60; // Use live price or fallback
   
-  // Use live order book data if available, otherwise fall back to synthetic
+  // Generate synthetic order book based on user-controlled XRP float
   const orderBook = useMemo((): OrderBookLevel[] => {
-    // Try to use live order book data first
-    if (orderBookData && selectedExchange && selectedExchange !== 'average' && selectedExchange !== 'aggregated') {
-      const exchangeData = orderBookData.exchanges.find(ex => ex.exchange === selectedExchange);
-      if (exchangeData?.orderBook.asks) {
-        let cumulative = 0;
-        return exchangeData.orderBook.asks.map(ask => {
-          cumulative += ask.size;
-          return {
-            price: ask.price,
-            size: ask.size,
-            cumulative
-          };
-        });
-      }
-    }
-    
-    // Fall back to synthetic order book
-    const levels: OrderBookLevel[] = [];
-    let cumulative = 0;
-    
-    // Generate order book levels from current XRP price to $1000+
-    for (let price = INITIAL_XRP_PRICE; price <= 1000; price += 0.01) {
-      // Exponentially decreasing liquidity as price increases
-      const baseSize = Math.max(100000, 10000000 * Math.exp(-(price - INITIAL_XRP_PRICE) * 0.5));
-      
-      // Add some randomness but keep it realistic
-      const randomFactor = 0.7 + Math.random() * 0.6;
-      const size = baseSize * randomFactor;
-      
-      cumulative += size;
-      
-      levels.push({
-        price: Number(price.toFixed(2)),
-        size,
-        cumulative
-      });
-      
-      // Larger price jumps at higher levels for performance
-      if (price > 10) price += 0.04;
-      if (price > 50) price += 0.20;
-      if (price > 100) price += 1.00;
-    }
-    
-    return levels;
-  }, [INITIAL_XRP_PRICE, orderBookData, selectedExchange]); // Include live data dependencies
+    return generateSyntheticOrderBook(INITIAL_XRP_PRICE, xrpFloat);
+  }, [INITIAL_XRP_PRICE, xrpFloat, generateSyntheticOrderBook]);
 
   // Calculate simulation results
   const simulationResults = useMemo((): SimulationResults => {
@@ -309,39 +266,23 @@ export function XRPMarketCapVisualizer() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-            <div className="space-y-3 text-sm">
+          <div className="space-y-3 text-sm">
             <p className="font-medium">
-              {selectedExchange && !['average', 'aggregated'].includes(selectedExchange) 
-                ? `Live Order Book Analysis - ${selectedExchange.charAt(0).toUpperCase() + selectedExchange.slice(1)}`
-                : 'Why does price move so much on low liquidity?'
-              }
+              Market Impact Analysis - User-Controlled Liquidity
             </p>
             <div className="space-y-2 text-muted-foreground">
-              {selectedExchange && !['average', 'aggregated'].includes(selectedExchange) ? (
-                <>
-                  <p>
-                    • <strong>Real Market Data:</strong> Using live order book from {selectedExchange.charAt(0).toUpperCase() + selectedExchange.slice(1)} exchange
-                  </p>
-                  <p>
-                    • <strong>Actual Liquidity:</strong> Shows real XRP available for purchase at current market prices
-                  </p>
-                  <p>
-                    • <strong>Live Price Impact:</strong> Demonstrates how your order would actually execute in the market
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p>
-                    • <strong>Order Book Depth:</strong> Large buy orders must consume multiple price levels to fill completely
-                  </p>
-                  <p>
-                    • <strong>Market Cap Multiplication:</strong> Price increases apply to the entire circulating supply (~100B XRP)
-                  </p>
-                  <p>
-                    • <strong>Liquidity Scarcity:</strong> Higher price levels typically have exponentially less liquidity available
-                  </p>
-                </>
-              )}
+              <p>
+                • <strong>Manual Liquidity Control:</strong> Using your estimated {xrpFloat.toFixed(1)}B XRP float for order book simulation
+              </p>
+              <p>
+                • <strong>Order Book Depth:</strong> Large buy orders must consume multiple price levels to fill completely
+              </p>
+              <p>
+                • <strong>Market Cap Multiplication:</strong> Price increases apply to the entire circulating supply (~100B XRP)
+              </p>
+              <p>
+                • <strong>Liquidity Impact:</strong> Higher liquidity estimates result in less dramatic price movements
+              </p>
               <p className="pt-2 font-medium text-foreground">
                 A {formatCurrency(buyOrderSize[0])} buy order creates a {formatCurrency(simulationResults.marketCapIncrease)} market cap increase - 
                 a <span className="text-green-500 font-bold">{simulationResults.multiplier.toFixed(1)}x multiplier effect!</span>
