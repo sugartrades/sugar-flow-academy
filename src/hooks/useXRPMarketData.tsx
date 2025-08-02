@@ -58,10 +58,11 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
           });
           setLastUpdated(new Date());
           
-          // Clear error if we successfully got data
+          // Clear error if we successfully got data (only for live data)
           if (!data?.error && !data?.usingFallback) {
             setError(null);
           }
+          return; // Successfully set data, exit early
         } else {
           throw new Error('XRP data not found in market response');
         }
@@ -74,9 +75,14 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch XRP data';
       setError(errorMessage);
       
-      // Only set fallback data if we don't already have data
-      if (!xrpData) {
-        setXrpData({
+      // Only set fallback data if we don't already have valid data
+      setXrpData(prevData => {
+        if (prevData && prevData.price > 0) {
+          // Keep existing data if we have it
+          return prevData;
+        }
+        // Only use fallback if we have no data at all
+        return {
           symbol: 'XRP',
           name: 'XRP',
           price: 0.60, // Fallback price
@@ -84,13 +90,13 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
           marketCap: 0,
           sentiment: 'neutral',
           lastUpdated: new Date().toISOString()
-        });
-        setLastUpdated(new Date());
-      }
+        };
+      });
+      setLastUpdated(new Date());
     } finally {
       setLoading(false);
     }
-  }, [xrpData]); // Include xrpData in dependencies to prevent unnecessary fallback
+  }, []); // Remove xrpData dependency to prevent infinite loops
 
   useEffect(() => {
     fetchXRPData();
