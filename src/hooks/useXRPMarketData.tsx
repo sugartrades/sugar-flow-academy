@@ -79,15 +79,17 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
       setXrpData(prevData => {
         if (prevData && prevData.price > 0) {
           // Keep existing data if we have it
+          console.warn('Keeping existing XRP data due to API error:', errorMessage);
           return prevData;
         }
         // Only use fallback if we have no data at all
+        console.warn('Using fallback XRP data due to API error:', errorMessage);
         return {
           symbol: 'XRP',
           name: 'XRP',
-          price: 0.60, // Fallback price
+          price: 2.98, // Updated fallback price to current market value
           change24h: 0,
-          marketCap: 0,
+          marketCap: 170000000000, // Approximate current market cap
           sentiment: 'neutral',
           lastUpdated: new Date().toISOString()
         };
