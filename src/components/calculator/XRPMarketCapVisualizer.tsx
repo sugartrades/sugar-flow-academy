@@ -4,7 +4,6 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { useXRPMarketData } from '@/hooks/useXRPMarketData';
 import { Skeleton } from '@/components/ui/skeleton';
-import { UseXRPFloatSliderReturn } from '@/hooks/useXRPFloatSlider';
 import { Separator } from '@/components/ui/separator';
 import { 
   TrendingUp, 
@@ -32,29 +31,47 @@ interface SimulationResults {
   averageExecutionPrice: number;
 }
 
-interface XRPMarketCapVisualizerProps {
-  xrpFloatSlider: UseXRPFloatSliderReturn;
-}
-
-export function XRPMarketCapVisualizer({ xrpFloatSlider }: XRPMarketCapVisualizerProps) {
+export function XRPMarketCapVisualizer() {
   const [buyOrderSize, setBuyOrderSize] = useState([100000000]); // $100M default
   const { xrpData, loading: marketDataLoading } = useXRPMarketData();
-  const { xrpFloat, generateSyntheticOrderBook } = xrpFloatSlider;
   
   // XRP constants
   const XRP_SUPPLY = 99987000000; // ~99.987 billion XRP in circulation
   const INITIAL_XRP_PRICE = xrpData?.price || 0.60; // Use live price or fallback
   
-  // Generate synthetic order book based on user-controlled XRP float
+  // Generate realistic order book data
   const orderBook = useMemo((): OrderBookLevel[] => {
-    console.log('Regenerating order book - Price:', INITIAL_XRP_PRICE, 'Float:', xrpFloat);
-    return generateSyntheticOrderBook(INITIAL_XRP_PRICE, xrpFloat);
-  }, [INITIAL_XRP_PRICE, xrpFloat, generateSyntheticOrderBook]);
+    const levels: OrderBookLevel[] = [];
+    let cumulative = 0;
+    
+    // Generate order book levels from current XRP price to $1000+
+    for (let price = INITIAL_XRP_PRICE; price <= 1000; price += 0.01) {
+      // Exponentially decreasing liquidity as price increases
+      const baseSize = Math.max(100000, 10000000 * Math.exp(-(price - INITIAL_XRP_PRICE) * 0.5));
+      
+      // Add some randomness but keep it realistic
+      const randomFactor = 0.7 + Math.random() * 0.6;
+      const size = baseSize * randomFactor;
+      
+      cumulative += size;
+      
+      levels.push({
+        price: Number(price.toFixed(2)),
+        size,
+        cumulative
+      });
+      
+      // Larger price jumps at higher levels for performance
+      if (price > 10) price += 0.04;
+      if (price > 50) price += 0.20;
+      if (price > 100) price += 1.00;
+    }
+    
+    return levels;
+  }, [INITIAL_XRP_PRICE]); // Include INITIAL_XRP_PRICE in dependencies
 
   // Calculate simulation results
   const simulationResults = useMemo((): SimulationResults => {
-    console.log('Recalculating simulation - Buy Order:', buyOrderSize[0], 'Order Book Levels:', orderBook.length);
-    
     const buyOrder = buyOrderSize[0];
     let remainingBuyOrder = buyOrder;
     let totalXRPBought = 0;
@@ -95,7 +112,7 @@ export function XRPMarketCapVisualizer({ xrpFloatSlider }: XRPMarketCapVisualize
       ordersExecuted,
       averageExecutionPrice
     };
-  }, [buyOrderSize, orderBook, INITIAL_XRP_PRICE, xrpData]); // Add xrpData to ensure updates when price changes
+  }, [buyOrderSize, orderBook, INITIAL_XRP_PRICE]); // Include INITIAL_XRP_PRICE in dependencies
 
   const formatCurrency = (value: number) => {
     if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
@@ -274,13 +291,8 @@ export function XRPMarketCapVisualizer({ xrpFloatSlider }: XRPMarketCapVisualize
         </CardHeader>
         <CardContent>
           <div className="space-y-3 text-sm">
-            <p className="font-medium">
-              Market Impact Analysis - User-Controlled Liquidity
-            </p>
+            <p className="font-medium">Why does price move so much on low liquidity?</p>
             <div className="space-y-2 text-muted-foreground">
-              <p>
-                • <strong>Manual Liquidity Control:</strong> Using your estimated {xrpFloat.toFixed(1)}B XRP float for order book simulation
-              </p>
               <p>
                 • <strong>Order Book Depth:</strong> Large buy orders must consume multiple price levels to fill completely
               </p>
@@ -288,7 +300,7 @@ export function XRPMarketCapVisualizer({ xrpFloatSlider }: XRPMarketCapVisualize
                 • <strong>Market Cap Multiplication:</strong> Price increases apply to the entire circulating supply (~100B XRP)
               </p>
               <p>
-                • <strong>Liquidity Impact:</strong> Higher liquidity estimates result in less dramatic price movements
+                • <strong>Liquidity Scarcity:</strong> Higher price levels typically have exponentially less liquidity available
               </p>
               <p className="pt-2 font-medium text-foreground">
                 A {formatCurrency(buyOrderSize[0])} buy order creates a {formatCurrency(simulationResults.marketCapIncrease)} market cap increase - 

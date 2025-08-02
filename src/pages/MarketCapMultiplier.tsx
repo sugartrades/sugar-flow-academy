@@ -3,10 +3,8 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { XRPMarketCapVisualizer } from '@/components/calculator/XRPMarketCapVisualizer';
 import { XRPMarketDataPanel } from '@/components/calculator/XRPMarketDataPanel';
-import { useXRPFloatSlider } from '@/hooks/useXRPFloatSlider';
 
 export default function MarketCapMultiplier() {
-  const xrpFloatSlider = useXRPFloatSlider();
   return (
     <div className="min-h-screen bg-background">
       <Header showAuth={true} />
@@ -22,8 +20,8 @@ export default function MarketCapMultiplier() {
           </p>
         </div>
 
-        <XRPMarketDataPanel xrpFloatSlider={xrpFloatSlider} />
-        <XRPMarketCapVisualizer xrpFloatSlider={xrpFloatSlider} />
+        <XRPMarketDataPanel />
+        <XRPMarketCapVisualizer />
       </main>
 
       <Footer />
