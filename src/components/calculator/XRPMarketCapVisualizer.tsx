@@ -5,13 +5,15 @@ import { Badge } from '@/components/ui/badge';
 import { useXRPMarketData } from '@/hooks/useXRPMarketData';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { 
   TrendingUp, 
   DollarSign, 
   BarChart3, 
   Lightbulb,
   ArrowRight,
-  Target
+  Target,
+  HelpCircle
 } from 'lucide-react';
 
 interface OrderBookLevel {
@@ -164,7 +166,8 @@ export function XRPMarketCapVisualizer() {
   }
 
   return (
-    <div className="space-y-8">
+    <TooltipProvider>
+      <div className="space-y-8">
       {/* XRP Float Slider */}
       <Card className="border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 backdrop-blur">
         <CardHeader>
@@ -203,10 +206,23 @@ export function XRPMarketCapVisualizer() {
       {/* Buy Order Size Slider */}
       <Card className="border-primary/20 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-primary" />
-            Buy Order Size
-          </CardTitle>
+          <div className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-primary" />
+              Buy Pressure Simulation Size
+            </CardTitle>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="w-4 h-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>Large buys are typically broken up algorithmically across exchanges. This tool visualizes what that pressure would look like if condensed.</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            (Simulates cumulative buy pressure, not necessarily one trader)
+          </p>
           {xrpData && (
             <p className="text-sm text-muted-foreground">
               Using live XRP price: ${xrpData.price.toFixed(4)}
@@ -361,6 +377,7 @@ export function XRPMarketCapVisualizer() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }
