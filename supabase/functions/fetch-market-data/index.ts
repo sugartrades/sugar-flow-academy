@@ -16,6 +16,11 @@ interface CryptoData {
   sentiment: string;
 }
 
+// Simple in-memory cache
+let cachedData: any = null;
+let cacheTimestamp: number = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -23,7 +28,24 @@ serve(async (req) => {
   }
 
   try {
-    console.log('Fetching market data for BTC, ETH, and XRP from CoinGecko API...');
+    const now = Date.now();
+    
+    // Check if we have valid cached data
+    if (cachedData && (now - cacheTimestamp) < CACHE_DURATION) {
+      console.log('Returning cached market data, age:', Math.floor((now - cacheTimestamp) / 1000), 'seconds');
+      return new Response(JSON.stringify({
+        ...cachedData,
+        fromCache: true,
+        cacheAge: Math.floor((now - cacheTimestamp) / 1000)
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log('Cache miss or expired, fetching fresh data from CoinGecko API...');
+    
+    // Add delay to help with rate limiting
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     // Fetch Bitcoin, Ethereum, and XRP data from CoinGecko API
     const response = await fetch(
@@ -31,11 +53,25 @@ serve(async (req) => {
       {
         headers: {
           'Accept': 'application/json',
+          'User-Agent': 'SugarTrades/1.0'
         },
       }
     );
 
     if (!response.ok) {
+      // If we have cached data, return it even if expired
+      if (cachedData) {
+        console.log('API failed but returning stale cached data due to rate limiting');
+        return new Response(JSON.stringify({
+          ...cachedData,
+          fromCache: true,
+          stale: true,
+          error: `API Error: ${response.status}`,
+          cacheAge: Math.floor((now - cacheTimestamp) / 1000)
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
       throw new Error(`CoinGecko API error: ${response.status}`);
     }
 
@@ -95,7 +131,11 @@ serve(async (req) => {
       lastUpdated: new Date().toISOString()
     };
 
-    console.log('Returning market data:', marketData);
+    // Cache the successful response
+    cachedData = marketData;
+    cacheTimestamp = now;
+
+    console.log('Returning fresh market data and caching it');
 
     return new Response(JSON.stringify(marketData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -103,6 +143,21 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in fetch-market-data function:', error);
+    
+    // If we have cached data, return it even if stale
+    if (cachedData) {
+      const now = Date.now();
+      console.log('Returning stale cached data due to API error');
+      return new Response(JSON.stringify({
+        ...cachedData,
+        fromCache: true,
+        stale: true,
+        error: `API Error: ${error.message}`,
+        cacheAge: Math.floor((now - cacheTimestamp) / 1000)
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     
     // Return a successful response with fallback data instead of a 500 error
     const fallbackData = {

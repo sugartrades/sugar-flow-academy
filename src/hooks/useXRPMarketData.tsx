@@ -103,8 +103,8 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
   useEffect(() => {
     fetchXRPData();
     
-    // Set up auto-refresh every 2 minutes
-    const interval = setInterval(fetchXRPData, 2 * 60 * 1000);
+    // Set up auto-refresh every 5 minutes to reduce API pressure
+    const interval = setInterval(fetchXRPData, 5 * 60 * 1000);
     
     return () => clearInterval(interval);
   }, [fetchXRPData]);
