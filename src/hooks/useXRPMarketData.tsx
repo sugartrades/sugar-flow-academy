@@ -87,7 +87,7 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
         return {
           symbol: 'XRP',
           name: 'XRP',
-          price: 2.98, // Updated fallback price to current market value
+          price: 3.00, // Updated fallback price to $3.00
           change24h: 0,
           marketCap: 170000000000, // Approximate current market cap
           sentiment: 'neutral',

@@ -181,9 +181,9 @@ serve(async (req) => {
         {
           symbol: 'XRP',
           name: 'XRP',
-          price: 0.60,
+          price: 3.00,
           change24h: 0,
-          marketCap: 35000000000,
+          marketCap: 170000000000,
           sentiment: 'Neutral'
         }
       ],
