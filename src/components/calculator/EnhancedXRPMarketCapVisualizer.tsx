@@ -61,11 +61,18 @@ export function EnhancedXRPMarketCapVisualizer() {
   };
 
   const handleBuyOrderChange = (value: number[]) => {
+    console.log('🎯 Buy order size changed:', value[0]);
     setBuyOrderSize(value[0]);
   };
 
   // Generate realistic order book with derivatives-influenced depth
   const orderBook = useMemo((): OrderBookLevel[] => {
+    console.log('📚 orderBook useMemo triggered with:', { 
+      currentPrice, 
+      calculatedFloat, 
+      derivativesEnabled 
+    });
+    
     const baseDepthMultiplier = derivativesEnabled && derivativesData 
       ? derivativesData.leverageMultiplier 
       : 1.0;
@@ -99,6 +106,16 @@ export function EnhancedXRPMarketCapVisualizer() {
 
   // Calculate simulation results with leverage effects
   const simulationResults = useMemo((): SimulationResults => {
+    console.log('🔄 simulationResults useMemo triggered');
+    console.log('📊 Simulation Parameters:', { 
+      buyOrderSize, 
+      currentPrice, 
+      orderBookLength: orderBook.length,
+      derivativesEnabled,
+      leverageAmplifier,
+      marketCap: xrpData?.marketCap
+    });
+    
     let totalCost = 0;
     let finalPrice = currentPrice;
     let liquidityConsumed = 0;
