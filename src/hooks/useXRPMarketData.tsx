@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useDerivativesData } from './useDerivativesData';
 
 interface XRPMarketData {
   symbol: string;
@@ -11,19 +12,34 @@ interface XRPMarketData {
   lastUpdated: string;
 }
 
+interface EnhancedXRPMarketData extends XRPMarketData {
+  derivatives?: {
+    totalOpenInterest: number;
+    avgLongShortRatio: number;
+    avgFundingRate: number;
+    leverageMultiplier: number;
+    estimatedFloat: number;
+  };
+}
+
 interface UseXRPMarketDataReturn {
-  xrpData: XRPMarketData | null;
+  xrpData: EnhancedXRPMarketData | null;
   loading: boolean;
   error: string | null;
   lastUpdated: Date | null;
   refetch: () => Promise<void>;
+  derivativesEnabled: boolean;
+  setDerivativesEnabled: (enabled: boolean) => void;
 }
 
 export function useXRPMarketData(): UseXRPMarketDataReturn {
-  const [xrpData, setXrpData] = useState<XRPMarketData | null>(null);
+  const [xrpData, setXrpData] = useState<EnhancedXRPMarketData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [derivativesEnabled, setDerivativesEnabled] = useState(true);
+
+  const { aggregated: derivativesData, loading: derivativesLoading } = useDerivativesData();
 
   const fetchXRPData = useCallback(async () => {
     try {
@@ -52,10 +68,23 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
         );
         
         if (xrpCrypto) {
-          setXrpData({
+          const enhancedData: EnhancedXRPMarketData = {
             ...xrpCrypto,
             lastUpdated: data.lastUpdated
-          });
+          };
+
+          // Add derivatives data if enabled and available
+          if (derivativesEnabled && derivativesData) {
+            enhancedData.derivatives = {
+              totalOpenInterest: derivativesData.totalOpenInterest,
+              avgLongShortRatio: derivativesData.avgLongShortRatio,
+              avgFundingRate: derivativesData.avgFundingRate,
+              leverageMultiplier: derivativesData.leverageMultiplier,
+              estimatedFloat: derivativesData.estimatedFloat,
+            };
+          }
+
+          setXrpData(enhancedData);
           setLastUpdated(new Date());
           
           // Clear error if we successfully got data (only for live data)
@@ -111,9 +140,11 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
 
   return {
     xrpData,
-    loading,
+    loading: loading || derivativesLoading,
     error,
     lastUpdated,
-    refetch: fetchXRPData
+    refetch: fetchXRPData,
+    derivativesEnabled,
+    setDerivativesEnabled
   };
 }

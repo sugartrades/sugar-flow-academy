@@ -36,3 +36,9 @@ verify_jwt = false
 
 [functions.test-welcome-email]
 verify_jwt = false
+
+[functions.fetch-market-data]
+verify_jwt = false
+
+[functions.fetch-derivatives-data]
+verify_jwt = false

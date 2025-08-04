@@ -41,6 +41,90 @@ export type Database = {
         }
         Relationships: []
       }
+      derivatives_data: {
+        Row: {
+          created_at: string
+          data_timestamp: string
+          exchange: string
+          funding_rate: number | null
+          funding_rate_8h: number | null
+          id: string
+          liquidations_24h: number | null
+          long_short_ratio: number | null
+          open_interest: number | null
+          open_interest_24h_change: number | null
+          symbol: string
+          updated_at: string
+          volume_24h: number | null
+        }
+        Insert: {
+          created_at?: string
+          data_timestamp: string
+          exchange: string
+          funding_rate?: number | null
+          funding_rate_8h?: number | null
+          id?: string
+          liquidations_24h?: number | null
+          long_short_ratio?: number | null
+          open_interest?: number | null
+          open_interest_24h_change?: number | null
+          symbol?: string
+          updated_at?: string
+          volume_24h?: number | null
+        }
+        Update: {
+          created_at?: string
+          data_timestamp?: string
+          exchange?: string
+          funding_rate?: number | null
+          funding_rate_8h?: number | null
+          id?: string
+          liquidations_24h?: number | null
+          long_short_ratio?: number | null
+          open_interest?: number | null
+          open_interest_24h_change?: number | null
+          symbol?: string
+          updated_at?: string
+          volume_24h?: number | null
+        }
+        Relationships: []
+      }
+      market_sentiment: {
+        Row: {
+          calculated_at: string
+          confidence_level: number
+          created_at: string
+          data_sources: Json | null
+          id: string
+          metadata: Json | null
+          sentiment_label: string
+          sentiment_score: number
+          symbol: string
+        }
+        Insert: {
+          calculated_at?: string
+          confidence_level: number
+          created_at?: string
+          data_sources?: Json | null
+          id?: string
+          metadata?: Json | null
+          sentiment_label: string
+          sentiment_score: number
+          symbol?: string
+        }
+        Update: {
+          calculated_at?: string
+          confidence_level?: number
+          created_at?: string
+          data_sources?: Json | null
+          id?: string
+          metadata?: Json | null
+          sentiment_label?: string
+          sentiment_score?: number
+          symbol?: string
+        }
+        Relationships: []
+      }
       market_updates: {
         Row: {
           content: string

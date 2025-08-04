@@ -1,7 +1,7 @@
 import React from 'react';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
-import { XRPMarketCapVisualizer } from '@/components/calculator/XRPMarketCapVisualizer';
+import { EnhancedXRPMarketCapVisualizer } from '@/components/calculator/EnhancedXRPMarketCapVisualizer';
 import { XRPMarketDataPanel } from '@/components/calculator/XRPMarketDataPanel';
 
 export default function MarketCapMultiplier() {
@@ -21,7 +21,7 @@ export default function MarketCapMultiplier() {
         </div>
 
         <XRPMarketDataPanel />
-        <XRPMarketCapVisualizer />
+        <EnhancedXRPMarketCapVisualizer />
       </main>
 
       <Footer />
