@@ -715,9 +715,30 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      latest_derivatives_data: {
+        Row: {
+          created_at: string | null
+          data_timestamp: string | null
+          exchange: string | null
+          funding_rate: number | null
+          funding_rate_8h: number | null
+          id: string | null
+          liquidations_24h: number | null
+          long_short_ratio: number | null
+          open_interest: number | null
+          open_interest_24h_change: number | null
+          symbol: string | null
+          updated_at: string | null
+          volume_24h: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
+      analyze_market_sentiment: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
       analyze_whale_trends: {
         Args: { p_wallet_address: string; p_time_window?: string }
         Returns: Json
@@ -737,6 +758,10 @@ export type Database = {
       }
       generate_destination_tag_test_data: {
         Args: { p_count?: number }
+        Returns: Json
+      }
+      get_aggregated_derivatives_metrics: {
+        Args: Record<PropertyKey, never>
         Returns: Json
       }
       get_current_ledger_index: {
