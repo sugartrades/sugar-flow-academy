@@ -7,15 +7,20 @@ const corsHeaders = {
 }
 
 interface CoinglasspayloadResponse {
-  symbol: string
-  exchangeName: string
-  openInterest: number
-  openInterest24hPcnt: number
-  longShortRatio: number
-  fundingRate: number
-  fundingRate8h: number
-  liquidations24h: number
-  volume24h: number
+  code: string
+  msg: string
+  data: {
+    symbol: string
+    exchange: string
+    openInterest: number
+    openInterestChange24h: number
+    longShortRatio: number
+    fundingRate: number
+    fundingRate8h: number
+    liquidationVolume24h: number
+    volume24h: number
+    priceChangePercent24h: number
+  }[]
 }
 
 interface DerivativesData {
@@ -87,32 +92,56 @@ serve(async (req) => {
         // Rate limiting delay
         await new Promise(resolve => setTimeout(resolve, 200))
 
+        console.log(`Fetching data for ${exchange} from CoinGlass API...`)
+        
+        // CoinGlass API v2 endpoint for futures data
         const response = await fetch(
-          `https://open-api.coinglass.com/public/v2/futures_data?symbol=XRP&exchange=${exchange}`,
+          `https://open-api.coinglass.com/public/v2/indicator/futures-data?symbol=XRP&ex=${exchange}`,
           {
             headers: {
-              'coinglassSecret': coinglassApiKey,
-              'Content-Type': 'application/json'
+              'CG-API-KEY': coinglassApiKey,
+              'Accept': 'application/json'
             }
           }
         )
 
+        console.log(`Response status for ${exchange}: ${response.status}`)
+
         if (!response.ok) {
-          console.warn(`Failed to fetch data for ${exchange}: ${response.status}`)
+          const errorText = await response.text()
+          console.warn(`Failed to fetch data for ${exchange}: ${response.status} - ${errorText}`)
+          
+          // Check for specific error types
+          if (response.status === 401) {
+            console.error('Invalid CoinGlass API key')
+          } else if (response.status === 403) {
+            console.error('Insufficient permissions or rate limit exceeded')
+          } else if (response.status === 404) {
+            console.error('API endpoint not found - check URL format')
+          }
           continue
         }
 
-        const data: CoinglasspayloadResponse = await response.json()
+        const apiResponse: CoinglasspayloadResponse = await response.json()
+        
+        // Check if API response is successful
+        if (apiResponse.code !== '0' || !apiResponse.data || apiResponse.data.length === 0) {
+          console.warn(`No data returned for ${exchange}: ${apiResponse.msg || 'Unknown error'}`)
+          continue
+        }
+
+        // Process the first data item (should be XRP data for the exchange)
+        const data = apiResponse.data[0]
         
         derivativesData.push({
           symbol: 'XRP',
           exchange: exchange,
           open_interest: data.openInterest || 0,
-          open_interest_24h_change: data.openInterest24hPcnt || 0,
+          open_interest_24h_change: data.openInterestChange24h || 0,
           long_short_ratio: data.longShortRatio || 1,
           funding_rate: data.fundingRate || 0,
           funding_rate_8h: data.fundingRate8h || 0,
-          liquidations_24h: data.liquidations24h || 0,
+          liquidations_24h: data.liquidationVolume24h || 0,
           volume_24h: data.volume24h || 0,
           data_timestamp: new Date().toISOString()
         })

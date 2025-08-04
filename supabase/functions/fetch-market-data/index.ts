@@ -21,11 +21,14 @@ interface CoinglassLiquidationResponse {
   code: string;
   msg: string;
   data: {
-    dateList: string[];
+    totalLiquidation: number;
+    totalLong: number;
+    totalShort: number;
     dataMap: {
       [exchange: string]: {
-        longLiquidation: string[];
-        shortLiquidation: string[];
+        long: number;
+        short: number;
+        total: number;
       };
     };
   };
@@ -83,14 +86,14 @@ serve(async (req) => {
     if (coinglassApiKey) {
       try {
         console.log('Attempting to fetch XRP liquidation data from Coinglass...');
-        // Use liquidation historical endpoint which is available in Hobbyist tier
+        // Use liquidation endpoint with proper parameters
         const liquidationResponse = await fetch(
-          'https://open-api.coinglass.com/public/v2/liquidation_history?symbol=XRP&interval=1d&limit=2',
+          'https://open-api.coinglass.com/public/v2/liquidation?symbol=XRP&time_type=1',
           {
             method: 'GET',
             headers: {
-              'coinglassSecret': coinglassApiKey,
-              'Content-Type': 'application/json'
+              'CG-API-KEY': coinglassApiKey,
+              'Accept': 'application/json'
             }
           }
         );
@@ -103,26 +106,15 @@ serve(async (req) => {
           console.log('Coinglass liquidation parsed data:', liquidationData);
           
           if (liquidationData.code === "0" && liquidationData.data) {
-            // Calculate 24h liquidations from the last available data
-            const dataMap = liquidationData.data.dataMap;
+            // Extract liquidation data from the response
+            const data = liquidationData.data;
+            const dataMap = data.dataMap;
             const exchanges = Object.keys(dataMap);
-            let total24hLong = 0;
-            let total24hShort = 0;
-            
-            exchanges.forEach(exchange => {
-              const exchangeData = dataMap[exchange];
-              if (exchangeData.longLiquidation.length > 0) {
-                total24hLong += parseFloat(exchangeData.longLiquidation[exchangeData.longLiquidation.length - 1] || '0');
-              }
-              if (exchangeData.shortLiquidation.length > 0) {
-                total24hShort += parseFloat(exchangeData.shortLiquidation[exchangeData.shortLiquidation.length - 1] || '0');
-              }
-            });
             
             xrpLiquidations = {
-              total24h: total24hLong + total24hShort,
-              long24h: total24hLong,
-              short24h: total24hShort,
+              total24h: data.totalLiquidation || 0,
+              long24h: data.totalLong || 0,
+              short24h: data.totalShort || 0,
               exchanges: exchanges
             };
             
