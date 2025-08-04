@@ -65,7 +65,7 @@ export function EnhancedXRPMarketCapVisualizer() {
     setBuyOrderSize(value[0]);
   };
 
-  // Generate realistic order book with derivatives-influenced depth
+  // Generate realistic order book with enhanced depth and liquidity validation
   const orderBook = useMemo((): OrderBookLevel[] => {
     console.log('📚 orderBook useMemo triggered with:', { 
       currentPrice, 
@@ -80,18 +80,33 @@ export function EnhancedXRPMarketCapVisualizer() {
     const levels: OrderBookLevel[] = [];
     let cumulative = 0;
     
-    // Create 200 levels with varying liquidity
-    for (let i = 0; i < 200; i++) {
-      const priceMultiplier = 1 + (i * 0.002); // 0.2% increments
+    // Create 1000 levels for much deeper liquidity
+    const totalLevels = 1000;
+    const maxPriceIncrease = 2.0; // Allow up to 100% price increase
+    
+    for (let i = 0; i < totalLevels; i++) {
+      // Use a more gradual price progression for better liquidity distribution
+      const priceMultiplier = 1 + ((i / totalLevels) * maxPriceIncrease * 0.01); // More gradual increase
       const price = currentPrice * priceMultiplier;
       
-      // Exponentially decreasing liquidity with derivatives influence
-      const baseSize = (calculatedFloat * 0.001) / Math.pow(1.5, i / 10);
+      // Improved liquidity curve: slower decay for larger orders
+      let baseSize;
+      if (i < 100) {
+        // High liquidity for first 100 levels
+        baseSize = (calculatedFloat * 0.002) / Math.pow(1.2, i / 20);
+      } else if (i < 500) {
+        // Medium liquidity for next 400 levels
+        baseSize = (calculatedFloat * 0.001) / Math.pow(1.3, (i - 100) / 30);
+      } else {
+        // Lower but still significant liquidity for deeper levels
+        baseSize = (calculatedFloat * 0.0005) / Math.pow(1.4, (i - 500) / 40);
+      }
+      
       const derivativesInfluence = derivativesEnabled && derivativesData 
-        ? 1 + (derivativesData.avgFundingRate * 100) // Funding rate influence
+        ? Math.max(0.5, 1 + (derivativesData.avgFundingRate * 100)) // Prevent negative influence
         : 1.0;
       
-      const size = baseSize * baseDepthMultiplier * derivativesInfluence;
+      const size = Math.max(1000, baseSize * baseDepthMultiplier * derivativesInfluence); // Minimum 1000 XRP per level
       cumulative += size;
       
       levels.push({
@@ -101,20 +116,54 @@ export function EnhancedXRPMarketCapVisualizer() {
       });
     }
     
+    console.log('📊 Order book stats:', { 
+      totalLevels: levels.length, 
+      totalLiquidity: cumulative, 
+      maxPrice: levels[levels.length - 1]?.price 
+    });
+    
     return levels;
   }, [currentPrice, calculatedFloat, derivativesEnabled, derivativesData]);
 
-  // Calculate simulation results with leverage effects
+  // Calculate total available liquidity in order book
+  const totalAvailableLiquidity = useMemo(() => {
+    return orderBook.reduce((total, level) => total + level.size, 0);
+  }, [orderBook]);
+
+  // Calculate simulation results with enhanced safety checks
   const simulationResults = useMemo((): SimulationResults => {
     console.log('🔄 simulationResults useMemo triggered');
     console.log('📊 Simulation Parameters:', { 
       buyOrderSize, 
       currentPrice, 
       orderBookLength: orderBook.length,
+      totalAvailableLiquidity,
       derivativesEnabled,
       leverageAmplifier,
       marketCap: xrpData?.marketCap
     });
+    
+    // Safety check: validate inputs
+    if (!buyOrderSize || buyOrderSize <= 0 || !currentPrice || currentPrice <= 0) {
+      console.warn('⚠️ Invalid simulation parameters, returning defaults');
+      return {
+        finalPrice: currentPrice,
+        priceImpact: 0,
+        marketCapIncrease: 0,
+        leverageAdjustedMarketCap: xrpData?.marketCap || 0,
+        effectiveMultiplier: 1,
+        executedAmount: 0,
+        averageExecutionPrice: currentPrice,
+        slippagePercentage: 0,
+        liquidityConsumed: 0,
+        syntheticBuyPressure: 0
+      };
+    }
+    
+    // Check if buy order exceeds available liquidity
+    if (buyOrderSize > totalAvailableLiquidity) {
+      console.warn('⚠️ Buy order exceeds total available liquidity');
+    }
     
     let totalCost = 0;
     let finalPrice = currentPrice;
@@ -123,18 +172,24 @@ export function EnhancedXRPMarketCapVisualizer() {
     // Calculate synthetic buy pressure from derivatives
     let syntheticBuyPressure = 0;
     if (derivativesEnabled && derivativesData) {
-      const longShortImbalance = derivativesData.avgLongShortRatio - 1;
-      const fundingPressure = Math.abs(derivativesData.avgFundingRate) * 1000; // Convert to basis points
-      syntheticBuyPressure = (longShortImbalance + fundingPressure) * buyOrderSize * 0.1;
+      const longShortImbalance = Math.max(-1, Math.min(1, derivativesData.avgLongShortRatio - 1)); // Clamp to reasonable range
+      const fundingPressure = Math.max(0, Math.abs(derivativesData.avgFundingRate) * 1000); // Ensure positive
+      syntheticBuyPressure = Math.max(0, (longShortImbalance + fundingPressure) * buyOrderSize * 0.1);
     }
     
     // Calculate effective order size including synthetic pressure
     const effectiveOrderSize = buyOrderSize + syntheticBuyPressure;
     let remainingEffectiveAmount = effectiveOrderSize;
     
-    // Execute through order book
+    // Execute through order book with safety checks
     for (const level of orderBook) {
       if (remainingEffectiveAmount <= 0) break;
+      
+      // Safety check for level data
+      if (!level.size || level.size <= 0 || !level.price || level.price <= 0) {
+        console.warn('⚠️ Invalid order book level:', level);
+        continue;
+      }
       
       const amountToTake = Math.min(remainingEffectiveAmount, level.size);
       totalCost += amountToTake * level.price;
@@ -143,41 +198,43 @@ export function EnhancedXRPMarketCapVisualizer() {
       finalPrice = level.price;
     }
     
-    // Calculate executed amount based on actual liquidity consumed
-    // Since liquidityConsumed includes the synthetic pressure effect, 
-    // we need to calculate the actual XRP amount from the original buy order
+    // Safety checks for calculated values
     const executedAmount = Math.min(buyOrderSize, liquidityConsumed);
     const averageExecutionPrice = liquidityConsumed > 0 ? totalCost / liquidityConsumed : currentPrice;
-    const priceImpact = ((finalPrice - currentPrice) / currentPrice) * 100;
     
-    // Calculate market cap changes
+    // Prevent division by zero and invalid percentages
+    const priceImpact = currentPrice > 0 ? ((finalPrice - currentPrice) / currentPrice) * 100 : 0;
+    const slippagePercentage = currentPrice > 0 ? ((averageExecutionPrice - currentPrice) / currentPrice) * 100 : 0;
+    
+    // Calculate market cap changes with safety checks
     const currentMarketCap = xrpData?.marketCap || (currentPrice * 100000000000); // 100B total supply
-    const newMarketCap = (currentMarketCap / currentPrice) * finalPrice;
+    const newMarketCap = currentPrice > 0 ? (currentMarketCap / currentPrice) * finalPrice : currentMarketCap;
     const marketCapIncrease = newMarketCap - currentMarketCap;
     
     // Calculate leverage-adjusted market cap
     const leverageMultiplier = derivativesEnabled && derivativesData 
-      ? derivativesData.leverageMultiplier * leverageAmplifier
+      ? Math.max(0.1, derivativesData.leverageMultiplier * leverageAmplifier) // Prevent zero or negative multipliers
       : 1.0;
     
     const leverageAdjustedMarketCap = currentMarketCap + (marketCapIncrease * leverageMultiplier);
-    const effectiveMultiplier = leverageAdjustedMarketCap / currentMarketCap;
+    const effectiveMultiplier = currentMarketCap > 0 ? leverageAdjustedMarketCap / currentMarketCap : 1;
     
-    const slippagePercentage = ((averageExecutionPrice - currentPrice) / currentPrice) * 100;
-    
-    return {
-      finalPrice,
-      priceImpact,
+    const results = {
+      finalPrice: Math.max(currentPrice, finalPrice), // Ensure price never goes below current
+      priceImpact: Math.max(0, priceImpact), // Price impact should be positive for buy orders
       marketCapIncrease,
       leverageAdjustedMarketCap,
-      effectiveMultiplier,
+      effectiveMultiplier: Math.max(1, effectiveMultiplier), // Multiplier should be at least 1
       executedAmount,
-      averageExecutionPrice,
-      slippagePercentage,
+      averageExecutionPrice: Math.max(currentPrice, averageExecutionPrice), // Execution price should be at least current price
+      slippagePercentage: Math.max(0, slippagePercentage), // Slippage should be positive
       liquidityConsumed,
       syntheticBuyPressure
     };
-  }, [buyOrderSize, orderBook, currentPrice, xrpData?.marketCap, derivativesEnabled, derivativesData, leverageAmplifier]);
+    
+    console.log('✅ Simulation results:', results);
+    return results;
+  }, [buyOrderSize, orderBook, currentPrice, totalAvailableLiquidity, xrpData?.marketCap, derivativesEnabled, derivativesData, leverageAmplifier]);
 
   // Formatting functions
   const formatCurrency = (amount: number): string => {
@@ -314,8 +371,18 @@ export function EnhancedXRPMarketCapVisualizer() {
                 <span className="font-medium">{formatXRPValue(buyOrderSize)}</span>
                 <span>2B XRP</span>
               </div>
-              <div className="text-xs text-muted-foreground">
-                Market value: {formatCurrency(buyOrderSize * currentPrice)}
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">
+                  Market value: {formatCurrency(buyOrderSize * currentPrice)}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Available liquidity: {formatXRPValue(totalAvailableLiquidity)}
+                </div>
+                {buyOrderSize > totalAvailableLiquidity && (
+                  <div className="text-xs text-orange-600 font-medium">
+                    ⚠️ Order exceeds available liquidity
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>
