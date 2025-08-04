@@ -336,19 +336,27 @@ export function EnhancedXRPMarketCapVisualizer() {
                   <Badge variant={manualFloatOverride ? "destructive" : "default"}>
                     {manualFloatOverride ? "Manual" : (derivativesEnabled ? "Auto" : "Manual")}
                   </Badge>
-                  {manualFloatOverride && derivativesEnabled && derivativesData && (
+                  {derivativesEnabled && (
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
                             onClick={() => setManualFloatOverride(false)}
-                            className="text-xs px-2 py-1 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
+                            disabled={!derivativesData}
+                            className="text-xs px-2 py-1 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
                           >
-                            Reset to Auto
+                            {manualFloatOverride ? "Reset to Auto" : "Auto Mode"}
                           </button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Return to automatic calculation based on derivatives data</p>
+                          <p>
+                            {!derivativesData 
+                              ? "Live derivatives data not available" 
+                              : manualFloatOverride 
+                                ? "Return to automatic calculation based on derivatives data"
+                                : "Currently using automatic calculation"
+                            }
+                          </p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
