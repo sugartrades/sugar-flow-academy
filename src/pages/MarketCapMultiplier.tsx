@@ -3,6 +3,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { XRPMarketCapVisualizer } from '@/components/calculator/XRPMarketCapVisualizer';
 import { XRPMarketDataPanel } from '@/components/calculator/XRPMarketDataPanel';
+import { HistoricalDataValidator } from '@/components/calculator/HistoricalDataValidator';
 
 export default function MarketCapMultiplier() {
   return (
@@ -22,6 +23,10 @@ export default function MarketCapMultiplier() {
 
         <XRPMarketDataPanel />
         <XRPMarketCapVisualizer />
+        
+        <div className="mt-8">
+          <HistoricalDataValidator />
+        </div>
       </main>
 
       <Footer />
