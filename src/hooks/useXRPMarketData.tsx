@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useDerivativesData } from './useDerivativesData';
+import { useDerivativesData, AggregatedDerivatives } from './useDerivativesData';
 
 interface XRPMarketData {
   symbol: string;
@@ -77,13 +77,7 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
 
           // Add derivatives data if enabled and available
           if (derivativesEnabled && derivativesData) {
-            enhancedData.derivatives = {
-              totalOpenInterest: derivativesData.totalOpenInterest,
-              avgLongShortRatio: derivativesData.avgLongShortRatio,
-              avgFundingRate: derivativesData.avgFundingRate,
-              leverageMultiplier: derivativesData.leverageMultiplier,
-              estimatedFloat: derivativesData.estimatedFloat,
-            };
+            enhancedData.derivatives = derivativesData;
           }
 
           setXrpData(enhancedData);

@@ -36,7 +36,7 @@ export function LiveExchangeFloatEstimator({
     );
   }
 
-  if (!derivativesData) {
+  if (!derivativesData || !derivativesData.floatRange) {
     return (
       <Card>
         <CardHeader>
