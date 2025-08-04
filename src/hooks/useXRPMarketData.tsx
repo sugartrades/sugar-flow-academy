@@ -30,6 +30,7 @@ interface UseXRPMarketDataReturn {
   refetch: () => Promise<void>;
   derivativesEnabled: boolean;
   setDerivativesEnabled: (enabled: boolean) => void;
+  dataSource: string | null;
 }
 
 export function useXRPMarketData(): UseXRPMarketDataReturn {
@@ -38,6 +39,7 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [derivativesEnabled, setDerivativesEnabled] = useState(true);
+  const [dataSource, setDataSource] = useState<string | null>(null);
 
   const { aggregated: derivativesData, loading: derivativesLoading } = useDerivativesData();
 
@@ -86,6 +88,7 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
 
           setXrpData(enhancedData);
           setLastUpdated(new Date());
+          setDataSource(data.dataSource || 'coingecko');
           
           // Clear error if we successfully got data (only for live data)
           if (!data?.error && !data?.usingFallback) {
@@ -145,6 +148,7 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
     lastUpdated,
     refetch: fetchXRPData,
     derivativesEnabled,
-    setDerivativesEnabled
+    setDerivativesEnabled,
+    dataSource
   };
 }

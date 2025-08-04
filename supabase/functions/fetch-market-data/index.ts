@@ -1,6 +1,7 @@
 
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,6 +16,16 @@ interface CryptoData {
   marketCap: number;
   sentiment: string;
 }
+
+interface CoingrassPayload {
+  usdPrice: string;
+  price24hPcnt: string;
+}
+
+const supabase = createClient(
+  Deno.env.get('SUPABASE_URL') ?? '',
+  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+);
 
 // Simple in-memory cache
 let cachedData: any = null;
@@ -42,7 +53,56 @@ serve(async (req) => {
       });
     }
 
-    console.log('Cache miss or expired, fetching fresh data from CoinGecko API...');
+    console.log('Cache miss or expired, fetching fresh data...');
+    
+    // Check if Coinglass API key is available for XRP data
+    const coinglassApiKey = Deno.env.get('COINGLASS_API_KEY');
+    let dataSource = 'coingecko';
+    let xrpFromCoinglass = null;
+    
+    // Try to fetch XRP from Coinglass if API key is available
+    if (coinglassApiKey) {
+      try {
+        console.log('Attempting to fetch XRP data from Coinglass...');
+        const coinglassResponse = await fetch(
+          'https://api.coinglass.com/public/v2/indicator',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'coinglassSecret': coinglassApiKey,
+            },
+            body: JSON.stringify({
+              indicator: 'price',
+              symbol: 'XRP'
+            })
+          }
+        );
+
+        if (coinglassResponse.ok) {
+          const coinglassData = await coinglassResponse.json();
+          if (coinglassData.success && coinglassData.data) {
+            const payload = coinglassData.data as CoingrassPayload;
+            const price = parseFloat(payload.usdPrice);
+            const change24h = parseFloat(payload.price24hPcnt);
+            
+            xrpFromCoinglass = {
+              symbol: 'XRP',
+              name: 'XRP',
+              price: price,
+              change24h: change24h,
+              marketCap: price * 55000000000, // Approximate circulating supply
+              sentiment: getSentiment(change24h)
+            };
+            
+            dataSource = 'coinglass';
+            console.log('Successfully fetched XRP data from Coinglass:', xrpFromCoinglass);
+          }
+        }
+      } catch (error) {
+        console.log('Failed to fetch from Coinglass, falling back to CoinGecko:', error.message);
+      }
+    }
     
     // Add delay to help with rate limiting
     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -108,8 +168,10 @@ serve(async (req) => {
       });
     }
 
-    // Process XRP data
-    if (data.ripple) {
+    // Process XRP data - use Coinglass data if available, otherwise CoinGecko
+    if (xrpFromCoinglass) {
+      cryptos.push(xrpFromCoinglass);
+    } else if (data.ripple) {
       const xrp = data.ripple;
       const sentiment = getSentiment(xrp.usd_24h_change);
       cryptos.push({
@@ -128,7 +190,8 @@ serve(async (req) => {
 
     const marketData = {
       cryptos,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      dataSource: dataSource
     };
 
     // Cache the successful response

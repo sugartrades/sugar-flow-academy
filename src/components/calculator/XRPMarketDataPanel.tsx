@@ -4,10 +4,15 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useXRPMarketData } from '@/hooks/useXRPMarketData';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function XRPMarketDataPanel() {
-  const { xrpData, loading, error, lastUpdated, refetch } = useXRPMarketData();
+  const { xrpData, loading, error, lastUpdated, refetch, dataSource } = useXRPMarketData();
+  const { isAdmin, loading: roleLoading } = useUserRole();
+  
+  // Show refresh button for admins or when data source is not Coinglass
+  const showRefreshButton = isAdmin || dataSource !== 'coinglass';
 
   const formatPrice = (price: number): string => {
     return `$${price.toFixed(4)}`;
@@ -107,18 +112,25 @@ export function XRPMarketDataPanel() {
           </div>
 
           <div className="flex flex-col items-end gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={refetch}
-              disabled={loading}
-              className="h-10 w-10 p-0"
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-            </Button>
+            {showRefreshButton && !roleLoading && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={refetch}
+                disabled={loading}
+                className="h-10 w-10 p-0"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              </Button>
+            )}
             <div className="text-xs text-muted-foreground">
               {lastUpdated ? formatTimeAgo(lastUpdated) : 'Never'}
             </div>
+            {dataSource && (
+              <div className="text-xs text-muted-foreground">
+                Source: {dataSource === 'coinglass' ? 'Coinglass' : 'CoinGecko'}
+              </div>
+            )}
           </div>
         </div>
         
