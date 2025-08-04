@@ -10,6 +10,12 @@ interface XRPMarketData {
   marketCap: number;
   sentiment: string;
   lastUpdated: string;
+  liquidations?: {
+    total24h: number;
+    long24h: number;
+    short24h: number;
+    exchanges: string[];
+  };
 }
 
 interface EnhancedXRPMarketData extends XRPMarketData {

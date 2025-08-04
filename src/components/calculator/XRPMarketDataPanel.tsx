@@ -128,11 +128,44 @@ export function XRPMarketDataPanel() {
             </div>
             {dataSource && (
               <div className="text-xs text-muted-foreground">
-                Source: {dataSource === 'coinglass' ? 'Coinglass' : 'CoinGecko'}
+                Source: {dataSource === 'coinglass+coingecko' ? 'CoinGecko + Coinglass' : 
+                         dataSource === 'coinglass' ? 'Coinglass' : 'CoinGecko'}
               </div>
             )}
           </div>
         </div>
+        
+        {/* Display liquidation data if available */}
+        {xrpData?.liquidations && (
+          <div className="mt-4 border-t pt-4">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-sm font-medium">24h Liquidations</span>
+              <Badge variant="outline" className="text-xs">
+                {xrpData.liquidations.exchanges.length} exchanges
+              </Badge>
+            </div>
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <div>
+                <div className="text-muted-foreground">Total</div>
+                <div className="font-medium">
+                  ${(xrpData.liquidations.total24h / 1000000).toFixed(2)}M
+                </div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Longs</div>
+                <div className="font-medium text-red-500">
+                  ${(xrpData.liquidations.long24h / 1000000).toFixed(2)}M
+                </div>
+              </div>
+              <div>
+                <div className="text-muted-foreground">Shorts</div>
+                <div className="font-medium text-green-500">
+                  ${(xrpData.liquidations.short24h / 1000000).toFixed(2)}M
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         
         {error && (
           <div className="mt-3 text-sm text-amber-600 bg-amber-50 p-2 rounded">

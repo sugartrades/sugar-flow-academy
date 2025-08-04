@@ -17,16 +17,27 @@ interface CryptoData {
   sentiment: string;
 }
 
-interface CoinglassResponse {
+interface CoinglassLiquidationResponse {
   code: string;
   msg: string;
   data: {
-    symbol: string;
-    price: string;
-    priceChangePercent: string;
-    marketCap: string;
-    volume24h: string;
-  }[];
+    dateList: string[];
+    dataMap: {
+      [exchange: string]: {
+        longLiquidation: string[];
+        shortLiquidation: string[];
+      };
+    };
+  };
+}
+
+interface CryptolDataWithLiquidations extends CryptoData {
+  liquidations?: {
+    total24h: number;
+    long24h: number;
+    short24h: number;
+    exchanges: string[];
+  };
 }
 
 const supabase = createClient(
@@ -67,55 +78,71 @@ serve(async (req) => {
     let dataSource = 'coingecko';
     let xrpFromCoinglass = null;
     
-    // Try to fetch XRP from Coinglass if API key is available
+    // Try to fetch XRP liquidation data from Coinglass (available in Hobbyist tier)
+    let xrpLiquidations = null;
     if (coinglassApiKey) {
       try {
-        console.log('Attempting to fetch XRP data from Coinglass v4 API...');
-        const coinglassResponse = await fetch(
-          'https://open-api-v4.coinglass.com/api/spot/coins-markets?symbol=XRP',
+        console.log('Attempting to fetch XRP liquidation data from Coinglass...');
+        // Use liquidation historical endpoint which is available in Hobbyist tier
+        const liquidationResponse = await fetch(
+          'https://open-api.coinglass.com/public/v2/liquidation_history?symbol=XRP&interval=1d&limit=2',
           {
             method: 'GET',
             headers: {
-              'CG-API-KEY': coinglassApiKey,
+              'coinglassSecret': coinglassApiKey,
               'Content-Type': 'application/json'
             }
           }
         );
 
-        if (coinglassResponse.ok) {
-          const responseText = await coinglassResponse.text();
-          console.log('Coinglass v4 raw response:', responseText);
+        if (liquidationResponse.ok) {
+          const liquidationText = await liquidationResponse.text();
+          console.log('Coinglass liquidation raw response:', liquidationText);
           
-          const coinglassData = JSON.parse(responseText) as CoinglassResponse;
-          console.log('Coinglass v4 parsed data:', coinglassData);
+          const liquidationData = JSON.parse(liquidationText) as CoinglassLiquidationResponse;
+          console.log('Coinglass liquidation parsed data:', liquidationData);
           
-          if (coinglassData.code === "0" && coinglassData.data && coinglassData.data.length > 0) {
-            // Find XRP data in the response
-            const xrpData = coinglassData.data.find(coin => coin.symbol === 'XRP') || coinglassData.data[0];
-            const price = parseFloat(xrpData.price);
-            const change24h = parseFloat(xrpData.priceChangePercent);
-            const marketCap = parseFloat(xrpData.marketCap);
+          if (liquidationData.code === "0" && liquidationData.data) {
+            // Calculate 24h liquidations from the last available data
+            const dataMap = liquidationData.data.dataMap;
+            const exchanges = Object.keys(dataMap);
+            let total24hLong = 0;
+            let total24hShort = 0;
             
-            xrpFromCoinglass = {
-              symbol: 'XRP',
-              name: 'XRP',
-              price: price,
-              change24h: change24h,
-              marketCap: marketCap || price * 55000000000, // Use API market cap or fallback to calculation
-              sentiment: getSentiment(change24h)
+            exchanges.forEach(exchange => {
+              const exchangeData = dataMap[exchange];
+              if (exchangeData.longLiquidation.length > 0) {
+                total24hLong += parseFloat(exchangeData.longLiquidation[exchangeData.longLiquidation.length - 1] || '0');
+              }
+              if (exchangeData.shortLiquidation.length > 0) {
+                total24hShort += parseFloat(exchangeData.shortLiquidation[exchangeData.shortLiquidation.length - 1] || '0');
+              }
+            });
+            
+            xrpLiquidations = {
+              total24h: total24hLong + total24hShort,
+              long24h: total24hLong,
+              short24h: total24hShort,
+              exchanges: exchanges
             };
             
-            dataSource = 'coinglass';
-            console.log('Successfully fetched XRP data from Coinglass v4:', xrpFromCoinglass);
+            dataSource = 'coinglass+coingecko';
+            console.log('Successfully fetched XRP liquidation data from Coinglass:', xrpLiquidations);
           } else {
-            console.log('Coinglass v4 API response indicates failure or no data. Code:', coinglassData.code, 'Message:', coinglassData.msg);
+            console.log('Coinglass liquidation API response indicates failure or no data. Code:', liquidationData.code, 'Message:', liquidationData.msg);
+            if (liquidationData.msg?.includes('Upgrade plan')) {
+              console.log('Coinglass API key has insufficient permissions for liquidation data');
+            }
           }
         } else {
-          const errorText = await coinglassResponse.text();
-          console.log('Coinglass v4 API request failed with status:', coinglassResponse.status, 'Response:', errorText);
+          const errorText = await liquidationResponse.text();
+          console.log('Coinglass liquidation API request failed with status:', liquidationResponse.status, 'Response:', errorText);
+          if (liquidationResponse.status === 402 || errorText.includes('Upgrade plan')) {
+            console.log('Current Coinglass subscription tier does not support liquidation historical data');
+          }
         }
       } catch (error) {
-        console.log('Failed to fetch from Coinglass, falling back to CoinGecko:', error.message);
+        console.log('Failed to fetch liquidation data from Coinglass:', error.message);
       }
     }
     
@@ -183,20 +210,25 @@ serve(async (req) => {
       });
     }
 
-    // Process XRP data - use Coinglass data if available, otherwise CoinGecko
-    if (xrpFromCoinglass) {
-      cryptos.push(xrpFromCoinglass);
-    } else if (data.ripple) {
+    // Process XRP data - always use CoinGecko for price, add Coinglass liquidations if available
+    if (data.ripple) {
       const xrp = data.ripple;
       const sentiment = getSentiment(xrp.usd_24h_change);
-      cryptos.push({
+      const xrpData: CryptolDataWithLiquidations = {
         symbol: 'XRP',
         name: 'XRP',
         price: xrp.usd,
         change24h: xrp.usd_24h_change,
         marketCap: xrp.usd_market_cap,
         sentiment
-      });
+      };
+      
+      // Add liquidation data if available from Coinglass
+      if (xrpLiquidations) {
+        xrpData.liquidations = xrpLiquidations;
+      }
+      
+      cryptos.push(xrpData);
     }
 
     if (cryptos.length === 0) {
