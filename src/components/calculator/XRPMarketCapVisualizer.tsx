@@ -33,8 +33,24 @@ interface SimulationResults {
 
 export function XRPMarketCapVisualizer() {
   const [xrpFloat, setXrpFloat] = useState([5000000000]); // 5B XRP default (5% of total supply)
-  const [buyOrderSize, setBuyOrderSize] = useState([100000000]); // $100M default
+  const [buyOrderSize, setBuyOrderSize] = useState([40000000]); // $40M default to match example
   const { xrpData, loading: marketDataLoading } = useXRPMarketData();
+  
+  // Dynamic step calculation for buy order slider
+  const getDynamicStep = (value: number) => {
+    if (value <= 100000000) return 1000000;      // $1M steps up to $100M
+    if (value <= 1000000000) return 10000000;    // $10M steps from $100M to $1B
+    if (value <= 10000000000) return 100000000;  // $100M steps from $1B to $10B
+    return 1000000000;                           // $1B steps above $10B
+  };
+  
+  // Handle slider change with dynamic stepping
+  const handleBuyOrderChange = (newValue: number[]) => {
+    const value = newValue[0];
+    const step = getDynamicStep(value);
+    const snappedValue = Math.round(value / step) * step;
+    setBuyOrderSize([snappedValue]);
+  };
   
   // XRP constants
   const XRP_SUPPLY = 99987000000; // ~99.987 billion XRP in circulation
@@ -137,7 +153,11 @@ export function XRPMarketCapVisualizer() {
 
   const formatSliderValue = (value: number) => {
     if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
-    if (value >= 1e6) return `$${(value / 1e6).toFixed(0)}M`;
+    if (value >= 1e6) {
+      // Show more precision for smaller values (under $100M)
+      const decimals = value < 100e6 ? 1 : 0;
+      return `$${(value / 1e6).toFixed(decimals)}M`;
+    }
     return formatCurrency(value);
   };
 
@@ -219,7 +239,7 @@ export function XRPMarketCapVisualizer() {
         <CardContent className="space-y-6">
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">$10M</span>
+              <span className="text-sm text-muted-foreground">$1M</span>
               <div className="text-2xl font-bold text-primary">
                 {formatSliderValue(buyOrderSize[0])}
               </div>
@@ -227,12 +247,17 @@ export function XRPMarketCapVisualizer() {
             </div>
             <Slider
               value={buyOrderSize}
-              onValueChange={setBuyOrderSize}
-              min={10000000}
+              onValueChange={handleBuyOrderChange}
+              min={1000000}
               max={50000000000}
-              step={100000000}
+              step={1000000}
               className="w-full"
             />
+            <div className="text-xs text-muted-foreground text-center">
+              Step size: {buyOrderSize[0] <= 100e6 ? '$1M' : 
+                         buyOrderSize[0] <= 1e9 ? '$10M' : 
+                         buyOrderSize[0] <= 10e9 ? '$100M' : '$1B'}
+            </div>
           </div>
         </CardContent>
       </Card>
