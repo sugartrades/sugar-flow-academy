@@ -127,8 +127,10 @@ export function EnhancedXRPMarketCapVisualizer() {
     }
     
     // Calculate executed amount based on actual liquidity consumed
-    const executedAmount = effectiveOrderSize - remainingEffectiveAmount;
-    const averageExecutionPrice = executedAmount > 0 ? totalCost / executedAmount : currentPrice;
+    // Since liquidityConsumed includes the synthetic pressure effect, 
+    // we need to calculate the actual XRP amount from the original buy order
+    const executedAmount = Math.min(buyOrderSize, liquidityConsumed);
+    const averageExecutionPrice = liquidityConsumed > 0 ? totalCost / liquidityConsumed : currentPrice;
     const priceImpact = ((finalPrice - currentPrice) / currentPrice) * 100;
     
     // Calculate market cap changes
