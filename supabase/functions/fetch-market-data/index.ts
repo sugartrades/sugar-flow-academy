@@ -17,9 +17,16 @@ interface CryptoData {
   sentiment: string;
 }
 
-interface CoingrassPayload {
-  usdPrice: string;
-  price24hPcnt: string;
+interface CoinglassResponse {
+  code: string;
+  msg: string;
+  data: {
+    symbol: string;
+    price: number;
+    priceChangePercent: number;
+    openInterest: number;
+    openInterestChange: number;
+  }[];
 }
 
 const supabase = createClient(
@@ -65,26 +72,26 @@ serve(async (req) => {
       try {
         console.log('Attempting to fetch XRP data from Coinglass...');
         const coinglassResponse = await fetch(
-          'https://api.coinglass.com/public/v2/indicator',
+          'https://api.coinglass.com/public/v2/open_interest?symbol=XRP',
           {
-            method: 'POST',
+            method: 'GET',
             headers: {
-              'Content-Type': 'application/json',
               'coinglassSecret': coinglassApiKey,
-            },
-            body: JSON.stringify({
-              indicator: 'price',
-              symbol: 'XRP'
-            })
+            }
           }
         );
 
         if (coinglassResponse.ok) {
-          const coinglassData = await coinglassResponse.json();
-          if (coinglassData.success && coinglassData.data) {
-            const payload = coinglassData.data as CoingrassPayload;
-            const price = parseFloat(payload.usdPrice);
-            const change24h = parseFloat(payload.price24hPcnt);
+          const responseText = await coinglassResponse.text();
+          console.log('Coinglass raw response:', responseText);
+          
+          const coinglassData = JSON.parse(responseText) as CoinglassResponse;
+          console.log('Coinglass parsed data:', coinglassData);
+          
+          if (coinglassData.code === "0" && coinglassData.data && coinglassData.data.length > 0) {
+            const xrpData = coinglassData.data[0]; // Get the first item which should be XRP data
+            const price = xrpData.price;
+            const change24h = xrpData.priceChangePercent;
             
             xrpFromCoinglass = {
               symbol: 'XRP',
@@ -97,7 +104,11 @@ serve(async (req) => {
             
             dataSource = 'coinglass';
             console.log('Successfully fetched XRP data from Coinglass:', xrpFromCoinglass);
+          } else {
+            console.log('Coinglass API response indicates failure or no data:', coinglassData);
           }
+        } else {
+          console.log('Coinglass API request failed with status:', coinglassResponse.status);
         }
       } catch (error) {
         console.log('Failed to fetch from Coinglass, falling back to CoinGecko:', error.message);
