@@ -6,6 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useXRPMarketData } from '@/hooks/useXRPMarketData';
 import { MarketCapSettings } from './MarketCapSettings';
+import { LiveExchangeFloatEstimator } from './LiveExchangeFloatEstimator';
+import { LeverageSentimentBar } from './LeverageSentimentBar';
+import { FundingRatePanel } from './FundingRatePanel';
+import { TestModePanel } from './TestModePanel';
 import { InfoIcon, TrendingUpIcon, DollarSignIcon, TargetIcon, AlertTriangleIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -38,6 +42,8 @@ export function EnhancedXRPMarketCapVisualizer() {
   const [updateFrequency, setUpdateFrequency] = useState(300); // 5 minutes
   const [dataSource, setDataSource] = useState('coinglass');
   const [manualFloatOverride, setManualFloatOverride] = useState(false);
+  const [isTestMode, setIsTestMode] = useState(false);
+  const [testSnapshot, setTestSnapshot] = useState<any>(null);
 
   // Get current XRP price and derivatives data
   const currentPrice = xrpData?.price || 3.0;
@@ -292,6 +298,31 @@ export function EnhancedXRPMarketCapVisualizer() {
       />
 
       {/* Input Controls */}
+      {/* Advanced Analytics Dashboard */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <LiveExchangeFloatEstimator 
+          derivativesData={derivativesData} 
+          loading={loading} 
+          currentXRPPrice={currentPrice}
+        />
+        <LeverageSentimentBar 
+          derivativesData={derivativesData} 
+          loading={loading} 
+        />
+        <FundingRatePanel 
+          derivativesData={derivativesData} 
+          loading={loading} 
+        />
+      </div>
+
+      {/* Test Mode Panel */}
+      <TestModePanel 
+        isTestMode={isTestMode}
+        onTestModeChange={setIsTestMode}
+        onSnapshotSelect={setTestSnapshot}
+        currentSnapshot={testSnapshot}
+      />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>
           <CardHeader>

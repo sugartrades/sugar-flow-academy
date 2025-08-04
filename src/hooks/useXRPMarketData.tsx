@@ -19,13 +19,7 @@ interface XRPMarketData {
 }
 
 interface EnhancedXRPMarketData extends XRPMarketData {
-  derivatives?: {
-    totalOpenInterest: number;
-    avgLongShortRatio: number;
-    avgFundingRate: number;
-    leverageMultiplier: number;
-    estimatedFloat: number;
-  };
+  derivatives?: AggregatedDerivatives;
 }
 
 interface UseXRPMarketDataReturn {
