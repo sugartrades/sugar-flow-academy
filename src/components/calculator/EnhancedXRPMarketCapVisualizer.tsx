@@ -99,7 +99,6 @@ export function EnhancedXRPMarketCapVisualizer() {
 
   // Calculate simulation results with leverage effects
   const simulationResults = useMemo((): SimulationResults => {
-    let remainingAmount = buyOrderSize;
     let totalCost = 0;
     let finalPrice = currentPrice;
     let liquidityConsumed = 0;
@@ -127,8 +126,9 @@ export function EnhancedXRPMarketCapVisualizer() {
       finalPrice = level.price;
     }
     
-    const executedAmount = buyOrderSize - (remainingAmount > 0 ? remainingAmount : 0);
-    const averageExecutionPrice = executedAmount > 0 ? totalCost / liquidityConsumed : currentPrice;
+    // Calculate executed amount based on actual liquidity consumed
+    const executedAmount = effectiveOrderSize - remainingEffectiveAmount;
+    const averageExecutionPrice = executedAmount > 0 ? totalCost / executedAmount : currentPrice;
     const priceImpact = ((finalPrice - currentPrice) / currentPrice) * 100;
     
     // Calculate market cap changes
