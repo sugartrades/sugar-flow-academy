@@ -225,9 +225,28 @@ export function EnhancedXRPMarketCapVisualizer() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label htmlFor="xrp-float">Estimated XRP Float on Exchanges</Label>
-                <Badge variant={manualFloatOverride ? "destructive" : "default"}>
-                  {manualFloatOverride ? "Manual" : (derivativesEnabled ? "Auto" : "Manual")}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant={manualFloatOverride ? "destructive" : "default"}>
+                    {manualFloatOverride ? "Manual" : (derivativesEnabled ? "Auto" : "Manual")}
+                  </Badge>
+                  {manualFloatOverride && derivativesEnabled && derivativesData && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            onClick={() => setManualFloatOverride(false)}
+                            className="text-xs px-2 py-1 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors"
+                          >
+                            Reset to Auto
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Return to automatic calculation based on derivatives data</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </div>
               </div>
               <Slider
                 id="xrp-float"
