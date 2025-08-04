@@ -22,10 +22,10 @@ interface CoinglassResponse {
   msg: string;
   data: {
     symbol: string;
-    price: number;
-    priceChangePercent: number;
-    openInterest: number;
-    openInterestChange: number;
+    price: string;
+    priceChangePercent: string;
+    marketCap: string;
+    volume24h: string;
   }[];
 }
 
@@ -70,45 +70,49 @@ serve(async (req) => {
     // Try to fetch XRP from Coinglass if API key is available
     if (coinglassApiKey) {
       try {
-        console.log('Attempting to fetch XRP data from Coinglass...');
+        console.log('Attempting to fetch XRP data from Coinglass v4 API...');
         const coinglassResponse = await fetch(
-          'https://api.coinglass.com/public/v2/open_interest?symbol=XRP',
+          'https://open-api-v4.coinglass.com/api/spot/coins-markets?symbol=XRP',
           {
             method: 'GET',
             headers: {
-              'coinglassSecret': coinglassApiKey,
+              'CG-API-KEY': coinglassApiKey,
+              'Content-Type': 'application/json'
             }
           }
         );
 
         if (coinglassResponse.ok) {
           const responseText = await coinglassResponse.text();
-          console.log('Coinglass raw response:', responseText);
+          console.log('Coinglass v4 raw response:', responseText);
           
           const coinglassData = JSON.parse(responseText) as CoinglassResponse;
-          console.log('Coinglass parsed data:', coinglassData);
+          console.log('Coinglass v4 parsed data:', coinglassData);
           
           if (coinglassData.code === "0" && coinglassData.data && coinglassData.data.length > 0) {
-            const xrpData = coinglassData.data[0]; // Get the first item which should be XRP data
-            const price = xrpData.price;
-            const change24h = xrpData.priceChangePercent;
+            // Find XRP data in the response
+            const xrpData = coinglassData.data.find(coin => coin.symbol === 'XRP') || coinglassData.data[0];
+            const price = parseFloat(xrpData.price);
+            const change24h = parseFloat(xrpData.priceChangePercent);
+            const marketCap = parseFloat(xrpData.marketCap);
             
             xrpFromCoinglass = {
               symbol: 'XRP',
               name: 'XRP',
               price: price,
               change24h: change24h,
-              marketCap: price * 55000000000, // Approximate circulating supply
+              marketCap: marketCap || price * 55000000000, // Use API market cap or fallback to calculation
               sentiment: getSentiment(change24h)
             };
             
             dataSource = 'coinglass';
-            console.log('Successfully fetched XRP data from Coinglass:', xrpFromCoinglass);
+            console.log('Successfully fetched XRP data from Coinglass v4:', xrpFromCoinglass);
           } else {
-            console.log('Coinglass API response indicates failure or no data:', coinglassData);
+            console.log('Coinglass v4 API response indicates failure or no data. Code:', coinglassData.code, 'Message:', coinglassData.msg);
           }
         } else {
-          console.log('Coinglass API request failed with status:', coinglassResponse.status);
+          const errorText = await coinglassResponse.text();
+          console.log('Coinglass v4 API request failed with status:', coinglassResponse.status, 'Response:', errorText);
         }
       } catch (error) {
         console.log('Failed to fetch from Coinglass, falling back to CoinGecko:', error.message);
