@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
@@ -52,26 +52,33 @@ export function EnhancedXRPMarketCapVisualizer() {
     return xrpFloat; // Use manual setting
   }, [derivativesEnabled, derivativesData, manualFloatOverride, xrpFloat]);
 
-  // Dynamic step calculation for smooth slider interaction
-  const getDynamicStep = (value: number): number => {
+  // Dynamic step calculation for smooth slider interaction (memoized)
+  const getDynamicStep = useCallback((value: number): number => {
     const { DYNAMIC_STEPS } = SLIDER_CONFIGS.XRP_FLOAT;
     if (value < 10000000) return DYNAMIC_STEPS.SMALL;
     if (value < 100000000) return DYNAMIC_STEPS.MEDIUM;
     if (value < 1000000000) return DYNAMIC_STEPS.LARGE;
     return DYNAMIC_STEPS.EXTRA_LARGE;
-  };
+  }, []);
 
-  const handleBuyOrderChange = (value: number[]) => {
+  // Memoized callback for buy order changes
+  const handleBuyOrderChange = useCallback((value: number[]) => {
     console.log('🎯 Buy order size changed:', value[0]);
     setBuyOrderSize(value[0]);
-  };
+  }, []);
+
+  // Memoized market cap calculation
+  const marketCap = useMemo(() => 
+    xrpData?.marketCap || (currentPrice * MARKET_DATA.XRP_TOTAL_SUPPLY), 
+    [xrpData?.marketCap, currentPrice]
+  );
 
   // Use the new realistic market simulator
   const simulationResults = useRealisticMarketSimulator({
     currentPrice,
     buyOrderSize,
     availableFloat: calculatedFloat,
-    marketCap: xrpData?.marketCap || (currentPrice * MARKET_DATA.XRP_TOTAL_SUPPLY),
+    marketCap,
     derivativesData
   });
 
@@ -81,35 +88,69 @@ export function EnhancedXRPMarketCapVisualizer() {
   const effectiveMultiplierTransition = useSmoothValueTransition(simulationResults.effectiveMultiplier);
   const slippageTransition = useSmoothValueTransition(simulationResults.slippagePercentage);
 
-  // Formatting functions with null/undefined safety
-  const formatCurrency = (amount: number | undefined | null): string => {
+  // Memoized formatting functions to prevent recreation on every render
+  const formatCurrency = useCallback((amount: number | undefined | null): string => {
     if (amount == null || isNaN(amount)) return '$0.00';
     if (amount >= FORMATTING.CURRENCY.TRILLION) return `$${(amount / FORMATTING.CURRENCY.TRILLION).toFixed(2)}T`;
     if (amount >= FORMATTING.CURRENCY.BILLION) return `$${(amount / FORMATTING.CURRENCY.BILLION).toFixed(2)}B`;
     if (amount >= FORMATTING.CURRENCY.MILLION) return `$${(amount / FORMATTING.CURRENCY.MILLION).toFixed(2)}M`;
     if (amount >= FORMATTING.CURRENCY.THOUSAND) return `$${(amount / FORMATTING.CURRENCY.THOUSAND).toFixed(2)}K`;
     return `$${amount.toFixed(2)}`;
-  };
+  }, []);
 
-  const formatPrice = (price: number | undefined | null): string => {
+  const formatPrice = useCallback((price: number | undefined | null): string => {
     if (price == null || isNaN(price)) return '$0.0000';
     return `$${price.toFixed(FORMATTING.PRICE_DECIMALS)}`;
-  };
+  }, []);
   
-  const formatXRPValue = (amount: number | undefined | null): string => {
+  const formatXRPValue = useCallback((amount: number | undefined | null): string => {
     if (amount == null || isNaN(amount)) return '0 XRP';
     if (amount >= FORMATTING.XRP_VALUE.BILLION) return `${(amount / FORMATTING.XRP_VALUE.BILLION).toFixed(2)}B XRP`;
     if (amount >= FORMATTING.XRP_VALUE.MILLION) return `${(amount / FORMATTING.XRP_VALUE.MILLION).toFixed(2)}M XRP`;
     if (amount >= FORMATTING.XRP_VALUE.THOUSAND) return `${(amount / FORMATTING.XRP_VALUE.THOUSAND).toFixed(2)}K XRP`;
     return `${amount.toFixed(0)} XRP`;
-  };
+  }, []);
 
-  const formatSliderValue = (value: number | undefined | null): string => {
+  const formatSliderValue = useCallback((value: number | undefined | null): string => {
     if (value == null || isNaN(value)) return '0';
     if (value >= FORMATTING.CURRENCY.BILLION) return `${(value / FORMATTING.CURRENCY.BILLION).toFixed(1)}B`;
     if (value >= FORMATTING.CURRENCY.MILLION) return `${(value / FORMATTING.CURRENCY.MILLION).toFixed(0)}M`;
     return `${(value / FORMATTING.CURRENCY.THOUSAND).toFixed(0)}K`;
-  };
+  }, []);
+
+  // Memoized state setters to prevent child component re-renders
+  const handleDerivativesToggle = useCallback((enabled: boolean) => {
+    setDerivativesEnabled(enabled);
+  }, [setDerivativesEnabled]);
+
+  const handleUpdateFrequencyChange = useCallback((frequency: number) => {
+    setUpdateFrequency(frequency);
+  }, []);
+
+  const handleDataSourceChange = useCallback((source: string) => {
+    setDataSource(source);
+  }, []);
+
+  const handleLeverageAmplifierChange = useCallback((amplifier: number) => {
+    setLeverageAmplifier(amplifier);
+  }, []);
+
+  const handleTestModeChange = useCallback((mode: boolean) => {
+    setIsTestMode(mode);
+  }, []);
+
+  const handleSnapshotSelect = useCallback((snapshot: any) => {
+    setTestSnapshot(snapshot);
+  }, []);
+
+  const handleManualFloatReset = useCallback(() => {
+    setManualFloatOverride(false);
+  }, []);
+
+  const handleXRPFloatChange = useCallback((value: number[]) => {
+    setXrpFloat(value[0]);
+    setManualFloatOverride(true);
+  }, []);
 
   if (loading && !xrpData) {
     return (
@@ -147,13 +188,13 @@ export function EnhancedXRPMarketCapVisualizer() {
       {/* Settings Panel */}
       <MarketCapSettings
         derivativesEnabled={derivativesEnabled}
-        onDerivativesToggle={setDerivativesEnabled}
+        onDerivativesToggle={handleDerivativesToggle}
         updateFrequency={updateFrequency}
-        onUpdateFrequencyChange={setUpdateFrequency}
+        onUpdateFrequencyChange={handleUpdateFrequencyChange}
         dataSource={dataSource}
-        onDataSourceChange={setDataSource}
+        onDataSourceChange={handleDataSourceChange}
         leverageAmplifier={leverageAmplifier}
-        onLeverageAmplifierChange={setLeverageAmplifier}
+        onLeverageAmplifierChange={handleLeverageAmplifierChange}
       />
 
       {/* Input Controls */}
@@ -177,8 +218,8 @@ export function EnhancedXRPMarketCapVisualizer() {
       {/* Test Mode Panel */}
       <TestModePanel 
         isTestMode={isTestMode}
-        onTestModeChange={setIsTestMode}
-        onSnapshotSelect={setTestSnapshot}
+        onTestModeChange={handleTestModeChange}
+        onSnapshotSelect={handleSnapshotSelect}
         currentSnapshot={testSnapshot}
       />
 
@@ -200,7 +241,7 @@ export function EnhancedXRPMarketCapVisualizer() {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <button
-                            onClick={() => setManualFloatOverride(false)}
+                            onClick={handleManualFloatReset}
                             disabled={!derivativesData}
                             className="text-xs px-2 py-1 bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed"
                           >
@@ -228,10 +269,7 @@ export function EnhancedXRPMarketCapVisualizer() {
                 max={SLIDER_CONFIGS.XRP_FLOAT.MAX}
                 step={SLIDER_CONFIGS.XRP_FLOAT.STEP}
                 value={[calculatedFloat]}
-                onValueChange={(value) => {
-                  setXrpFloat(value[0]);
-                  setManualFloatOverride(true);
-                }}
+                onValueChange={handleXRPFloatChange}
                 className="w-full"
               />
               <div className="flex justify-between text-sm text-muted-foreground">

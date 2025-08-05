@@ -53,6 +53,7 @@ export function useRealisticMarketSimulator({
 }: RealisticMarketSimulatorProps): SimulationResults {
   
   return useMemo(() => {
+    console.log('🔄 Running market simulation with:', { currentPrice, buyOrderSize, availableFloat, marketCap });
     // PHASE 1: Realistic Market Microstructure
     const microstructure: MarketMicrostructure = {
       // Conservative immediate depth
