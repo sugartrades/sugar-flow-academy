@@ -4,33 +4,20 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useXRPMarketData } from '@/hooks/useXRPMarketData';
+import { useRealisticMarketSimulator } from './RealisticMarketSimulator';
+import { MarketImpactBreakdown } from './MarketImpactBreakdown';
+import { CalibrationDisplay } from './CalibrationDisplay';
 import { MarketCapSettings } from './MarketCapSettings';
 import { LiveExchangeFloatEstimator } from './LiveExchangeFloatEstimator';
 import { LeverageSentimentBar } from './LeverageSentimentBar';
 import { FundingRatePanel } from './FundingRatePanel';
 import { TestModePanel } from './TestModePanel';
-import { InfoIcon, TrendingUpIcon, DollarSignIcon, TargetIcon, AlertTriangleIcon } from 'lucide-react';
+import { InfoIcon, TrendingUpIcon, DollarSignIcon, TargetIcon, AlertTriangleIcon, ZapIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
-interface OrderBookLevel {
-  price: number;
-  size: number;
-  cumulative: number;
-}
-
-interface SimulationResults {
-  finalPrice: number;
-  priceImpact: number;
-  marketCapIncrease: number;
-  leverageAdjustedMarketCap: number;
-  effectiveMultiplier: number;
-  executedAmount: number;
-  averageExecutionPrice: number;
-  slippagePercentage: number;
-  liquidityConsumed: number;
-  syntheticBuyPressure: number;
-}
+// Remove old interfaces since we're using the new realistic simulator
 
 export function EnhancedXRPMarketCapVisualizer() {
   const { xrpData, loading, derivativesEnabled, setDerivativesEnabled } = useXRPMarketData();
@@ -71,125 +58,14 @@ export function EnhancedXRPMarketCapVisualizer() {
     setBuyOrderSize(value[0]);
   };
 
-  // Generate simplified order book with dramatic price impact (like original calculator)
-  const orderBook = useMemo((): OrderBookLevel[] => {
-    if (!currentPrice || currentPrice <= 0) return [];
-    
-    const levels: OrderBookLevel[] = [];
-    let cumulativeXRP = 0;
-    
-    // SIMPLIFIED order book - designed for educational multiplier effect
-    const totalLevels = 100;
-    
-    // Use much larger liquidity amounts for dramatic effect (like original calculator)
-    // This represents the total available liquidity across all major exchanges
-    const totalLiquidity = calculatedFloat * 0.15; // 15% of float available in orderbooks
-    
-    console.log('📊 Simplified order book generation:', {
-      calculatedFloat: calculatedFloat,
-      totalLiquidity: totalLiquidity,
-      currentPrice: currentPrice
-    });
-    
-    for (let i = 0; i < totalLevels; i++) {
-      // DRAMATIC price progression - steeper curve for educational effect
-      const priceMultiplier = 1 + Math.pow(i / 20, 1.8) * 0.01; // Exponential price increase
-      const price = currentPrice * priceMultiplier;
-      
-      // Front-load liquidity at current price, then rapidly decrease
-      const sizeMultiplier = Math.exp(-i * 0.08); // Faster decay for dramatic effect
-      const baseSize = (totalLiquidity / 20) * sizeMultiplier; // Concentrate liquidity in first 20 levels
-      
-      // Ensure minimum meaningful sizes
-      const size = Math.max(baseSize, totalLiquidity * 0.001); // Min 0.1% of total liquidity
-      
-      cumulativeXRP += size;
-      
-      levels.push({
-        price: price,
-        size: size,
-        cumulative: cumulativeXRP
-      });
-    }
-    
-    console.log('📈 Order book created:', {
-      levels: levels.length,
-      totalLiquidity: cumulativeXRP,
-      priceRange: `$${currentPrice.toFixed(3)} - $${levels[levels.length - 1].price.toFixed(3)}`,
-      firstLevelSize: levels[0].size,
-      liquidityConcentration: `${((levels.slice(0, 10).reduce((sum, level) => sum + level.size, 0) / cumulativeXRP) * 100).toFixed(1)}% in first 10 levels`
-    });
-    
-    return levels;
-  }, [calculatedFloat, currentPrice]);
-
-  // Calculate total available liquidity in order book
-  const totalAvailableLiquidity = useMemo(() => {
-    return orderBook.reduce((total, level) => total + level.size, 0);
-  }, [orderBook]);
-
-  // Calculate simulation results with simplified logic (like original calculator)
-  const simulationResults = useMemo((): SimulationResults => {
-    // Safety check: validate inputs
-    if (!buyOrderSize || buyOrderSize <= 0 || !currentPrice || currentPrice <= 0) {
-      return {
-        finalPrice: currentPrice,
-        priceImpact: 0,
-        marketCapIncrease: 0,
-        leverageAdjustedMarketCap: xrpData?.marketCap || 0,
-        effectiveMultiplier: 1,
-        executedAmount: 0,
-        averageExecutionPrice: currentPrice,
-        slippagePercentage: 0,
-        liquidityConsumed: 0,
-        syntheticBuyPressure: 0
-      };
-    }
-    
-    let totalCost = 0;
-    let finalPrice = currentPrice;
-    let liquidityConsumed = 0;
-    let remainingAmount = buyOrderSize;
-    
-    // Simple order book execution - just walk through levels
-    for (const level of orderBook) {
-      if (remainingAmount <= 0) break;
-      
-      const amountToTake = Math.min(remainingAmount, level.size);
-      totalCost += amountToTake * level.price;
-      liquidityConsumed += amountToTake;
-      remainingAmount -= amountToTake;
-      finalPrice = level.price;
-    }
-    
-    // Calculate basic results
-    const executedAmount = buyOrderSize - remainingAmount;
-    const averageExecutionPrice = liquidityConsumed > 0 ? totalCost / liquidityConsumed : currentPrice;
-    const priceImpact = ((finalPrice - currentPrice) / currentPrice) * 100;
-    const slippagePercentage = ((averageExecutionPrice - currentPrice) / currentPrice) * 100;
-    
-    // Calculate market cap impact (simple multiplier effect)
-    const currentMarketCap = xrpData?.marketCap || (currentPrice * 100000000000); // 100B total supply
-    const newMarketCap = (currentMarketCap / currentPrice) * finalPrice;
-    const marketCapIncrease = newMarketCap - currentMarketCap;
-    const effectiveMultiplier = newMarketCap / currentMarketCap;
-    
-    const results = {
-      finalPrice,
-      priceImpact,
-      marketCapIncrease,
-      leverageAdjustedMarketCap: newMarketCap,
-      effectiveMultiplier,
-      executedAmount,
-      averageExecutionPrice,
-      slippagePercentage,
-      liquidityConsumed,
-      syntheticBuyPressure: 0 // Simplified - no derivatives pressure
-    };
-    
-    console.log('✅ Simplified simulation results:', results);
-    return results;
-  }, [buyOrderSize, orderBook, currentPrice, xrpData?.marketCap]);
+  // Use the new realistic market simulator
+  const simulationResults = useRealisticMarketSimulator({
+    currentPrice,
+    buyOrderSize,
+    availableFloat: calculatedFloat,
+    marketCap: xrpData?.marketCap || (currentPrice * 100000000000),
+    derivativesData
+  });
 
   // Formatting functions
   const formatCurrency = (amount: number): string => {
@@ -364,11 +240,11 @@ export function EnhancedXRPMarketCapVisualizer() {
                   Market value: {formatCurrency(buyOrderSize * currentPrice)}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  Available liquidity: {formatXRPValue(totalAvailableLiquidity)}
+                  Available liquidity: {formatXRPValue(calculatedFloat)}
                 </div>
-                {buyOrderSize > totalAvailableLiquidity && (
+                {buyOrderSize > calculatedFloat && (
                   <div className="text-xs text-orange-600 font-medium">
-                    ⚠️ Order exceeds available liquidity
+                    ⚠️ Order exceeds available float
                   </div>
                 )}
               </div>
@@ -377,8 +253,18 @@ export function EnhancedXRPMarketCapVisualizer() {
         </Card>
       </div>
 
-      {/* Results Display */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Enhanced Results Display with Tabs */}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="breakdown">Breakdown</TabsTrigger>
+          <TabsTrigger value="calibration">Calibration</TabsTrigger>
+          <TabsTrigger value="education">Education</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="overview" className="space-y-6">
+          {/* Main Results Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Price Impact</CardTitle>
@@ -406,14 +292,14 @@ export function EnhancedXRPMarketCapVisualizer() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {formatCurrency(derivativesEnabled ? simulationResults.leverageAdjustedMarketCap : simulationResults.marketCapIncrease)}
+              {formatCurrency(simulationResults.marketCapIncrease)}
             </div>
             <p className="text-xs text-muted-foreground">
               {derivativesEnabled ? "Total adjusted cap" : "Increase from current"}
             </p>
             {derivativesEnabled && (
               <p className="text-xs text-green-600 mt-1">
-                +{formatCurrency(simulationResults.leverageAdjustedMarketCap - (xrpData?.marketCap || 0))}
+                New cap: {formatCurrency((xrpData?.marketCap || 0) + simulationResults.marketCapIncrease)}
               </p>
             )}
           </CardContent>
@@ -463,7 +349,7 @@ export function EnhancedXRPMarketCapVisualizer() {
                 Executed: {formatXRPValue(simulationResults.executedAmount)}
               </p>
               <p className="text-xs text-muted-foreground">
-                Liquidity used: {formatXRPValue(simulationResults.liquidityConsumed)}
+                Total cost: {formatCurrency(simulationResults.executedAmount * simulationResults.averageExecutionPrice)}
               </p>
             </div>
           </CardContent>
@@ -506,7 +392,7 @@ export function EnhancedXRPMarketCapVisualizer() {
               <div className="space-y-1">
                 <Label className="text-sm font-medium">Synthetic Buy Pressure</Label>
                 <p className="text-lg font-semibold text-blue-600">
-                  {formatXRPValue(simulationResults.syntheticBuyPressure)}
+                  {formatXRPValue(simulationResults.syntheticDemand)}
                 </p>
                 <p className="text-xs text-muted-foreground">From derivatives effects</p>
               </div>
@@ -514,6 +400,59 @@ export function EnhancedXRPMarketCapVisualizer() {
           </CardContent>
         </Card>
       )}
+        </TabsContent>
+
+        <TabsContent value="breakdown">
+          <MarketImpactBreakdown
+            phases={simulationResults.phases}
+            microstructure={simulationResults.microstructure}
+            psychology={simulationResults.psychology}
+            orderValueUSD={buyOrderSize * currentPrice}
+          />
+        </TabsContent>
+
+        <TabsContent value="calibration">
+          <CalibrationDisplay
+            effectiveMultiplier={simulationResults.effectiveMultiplier}
+            orderValueUSD={buyOrderSize * currentPrice}
+            marketCapIncrease={simulationResults.marketCapIncrease}
+          />
+        </TabsContent>
+
+        <TabsContent value="education">
+          <Card>
+            <CardHeader>
+              <CardTitle>Why 522x Multipliers Are Real</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                The Coinglass example shows how $40M capital inflow created $20.9B market cap movement (522x multiplier) 
+                through derivatives leverage, market psychology, and liquidity constraints.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-3 bg-blue-50 rounded">
+                  <h4 className="font-semibold text-blue-800 mb-2">Enhanced Model Features</h4>
+                  <ul className="text-sm text-blue-700 space-y-1">
+                    <li>• Realistic market microstructure</li>
+                    <li>• Derivatives-driven amplification</li>
+                    <li>• Market psychology simulation</li>
+                    <li>• Calibrated against real data</li>
+                  </ul>
+                </div>
+                <div className="p-3 bg-green-50 rounded">
+                  <h4 className="font-semibold text-green-800 mb-2">Key Insights</h4>
+                  <ul className="text-sm text-green-700 space-y-1">
+                    <li>• Float is much smaller than total supply</li>
+                    <li>• Large orders trigger cascading effects</li>
+                    <li>• Psychology amplifies price movements</li>
+                    <li>• Derivatives create synthetic demand</li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Educational Tooltip Section */}
       <Card>
