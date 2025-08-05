@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useDerivativesData, AggregatedDerivatives } from './useDerivativesData';
 
@@ -34,122 +35,140 @@ interface UseXRPMarketDataReturn {
   dataSource: string | null;
 }
 
-export function useXRPMarketData(): UseXRPMarketDataReturn {
-  const [xrpData, setXrpData] = useState<EnhancedXRPMarketData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [derivativesEnabled, setDerivativesEnabled] = useState(true);
-  const [dataSource, setDataSource] = useState<string | null>(null);
+// Query keys
+const xrpMarketDataKeys = {
+  all: ['xrpMarketData'] as const,
+  market: () => [...xrpMarketDataKeys.all, 'market'] as const,
+};
 
-  const { aggregated: derivativesData, loading: derivativesLoading } = useDerivativesData();
+async function fetchXRPMarketData(): Promise<{
+  xrpData: XRPMarketData;
+  dataSource: string;
+}> {
+  const { data, error } = await supabase.functions.invoke('fetch-market-data');
+  
+  if (error) {
+    throw new Error(`Failed to fetch market data: ${error.message}`);
+  }
 
-  const fetchXRPData = useCallback(async () => {
-    try {
-      // Use refreshing state when we already have data
-      if (xrpData) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-      setError(null);
-      
-      const { data, error: fetchError } = await supabase.functions.invoke('fetch-market-data');
-      
-      // Check for Supabase client errors first
-      if (fetchError) {
-        console.error('Supabase client error:', fetchError);
-        throw new Error(`Failed to fetch market data: ${fetchError.message}`);
-      }
+  // Handle fallback data gracefully
+  if (data?.error || data?.usingFallback) {
+    console.info('Using cached or fallback market data');
+  }
 
-      // Handle fallback data gracefully without showing errors to users
-      if (data?.error || data?.usingFallback) {
-        console.info('Using cached or fallback market data');
-        // Don't set error state for fallback data - it's a normal fallback behavior
-      }
-
-      // Check if we have valid data
-      if (data?.cryptos && Array.isArray(data.cryptos)) {
-        // Find XRP data from the response
-        const xrpCrypto = data.cryptos.find((crypto: any) => 
-          crypto.symbol.toLowerCase() === 'xrp'
-        );
-        
-        if (xrpCrypto) {
-          const enhancedData: EnhancedXRPMarketData = {
-            ...xrpCrypto,
-            lastUpdated: data.lastUpdated
-          };
-
-          // Add derivatives data if enabled and available
-          if (derivativesEnabled && derivativesData) {
-            enhancedData.derivatives = derivativesData;
-          }
-
-          setXrpData(enhancedData);
-          setLastUpdated(new Date());
-          setDataSource(data.dataSource || 'coingecko');
-          
-          // Always clear error state when we get valid data structure
-          setError(null);
-          return; // Successfully set data, exit early
-        } else {
-          throw new Error('XRP data not found in market response');
-        }
-      } else {
-        console.error('Invalid response structure:', data);
-        throw new Error('Invalid market data response structure');
-      }
-    } catch (err) {
-      console.error('Error fetching XRP data:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch XRP data';
-      setError(errorMessage);
-      
-      // Only set fallback data if we don't already have valid data
-      setXrpData(prevData => {
-        if (prevData && prevData.price > 0) {
-          // Keep existing data if we have it
-          console.warn('Keeping existing XRP data due to API error:', errorMessage);
-          return prevData;
-        }
-        // Only use fallback if we have no data at all
-        console.warn('Using fallback XRP data due to API error:', errorMessage);
-        return {
-          symbol: 'XRP',
-          name: 'XRP',
-          price: 3.00, // Updated fallback price to $3.00
-          change24h: 0,
-          marketCap: 170000000000, // Approximate current market cap
-          sentiment: 'neutral',
-          lastUpdated: new Date().toISOString()
-        };
-      });
-      setLastUpdated(new Date());
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
+  // Check if we have valid data
+  if (data?.cryptos && Array.isArray(data.cryptos)) {
+    const xrpCrypto = data.cryptos.find((crypto: any) => 
+      crypto.symbol.toLowerCase() === 'xrp'
+    );
+    
+    if (xrpCrypto) {
+      return {
+        xrpData: {
+          ...xrpCrypto,
+          lastUpdated: data.lastUpdated
+        },
+        dataSource: data.dataSource || 'coingecko'
+      };
+    } else {
+      throw new Error('XRP data not found in market response');
     }
-  }, [derivativesEnabled, derivativesData]);
+  } else {
+    throw new Error('Invalid market data response structure');
+  }
+}
 
-  useEffect(() => {
-    fetchXRPData();
+export function useXRPMarketData(): UseXRPMarketDataReturn {
+  const { aggregated: derivativesData, loading: derivativesLoading } = useDerivativesData();
+  
+  // This would typically come from a state management solution or localStorage
+  // For now, we'll use a simple state approach since we need to maintain the setter
+  const [derivativesEnabled, setDerivativesEnabled] = React.useState(true);
+
+  const {
+    data: marketData,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: xrpMarketDataKeys.market(),
+    queryFn: fetchXRPMarketData,
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    retry: (failureCount, error) => {
+      // Don't retry if it's a known API issue (fallback data is acceptable)
+      if (error?.message?.includes('fallback') || error?.message?.includes('cached')) {
+        return false;
+      }
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+
+  // Enhanced XRP data with derivatives
+  const enhancedXrpData: EnhancedXRPMarketData | null = React.useMemo(() => {
+    if (!marketData?.xrpData) return null;
+
+    const enhanced: EnhancedXRPMarketData = {
+      ...marketData.xrpData,
+    };
+
+    // Add derivatives data if enabled and available
+    if (derivativesEnabled && derivativesData) {
+      enhanced.derivatives = derivativesData;
+    }
+
+    return enhanced;
+  }, [marketData?.xrpData, derivativesEnabled, derivativesData]);
+
+  // Handle error state with fallback data
+  const errorMessage = React.useMemo(() => {
+    if (error) {
+      // Don't show errors for fallback data scenarios
+      if (marketData?.xrpData && marketData.xrpData.price > 0) {
+        return null; // We have valid data, don't show error
+      }
+      return error instanceof Error ? error.message : 'Failed to fetch XRP data';
+    }
+    return null;
+  }, [error, marketData]);
+
+  // Provide fallback data if we have no data at all
+  const finalXrpData = React.useMemo(() => {
+    if (enhancedXrpData) return enhancedXrpData;
     
-    // Set up auto-refresh every 5 minutes to reduce API pressure
-    const interval = setInterval(fetchXRPData, 5 * 60 * 1000);
+    if (errorMessage && !marketData) {
+      // Only use fallback if we have no data at all
+      console.warn('Using fallback XRP data due to API error:', errorMessage);
+      return {
+        symbol: 'XRP',
+        name: 'XRP',
+        price: 3.00,
+        change24h: 0,
+        marketCap: 170000000000,
+        sentiment: 'neutral',
+        lastUpdated: new Date().toISOString()
+      };
+    }
     
-    return () => clearInterval(interval);
-  }, [fetchXRPData]);
+    return null;
+  }, [enhancedXrpData, errorMessage, marketData]);
+
+  const refetchWithLog = React.useCallback(async () => {
+    console.log('Manually refetching XRP market data...');
+    await refetch();
+  }, [refetch]);
 
   return {
-    xrpData,
-    loading: loading || derivativesLoading,
-    refreshing,
-    error,
-    lastUpdated,
-    refetch: fetchXRPData,
+    xrpData: finalXrpData,
+    loading: isLoading || derivativesLoading,
+    refreshing: isFetching && !isLoading,
+    error: errorMessage,
+    lastUpdated: marketData?.xrpData ? new Date() : null,
+    refetch: refetchWithLog,
     derivativesEnabled,
     setDerivativesEnabled,
-    dataSource
+    dataSource: marketData?.dataSource || null,
   };
 }
