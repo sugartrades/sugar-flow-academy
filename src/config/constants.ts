@@ -118,10 +118,32 @@ export const SLIDER_CONFIGS = {
 // ============================================================================
 
 export const MARKET_SIMULATOR = {
-  // Market Microstructure percentages - increased to better reflect real market depth
-  IMMEDIATE_DEPTH_PERCENT: 0.15, // 15% of float immediately available
-  MARKET_MAKER_RESPONSE_PERCENT: 0.25, // 25% from algorithmic MM
-  CROSS_EXCHANGE_ARB_PERCENT: 0.35, // 35% from arbitrage flows
+  // Realistic Market Depth Constraints with fixed caps and logarithmic scaling
+  LIQUIDITY_TIERS: {
+    // Immediate Depth: Fixed cap with base amount
+    IMMEDIATE_DEPTH: {
+      BASE_AMOUNT: 2000000, // 2M XRP base immediate depth
+      FLOAT_PERCENT: 0.05, // Plus 5% of float
+      MAX_CAP: 10000000, // Maximum 10M XRP immediate depth
+      PRICE_IMPACT_FACTOR: 0.0002 // Very low impact in immediate depth
+    },
+    
+    // Market Maker Response: Logarithmic scaling
+    MARKET_MAKER: {
+      BASE_AMOUNT: 5000000, // 5M XRP base MM response
+      LOG_SCALING_FACTOR: 0.15, // Logarithmic scaling factor
+      MAX_CAP: 25000000, // Maximum 25M XRP from MMs
+      PRICE_IMPACT_FACTOR: 0.001 // Low impact for MM liquidity
+    },
+    
+    // Cross-Exchange Arbitrage: Square root scaling
+    CROSS_EXCHANGE: {
+      BASE_AMOUNT: 8000000, // 8M XRP base arbitrage
+      SQRT_SCALING_FACTOR: 0.2, // Square root scaling factor
+      MAX_CAP: 40000000, // Maximum 40M XRP from arbitrage
+      PRICE_IMPACT_FACTOR: 0.004 // Medium impact for arbitrage
+    }
+  },
   
   // Derivatives impact factors
   DERIVATIVES_FLOAT_MULTIPLIER: 0.7, // Conservative derivatives impact
@@ -162,14 +184,33 @@ export const MARKET_SIMULATOR = {
     WHALE_ALERT_MULTIPLIER: 0.02 // Whale alert scaling factor
   },
   
-  // Price impact factors for different phases
+  // Float-dependent price impact factors
   PRICE_IMPACT: {
-    IMMEDIATE_FACTOR: 0.0005, // 0.05% immediate impact per depth ratio
-    MARKET_MAKER_FACTOR: 0.003, // 0.3% MM price impact
-    ARBITRAGE_FACTOR: 0.008, // 0.8% arbitrage price impact
-    EXHAUSTION_POWER: 1.2, // Exponential exhaustion factor
-    EXHAUSTION_MAX: 0.05, // Maximum 5% exhaustion impact
-    CALIBRATION_FACTOR: 0.002 // 0.2% phase calibration impact
+    // Base factors that scale with float size
+    BASE_FACTORS: {
+      IMMEDIATE: 0.0001, // Base immediate impact
+      MARKET_MAKER: 0.0008, // Base MM impact  
+      ARBITRAGE: 0.003, // Base arbitrage impact
+      EXHAUSTION_BASE: 0.01 // Base exhaustion impact
+    },
+    
+    // Float dependency scaling
+    FLOAT_SCALING: {
+      MIN_FLOAT: 5000000000, // 5B XRP minimum for scaling calculations
+      MAX_FLOAT: 20000000000, // 20B XRP maximum for scaling calculations
+      IMPACT_AMPLIFIER: 2.0, // How much impact scales with smaller floats
+      LOG_DAMPENING: 0.5 // Logarithmic dampening factor
+    },
+    
+    // Exhaustion phase (when all liquidity tiers are consumed)
+    EXHAUSTION: {
+      POWER: 1.5, // More aggressive exhaustion curve
+      MAX_IMPACT: 0.15, // Maximum 15% impact in exhaustion
+      THRESHOLD: 0.8 // Trigger exhaustion when 80% of liquidity is consumed
+    },
+    
+    // Legacy calibration factor for phase calculations
+    CALIBRATION_FACTOR: 0.001 // 0.1% baseline calibration impact
   },
   
   // Amplification limits

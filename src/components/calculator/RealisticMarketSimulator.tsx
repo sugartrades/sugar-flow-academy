@@ -64,30 +64,47 @@ export function useRealisticMarketSimulator({
     // Each layer represents different sources of liquidity that become available 
     // as the order executes and price moves.
     
+    // Calculate float-dependent price impact scaling factor
+    const floatScaling = Math.max(0.5, Math.min(2.0, 
+      MARKET_SIMULATOR.PRICE_IMPACT.FLOAT_SCALING.IMPACT_AMPLIFIER * 
+      Math.log(MARKET_SIMULATOR.PRICE_IMPACT.FLOAT_SCALING.MIN_FLOAT / Math.max(availableFloat, MARKET_SIMULATOR.PRICE_IMPACT.FLOAT_SCALING.MIN_FLOAT)) * 
+      MARKET_SIMULATOR.PRICE_IMPACT.FLOAT_SCALING.LOG_DAMPENING + 1
+    ));
+
     const microstructure: MarketMicrostructure = {
       /**
-       * IMMEDIATE DEPTH: The amount of XRP available at the current price ±0.1%
-       * This represents the top-of-book liquidity - orders sitting very close to market price.
-       * Calculated as a small percentage of available float because most liquidity
-       * sits deeper in the order book at less favorable prices.
+       * IMMEDIATE DEPTH: Realistic top-of-book liquidity with fixed base + float percentage
+       * Uses a base amount plus a small percentage of float, capped at a maximum.
+       * This creates realistic constraints where very large floats don't create
+       * proportionally massive immediate depth.
        */
-      immediateDepth: availableFloat * MARKET_SIMULATOR.IMMEDIATE_DEPTH_PERCENT,
+      immediateDepth: Math.min(
+        MARKET_SIMULATOR.LIQUIDITY_TIERS.IMMEDIATE_DEPTH.BASE_AMOUNT + 
+        (availableFloat * MARKET_SIMULATOR.LIQUIDITY_TIERS.IMMEDIATE_DEPTH.FLOAT_PERCENT),
+        MARKET_SIMULATOR.LIQUIDITY_TIERS.IMMEDIATE_DEPTH.MAX_CAP
+      ),
       
       /**
-       * MARKET MAKER RESPONSE: Additional liquidity provided by algorithmic market makers
-       * Market makers (MMs) provide liquidity but adjust their quotes based on order flow.
-       * When they detect large orders, they widen spreads and reduce quoted size.
-       * This factor represents the liquidity MMs are willing to provide at slightly worse prices.
+       * MARKET MAKER RESPONSE: Logarithmic scaling for algorithmic market makers
+       * Uses base amount plus logarithmic scaling of float, capped at maximum.
+       * This models how MM capacity grows sub-linearly with float size.
        */
-      marketMakerResponse: availableFloat * MARKET_SIMULATOR.MARKET_MAKER_RESPONSE_PERCENT,
+      marketMakerResponse: Math.min(
+        MARKET_SIMULATOR.LIQUIDITY_TIERS.MARKET_MAKER.BASE_AMOUNT + 
+        (Math.log10(Math.max(1, availableFloat / 1000000000)) * MARKET_SIMULATOR.LIQUIDITY_TIERS.MARKET_MAKER.LOG_SCALING_FACTOR * availableFloat),
+        MARKET_SIMULATOR.LIQUIDITY_TIERS.MARKET_MAKER.MAX_CAP
+      ),
       
       /**
-       * CROSS-EXCHANGE ARBITRAGE: Liquidity flowing from arbitrage between exchanges
-       * When price moves significantly on one exchange, arbitrageurs bring liquidity
-       * from other exchanges to capture the price difference. This helps provide
-       * deeper liquidity but at increasingly unfavorable prices as the gap widens.
+       * CROSS-EXCHANGE ARBITRAGE: Square root scaling for inter-exchange flows
+       * Uses base amount plus square root scaling of float, capped at maximum.
+       * This models how arbitrage capacity scales with float but with diminishing returns.
        */
-      crossExchangeArb: availableFloat * MARKET_SIMULATOR.CROSS_EXCHANGE_ARB_PERCENT,
+      crossExchangeArb: Math.min(
+        MARKET_SIMULATOR.LIQUIDITY_TIERS.CROSS_EXCHANGE.BASE_AMOUNT + 
+        (Math.sqrt(availableFloat / 1000000000) * MARKET_SIMULATOR.LIQUIDITY_TIERS.CROSS_EXCHANGE.SQRT_SCALING_FACTOR * availableFloat),
+        MARKET_SIMULATOR.LIQUIDITY_TIERS.CROSS_EXCHANGE.MAX_CAP
+      ),
       
       /**
        * DERIVATIVES-DRIVEN FLOAT REDUCTION: Effective circulating supply reduction
@@ -220,7 +237,8 @@ export function useRealisticMarketSimulator({
     // because we're trading at essentially the "market price".
     const immediateExecution = Math.min(remainingOrder, microstructure.immediateDepth);
     if (immediateExecution > 0) {
-      const executionPrice = currentPriceLevel * (1 + (immediateExecution / microstructure.immediateDepth) * MARKET_SIMULATOR.PRICE_IMPACT.IMMEDIATE_FACTOR);
+      const scaledImpactFactor = MARKET_SIMULATOR.PRICE_IMPACT.BASE_FACTORS.IMMEDIATE * floatScaling;
+      const executionPrice = currentPriceLevel * (1 + (immediateExecution / microstructure.immediateDepth) * scaledImpactFactor);
       totalCost += immediateExecution * executionPrice;
       liquidityConsumed += immediateExecution;
       remainingOrder -= immediateExecution;
@@ -238,7 +256,8 @@ export function useRealisticMarketSimulator({
       const mmExecution = Math.min(remainingOrder, microstructure.marketMakerResponse);
       if (mmExecution > 0) {
         // MMs provide liquidity but at progressively higher prices to compensate for risk
-        const mmPriceImpact = (mmExecution / microstructure.marketMakerResponse) * MARKET_SIMULATOR.PRICE_IMPACT.MARKET_MAKER_FACTOR;
+        const scaledImpactFactor = MARKET_SIMULATOR.PRICE_IMPACT.BASE_FACTORS.MARKET_MAKER * floatScaling;
+        const mmPriceImpact = (mmExecution / microstructure.marketMakerResponse) * scaledImpactFactor;
         const executionPrice = currentPriceLevel * (1 + mmPriceImpact);
         totalCost += mmExecution * (currentPriceLevel + executionPrice) / 2; // Average price across the range
         liquidityConsumed += mmExecution;
@@ -258,7 +277,8 @@ export function useRealisticMarketSimulator({
       const arbExecution = Math.min(remainingOrder, microstructure.crossExchangeArb);
       if (arbExecution > 0) {
         // Arbitrage provides more liquidity but requires larger price movements to be profitable
-        const arbPriceImpact = (arbExecution / microstructure.crossExchangeArb) * MARKET_SIMULATOR.PRICE_IMPACT.ARBITRAGE_FACTOR;
+        const scaledImpactFactor = MARKET_SIMULATOR.PRICE_IMPACT.BASE_FACTORS.ARBITRAGE * floatScaling;
+        const arbPriceImpact = (arbExecution / microstructure.crossExchangeArb) * scaledImpactFactor;
         const executionPrice = currentPriceLevel * (1 + arbPriceImpact);
         totalCost += arbExecution * (currentPriceLevel + executionPrice) / 2; // Average price across the range
         liquidityConsumed += arbExecution;
@@ -279,8 +299,10 @@ export function useRealisticMarketSimulator({
       const remainingFloat = Math.max(availableFloat * MARKET_SIMULATOR.EXECUTION.MIN_FLOAT_PERCENT, availableFloat - liquidityConsumed);
       const exhaustionRatio = Math.min(remainingOrder / remainingFloat, 1);
       
-      // Exponential price impact when exhausting float - models thin market conditions
-      const exhaustionImpact = Math.pow(exhaustionRatio, MARKET_SIMULATOR.PRICE_IMPACT.EXHAUSTION_POWER) * MARKET_SIMULATOR.PRICE_IMPACT.EXHAUSTION_MAX;
+      // Enhanced exponential price impact when exhausting float - models thin market conditions
+      const baseExhaustionImpact = MARKET_SIMULATOR.PRICE_IMPACT.BASE_FACTORS.EXHAUSTION_BASE * floatScaling;
+      const exhaustionImpact = Math.pow(exhaustionRatio, MARKET_SIMULATOR.PRICE_IMPACT.EXHAUSTION.POWER) * 
+        Math.min(MARKET_SIMULATOR.PRICE_IMPACT.EXHAUSTION.MAX_IMPACT, baseExhaustionImpact * (1 + exhaustionRatio));
       const executionPrice = currentPriceLevel * (1 + exhaustionImpact);
       
       // Cost increases dramatically as we exhaust available liquidity
@@ -295,6 +317,12 @@ export function useRealisticMarketSimulator({
       mmExecution: (buyOrderSize - remainingOrder - immediateExecution > 0) ? Math.min(buyOrderSize - immediateExecution, microstructure.marketMakerResponse) : 0,
       arbExecution: remainingOrder > 0 ? Math.min(remainingOrder, microstructure.crossExchangeArb) : 0,
       exhaustionExecution: remainingOrder,
+      floatScaling,
+      liquidityTierSizes: {
+        immediate: microstructure.immediateDepth,
+        marketMaker: microstructure.marketMakerResponse,
+        arbitrage: microstructure.crossExchangeArb
+      },
       finalPriceImpact: ((currentPriceLevel - currentPrice) / currentPrice) * 100
     });
 
