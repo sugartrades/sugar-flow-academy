@@ -85,9 +85,20 @@ export function EnhancedXRPMarketCapVisualizer() {
     // REALISTIC market parameters - based on actual crypto orderbooks
     const totalLevels = 200;
     
-    // Real XRP orderbooks typically have 5-20M XRP total across all reasonable levels
-    const realisticTotalLiquidity = Math.min(calculatedFloat * 0.003, 50000000); // Max 50M XRP total
-    console.log('💧 Realistic total liquidity cap:', realisticTotalLiquidity);
+    // Real XRP orderbooks - use Live Exchange Float Estimator data
+    const estimatedExchangeFloat = derivativesEnabled && derivativesData?.estimatedFloat 
+      ? derivativesData.estimatedFloat 
+      : calculatedFloat;
+    
+    // Realistic percentage of exchange float available in orderbooks (typically 1-5%)
+    const orderBookPercentage = 0.02; // 2% of exchange float in orderbooks
+    const realisticTotalLiquidity = estimatedExchangeFloat * orderBookPercentage;
+    
+    console.log('💧 Using Live Exchange Float data:', {
+      estimatedExchangeFloat: estimatedExchangeFloat,
+      orderBookPercentage: `${orderBookPercentage * 100}%`,
+      realisticTotalLiquidity: realisticTotalLiquidity
+    });
     
     for (let i = 0; i < totalLevels; i++) {
       // AGGRESSIVE price progression - each level should meaningfully increase price
