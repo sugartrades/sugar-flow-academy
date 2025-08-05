@@ -82,43 +82,51 @@ export function EnhancedXRPMarketCapVisualizer() {
     const levels: OrderBookLevel[] = [];
     let cumulative = 0;
     
-    // Realistic market parameters
-    const totalLevels = 500;
-    const maxPriceIncrease = 10.0; // Allow up to 1000% price increase for large orders
+    // REALISTIC market parameters - based on actual crypto orderbooks
+    const totalLevels = 200;
     
-    // Base liquidity should be much lower - real XRP books have ~10-50M XRP total
-    const baseLiquidityFactor = derivativesEnabled && derivativesData 
-      ? Math.min(2.0, derivativesData.leverageMultiplier * 0.5) 
-      : 1.0;
-    
-    // Realistic total liquidity cap (much lower than before)
-    const maxTotalLiquidity = calculatedFloat * 0.05 * baseLiquidityFactor; // 5% of float max
+    // Real XRP orderbooks typically have 5-20M XRP total across all reasonable levels
+    const realisticTotalLiquidity = Math.min(calculatedFloat * 0.003, 50000000); // Max 50M XRP total
+    console.log('💧 Realistic total liquidity cap:', realisticTotalLiquidity);
     
     for (let i = 0; i < totalLevels; i++) {
-      // Exponential price progression - realistic slippage curve
-      const levelRatio = i / totalLevels;
-      const priceMultiplier = 1 + Math.pow(levelRatio, 1.5) * maxPriceIncrease;
-      const price = currentPrice * priceMultiplier;
-      
-      // Realistic liquidity distribution with steep decay
-      let baseSize;
-      if (i < 20) {
-        // Very tight spread with decent liquidity (first 20 levels)
-        baseSize = maxTotalLiquidity * 0.4 * Math.exp(-i * 0.15);
-      } else if (i < 100) {
-        // Medium levels with exponential decay
-        baseSize = maxTotalLiquidity * 0.3 * Math.exp(-(i - 20) * 0.08);
+      // AGGRESSIVE price progression - each level should meaningfully increase price
+      // Start with tight spread, then exponential growth
+      let priceIncrease;
+      if (i < 10) {
+        // Very tight spread for first 10 levels (0.1% - 1%)
+        priceIncrease = (i + 1) * 0.001;
+      } else if (i < 50) {
+        // Moderate spread for next 40 levels (1% - 10%)
+        const levelRatio = (i - 10) / 40;
+        priceIncrease = 0.01 + (levelRatio * levelRatio * 0.09);
       } else {
-        // Deep levels with very little liquidity
-        baseSize = maxTotalLiquidity * 0.1 * Math.exp(-(i - 100) * 0.05);
+        // Exponential growth for deeper levels (10% - 500%)
+        const levelRatio = (i - 50) / 150;
+        priceIncrease = 0.1 + Math.pow(levelRatio, 2) * 4.9; // Up to 500% increase
       }
       
-      // Apply derivatives influence (but keep it reasonable)
+      const price = currentPrice * (1 + priceIncrease);
+      
+      // REALISTIC liquidity distribution with steep decay
+      let liquidityAtLevel;
+      if (i < 5) {
+        // Best levels: decent liquidity
+        liquidityAtLevel = realisticTotalLiquidity * 0.15 * Math.exp(-i * 0.3);
+      } else if (i < 20) {
+        // Good levels: moderate liquidity  
+        liquidityAtLevel = realisticTotalLiquidity * 0.08 * Math.exp(-(i - 5) * 0.2);
+      } else {
+        // Deep levels: very little liquidity
+        liquidityAtLevel = realisticTotalLiquidity * 0.02 * Math.exp(-(i - 20) * 0.1);
+      }
+      
+      // Apply minimal derivatives influence (keep it realistic)
       const derivativesInfluence = derivativesEnabled && derivativesData 
-        ? Math.max(0.3, Math.min(2.0, 1 + (derivativesData.avgFundingRate * 50)))
+        ? Math.max(0.5, Math.min(1.5, 1 + (derivativesData.avgFundingRate * 20)))
         : 1.0;
       
-      const size = Math.max(100, baseSize * derivativesInfluence); // Minimum 100 XRP per level
+      const size = Math.max(50, liquidityAtLevel * derivativesInfluence); // Minimum 50 XRP per level
       cumulative += size;
       
       levels.push({
@@ -127,8 +135,11 @@ export function EnhancedXRPMarketCapVisualizer() {
         cumulative
       });
       
-      // Stop if we've reached our liquidity cap
-      if (cumulative >= maxTotalLiquidity) {
+      console.log(`Level ${i}: price=$${price.toFixed(4)} (+${(priceIncrease*100).toFixed(2)}%), size=${size.toFixed(0)} XRP`);
+      
+      // Stop if we've used up our liquidity budget
+      if (cumulative >= realisticTotalLiquidity) {
+        console.log(`💧 Liquidity cap reached at level ${i}`);
         break;
       }
     }
@@ -137,7 +148,8 @@ export function EnhancedXRPMarketCapVisualizer() {
       totalLevels: levels.length, 
       totalLiquidity: cumulative, 
       maxPrice: levels[levels.length - 1]?.price,
-      maxTotalLiquidity 
+      priceRange: `$${currentPrice.toFixed(4)} - $${levels[levels.length - 1]?.price.toFixed(4)}`,
+      maxPriceIncrease: levels.length > 0 ? `${(((levels[levels.length - 1].price / currentPrice) - 1) * 100).toFixed(1)}%` : '0%'
     });
     
     return levels;
