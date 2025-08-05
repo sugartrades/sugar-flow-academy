@@ -110,24 +110,25 @@ export function useRealisticMarketSimulator({
 
     // Phase 4.1: Immediate impact (consume immediate depth)
     const immediateExecution = Math.min(remainingOrder, microstructure.immediateDepth);
-      if (immediateExecution > 0) {
-        totalCost += immediateExecution * currentPriceLevel;
-        liquidityConsumed += immediateExecution;
-        remainingOrder -= immediateExecution;
-        // Very minimal price impact for immediate depth
-        currentPriceLevel *= 1 + (immediateExecution / microstructure.immediateDepth) * 0.0005;
-      }
+    if (immediateExecution > 0) {
+      const executionPrice = currentPriceLevel * (1 + (immediateExecution / microstructure.immediateDepth) * 0.0005);
+      totalCost += immediateExecution * executionPrice;
+      liquidityConsumed += immediateExecution;
+      remainingOrder -= immediateExecution;
+      currentPriceLevel = executionPrice;
+    }
 
     // Phase 4.2: Market maker response
     if (remainingOrder > 0) {
       const mmExecution = Math.min(remainingOrder, microstructure.marketMakerResponse);
       if (mmExecution > 0) {
-        // MMs provide liquidity but at higher prices
+        // MMs provide liquidity but at progressively higher prices
         const mmPriceImpact = (mmExecution / microstructure.marketMakerResponse) * 0.003;
-        currentPriceLevel *= (1 + mmPriceImpact);
-        totalCost += mmExecution * currentPriceLevel;
+        const executionPrice = currentPriceLevel * (1 + mmPriceImpact);
+        totalCost += mmExecution * (currentPriceLevel + executionPrice) / 2; // Average price across the range
         liquidityConsumed += mmExecution;
         remainingOrder -= mmExecution;
+        currentPriceLevel = executionPrice;
       }
     }
 
@@ -135,27 +136,29 @@ export function useRealisticMarketSimulator({
     if (remainingOrder > 0) {
       const arbExecution = Math.min(remainingOrder, microstructure.crossExchangeArb);
       if (arbExecution > 0) {
-        // Arb provides more liquidity but prices start moving significantly
+        // Arb provides more liquidity but prices move more significantly
         const arbPriceImpact = (arbExecution / microstructure.crossExchangeArb) * 0.008;
-        currentPriceLevel *= (1 + arbPriceImpact);
-        totalCost += arbExecution * currentPriceLevel;
+        const executionPrice = currentPriceLevel * (1 + arbPriceImpact);
+        totalCost += arbExecution * (currentPriceLevel + executionPrice) / 2; // Average price across the range
         liquidityConsumed += arbExecution;
         remainingOrder -= arbExecution;
+        currentPriceLevel = executionPrice;
       }
     }
 
-    // Phase 4.4: Exhausted traditional liquidity - derivatives amplification
+    // Phase 4.4: Exhausted traditional liquidity - exponential impact zone
     if (remainingOrder > 0) {
-      // Now we're in the exponential impact zone
       const remainingFloat = Math.max(effectiveFloat * 0.1, effectiveFloat - liquidityConsumed);
       const exhaustionRatio = Math.min(remainingOrder / remainingFloat, 1);
       
       // Exponential price impact when exhausting float
       const exhaustionImpact = Math.pow(exhaustionRatio, 1.2) * 0.05; // Much more conservative
-      currentPriceLevel *= (1 + exhaustionImpact);
+      const executionPrice = currentPriceLevel * (1 + exhaustionImpact);
       
-      totalCost += remainingOrder * currentPriceLevel;
+      // Cost increases dramatically as we exhaust liquidity
+      totalCost += remainingOrder * (currentPriceLevel + executionPrice) / 2;
       liquidityConsumed += remainingOrder;
+      currentPriceLevel = executionPrice;
       remainingOrder = 0;
     }
 
@@ -172,11 +175,16 @@ export function useRealisticMarketSimulator({
       currentPriceLevel *= panicAmplification;
     }
 
-    // Calculate final results
+    // Calculate final results with proper slippage calculation
     const finalPrice = currentPriceLevel;
     const priceImpact = ((finalPrice - currentPrice) / currentPrice) * 100;
+    
+    // Calculate weighted average execution price across all phases
     const averageExecutionPrice = liquidityConsumed > 0 ? totalCost / liquidityConsumed : currentPrice;
-    const slippagePercentage = ((averageExecutionPrice - currentPrice) / currentPrice) * 100;
+    
+    // Slippage should reflect the difference between average execution and entry price
+    const slippagePercentage = liquidityConsumed > 0 ? 
+      ((averageExecutionPrice - currentPrice) / currentPrice) * 100 : 0;
     
     // Market cap calculations
     const totalSupply = marketCap / currentPrice; // Derive total supply
