@@ -306,7 +306,11 @@ export function useRealisticMarketSimulator({
     const totalSupply = marketCap / currentPrice; // Derive total supply
     const newMarketCap = totalSupply * finalPrice;
     const marketCapIncrease = newMarketCap - marketCap;
-    const effectiveMultiplier = newMarketCap / marketCap;
+    
+    // Calculate effective multiplier as investment efficiency (old formula)
+    // This shows how much market cap increase you get per dollar invested
+    const investmentAmount = buyOrderSize * averageExecutionPrice;
+    const effectiveMultiplier = investmentAmount > 0 ? marketCapIncrease / investmentAmount : 0;
 
     return {
       finalPrice,
