@@ -134,7 +134,9 @@ export function XRPMarketDataPanel() {
             </div>
             {dataSource && (
               <div className="text-xs text-muted-foreground">
-                Source: {dataSource === 'coinglass+coingecko' ? 'CoinGecko + Coinglass' : 
+                Source: {dataSource === 'binance+coinglass' ? 'Binance + Coinglass' : 
+                         dataSource === 'binance' ? 'Binance' : 
+                         dataSource === 'coinglass+coingecko' ? 'CoinGecko + Coinglass' : 
                          dataSource === 'coinglass' ? 'Coinglass' : 'CoinGecko'}
               </div>
             )}

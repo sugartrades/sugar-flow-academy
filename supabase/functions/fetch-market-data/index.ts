@@ -78,7 +78,7 @@ serve(async (req) => {
     
     // Check if Coinglass API key is available for XRP data
     const coinglassApiKey = Deno.env.get('COINGLASS_API_KEY');
-    let dataSource = 'coingecko';
+    let dataSource = 'binance';
     let xrpFromCoinglass = null;
     
     // Try to fetch XRP liquidation data from Coinglass (available in Hobbyist tier)
@@ -118,7 +118,7 @@ serve(async (req) => {
               exchanges: exchanges
             };
             
-            dataSource = 'coinglass+coingecko';
+            dataSource = 'binance+coinglass';
             console.log('Successfully fetched XRP liquidation data from Coinglass:', xrpLiquidations);
           } else {
             console.log('Coinglass liquidation API response indicates failure or no data. Code:', liquidationData.code, 'Message:', liquidationData.msg);
@@ -139,11 +139,11 @@ serve(async (req) => {
     }
     
     // Add delay to help with rate limiting
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Fetch Bitcoin, Ethereum, and XRP data from CoinGecko API
-    const response = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,ripple&vs_currencies=usd&include_24hr_change=true&include_market_cap=true',
+    // Fetch XRP data from Binance Public API (more reliable and free)
+    const binanceResponse = await fetch(
+      'https://api.binance.com/api/v3/ticker/24hr?symbol=XRPUSDT',
       {
         headers: {
           'Accept': 'application/json',
@@ -152,66 +152,44 @@ serve(async (req) => {
       }
     );
 
-    if (!response.ok) {
+    if (!binanceResponse.ok) {
       // If we have cached data, return it even if expired
       if (cachedData) {
-        console.log('API failed but returning stale cached data due to rate limiting');
+        console.log('Binance API failed but returning stale cached data');
         return new Response(JSON.stringify({
           ...cachedData,
           fromCache: true,
           stale: true,
-          error: `API Error: ${response.status}`,
+          error: `Binance API Error: ${binanceResponse.status}`,
           cacheAge: Math.floor((now - cacheTimestamp) / 1000)
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
-      throw new Error(`CoinGecko API error: ${response.status}`);
+      throw new Error(`Binance API error: ${binanceResponse.status}`);
     }
 
-    const data = await response.json();
-    console.log('CoinGecko response:', data);
+    const binanceData = await binanceResponse.json();
+    console.log('Binance XRP response:', binanceData);
 
-    const cryptos: CryptoData[] = [];
+    const cryptos: CryptolDataWithLiquidations[] = [];
 
-    // Process Bitcoin data
-    if (data.bitcoin) {
-      const btc = data.bitcoin;
-      const sentiment = getSentiment(btc.usd_24h_change);
-      cryptos.push({
-        symbol: 'BTC',
-        name: 'Bitcoin',
-        price: btc.usd,
-        change24h: btc.usd_24h_change,
-        marketCap: btc.usd_market_cap,
-        sentiment
-      });
-    }
-
-    // Process Ethereum data
-    if (data.ethereum) {
-      const eth = data.ethereum;
-      const sentiment = getSentiment(eth.usd_24h_change);
-      cryptos.push({
-        symbol: 'ETH',
-        name: 'Ethereum',
-        price: eth.usd,
-        change24h: eth.usd_24h_change,
-        marketCap: eth.usd_market_cap,
-        sentiment
-      });
-    }
-
-    // Process XRP data - always use CoinGecko for price, add Coinglass liquidations if available
-    if (data.ripple) {
-      const xrp = data.ripple;
-      const sentiment = getSentiment(xrp.usd_24h_change);
+    // Process XRP data from Binance API
+    if (binanceData && binanceData.symbol === 'XRPUSDT') {
+      const price = parseFloat(binanceData.lastPrice);
+      const change24h = parseFloat(binanceData.priceChangePercent);
+      
+      // Estimate market cap (approximate XRP circulating supply: ~59 billion)
+      const estimatedCirculatingSupply = 59000000000;
+      const marketCap = price * estimatedCirculatingSupply;
+      
+      const sentiment = getSentiment(change24h);
       const xrpData: CryptolDataWithLiquidations = {
         symbol: 'XRP',
         name: 'XRP',
-        price: xrp.usd,
-        change24h: xrp.usd_24h_change,
-        marketCap: xrp.usd_market_cap,
+        price: price,
+        change24h: change24h,
+        marketCap: marketCap,
         sentiment
       };
       
@@ -221,6 +199,11 @@ serve(async (req) => {
       }
       
       cryptos.push(xrpData);
+      
+      // Update data source
+      dataSource = xrpLiquidations ? 'binance+coinglass' : 'binance';
+      
+      console.log('Successfully processed XRP data from Binance:', xrpData);
     }
 
     if (cryptos.length === 0) {
@@ -283,9 +266,9 @@ serve(async (req) => {
         {
           symbol: 'XRP',
           name: 'XRP',
-          price: 3.00,
+          price: 3.08,
           change24h: 0,
-          marketCap: 170000000000,
+          marketCap: 181720000000,
           sentiment: 'Neutral'
         }
       ],
