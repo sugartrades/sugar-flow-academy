@@ -128,6 +128,17 @@ export function useRealisticMarketSimulator({
     
     const effectiveFloat = microstructure.derivativesFloat * 
       (1 - Math.min(MARKET_SIMULATOR.SYNTHETIC_DEMAND.MAX_MULTIPLIER, syntheticDemandMultiplier * MARKET_SIMULATOR.EXECUTION.EFFECTIVE_FLOAT_REDUCTION));
+    
+    console.log('📊 Liquidity breakdown:', {
+      availableFloat,
+      derivativesFloat: microstructure.derivativesFloat,
+      effectiveFloat,
+      immediateDepth: microstructure.immediateDepth,
+      marketMakerResponse: microstructure.marketMakerResponse,
+      crossExchangeArb: microstructure.crossExchangeArb,
+      totalLowImpactLiquidity: microstructure.immediateDepth + microstructure.marketMakerResponse + microstructure.crossExchangeArb,
+      orderSize: buyOrderSize
+    });
 
     // ===================================================================
     // PHASE 3: MARKET PSYCHOLOGY SIMULATION
@@ -264,7 +275,7 @@ export function useRealisticMarketSimulator({
     // cause dramatic price swings. The exponential function captures how price impact
     // accelerates as available liquidity approaches zero.
     if (remainingOrder > 0) {
-      const remainingFloat = Math.max(effectiveFloat * MARKET_SIMULATOR.EXECUTION.MIN_FLOAT_PERCENT, effectiveFloat - liquidityConsumed);
+      const remainingFloat = Math.max(availableFloat * MARKET_SIMULATOR.EXECUTION.MIN_FLOAT_PERCENT, availableFloat - liquidityConsumed);
       const exhaustionRatio = Math.min(remainingOrder / remainingFloat, 1);
       
       // Exponential price impact when exhausting float - models thin market conditions
@@ -277,6 +288,14 @@ export function useRealisticMarketSimulator({
       currentPriceLevel = executionPrice;
       remainingOrder = 0;
     }
+
+    console.log('⚡ Execution phases:', {
+      immediateExecution,
+      mmExecution: (buyOrderSize - remainingOrder - immediateExecution > 0) ? Math.min(buyOrderSize - immediateExecution, microstructure.marketMakerResponse) : 0,
+      arbExecution: remainingOrder > 0 ? Math.min(remainingOrder, microstructure.crossExchangeArb) : 0,
+      exhaustionExecution: remainingOrder,
+      finalPriceImpact: ((currentPriceLevel - currentPrice) / currentPrice) * 100
+    });
 
     // Apply amplification effects conservatively
     const derivativesAmplification = Math.min(MARKET_SIMULATOR.AMPLIFICATION.DERIVATIVES_MAX, 
