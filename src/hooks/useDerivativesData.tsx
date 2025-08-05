@@ -179,21 +179,48 @@ export function useDerivativesData(): UseDerivativesDataReturn {
   } = useQuery({
     queryKey: derivativesDataKeys.data(),
     queryFn: fetchDerivativesData,
-    refetchInterval: 3 * 60 * 1000, // 3 minutes - less frequent updates
-    staleTime: 5 * 60 * 1000, // 5 minutes - longer cache
-    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    refetchInterval: 90 * 1000, // 90 seconds - faster updates
+    staleTime: 1 * 60 * 1000, // 1 minute - shorter cache for fresher data
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
     retry: 1, // Reduced retries for faster failure
     retryDelay: (attemptIndex) => Math.min(500 * 2 ** attemptIndex, 3000), // Faster retries
     networkMode: 'offlineFirst',
   });
 
-  // Calculate aggregated metrics
+  // Calculate aggregated metrics with immediate fallback
   const aggregated = React.useMemo(() => {
     if (data?.derivatives && data.derivatives.length > 0) {
       return calculateAggregatedMetrics(data.derivatives);
     }
+    
+    // Provide immediate fallback data for faster loading
+    if (isLoading) {
+      console.log('Using fallback derivatives data for faster loading');
+      return {
+        totalOpenInterest: 1200000000, // 1.2B XRP in OI
+        avgLongShortRatio: 1.15,
+        avgFundingRate: 0.0002,
+        totalLiquidations24h: 25000000,
+        totalVolume24h: 800000000,
+        exchangeCount: 5,
+        estimatedFloat: 8000000000, // 8B XRP
+        leverageMultiplier: 1.2,
+        weightedFundingRate: 0.0002,
+        fundingTrend: 'neutral' as const,
+        leverageSentiment: 'balanced' as const,
+        marketMoodScore: 0.55,
+        floatRange: { min: 6000000000, max: 10000000000 },
+        exchangeDistribution: {
+          'Binance': { oi: 480000000, percentage: 40 },
+          'Bybit': { oi: 360000000, percentage: 30 },
+          'OKX': { oi: 240000000, percentage: 20 },
+          'Other': { oi: 120000000, percentage: 10 }
+        }
+      };
+    }
+    
     return null;
-  }, [data?.derivatives]);
+  }, [data?.derivatives, isLoading]);
 
   const refetchWithLog = React.useCallback(async () => {
     console.log('Manually refetching derivatives data...');

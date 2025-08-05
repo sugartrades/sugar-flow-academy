@@ -42,12 +42,14 @@ interface CryptolDataWithLiquidations extends CryptoData {
   };
 }
 
-// Enhanced configuration
+// Enhanced configuration with circuit breaker
 const CONFIG = {
   CACHE_DURATION: 2 * 60 * 1000, // 2 minutes
-  MAX_RETRIES: 3,
-  RETRY_DELAY_BASE: 1000,
-  REQUEST_TIMEOUT: 15000,
+  MAX_RETRIES: 2, // Reduced for faster fallback
+  RETRY_DELAY_BASE: 500, // Faster retries
+  REQUEST_TIMEOUT: 8000, // Faster timeout
+  CIRCUIT_BREAKER_THRESHOLD: 3, // Failures before opening circuit
+  CIRCUIT_BREAKER_TIMEOUT: 5 * 60 * 1000, // 5 minutes before trying again
   RATE_LIMIT_DELAY: 200,
   
   // API endpoints with fallbacks

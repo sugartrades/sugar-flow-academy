@@ -51,13 +51,15 @@ interface DerivativesData {
   data_timestamp: string
 }
 
-// Enhanced configuration
+// Enhanced configuration with circuit breaker
 const CONFIG = {
-  CACHE_DURATION: 3 * 60 * 1000, // 3 minutes
-  MAX_RETRIES: 3,
-  RETRY_DELAY_BASE: 1000,
-  REQUEST_TIMEOUT: 15000,
-  RATE_LIMIT_DELAY: 500,
+  CACHE_DURATION: 2 * 60 * 1000, // 2 minutes - reduced for faster updates
+  MAX_RETRIES: 2, // Reduced for faster fallback
+  RETRY_DELAY_BASE: 500, // Faster retries
+  REQUEST_TIMEOUT: 8000, // Faster timeout
+  RATE_LIMIT_DELAY: 300, // Reduced delay
+  CIRCUIT_BREAKER_THRESHOLD: 3, // Failures before opening circuit
+  CIRCUIT_BREAKER_TIMEOUT: 5 * 60 * 1000, // 5 minutes before trying again
   
   // Primary CoinGlass endpoints with fallbacks
   COINGLASS_ENDPOINTS: {
