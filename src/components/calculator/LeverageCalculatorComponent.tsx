@@ -25,6 +25,64 @@ export function LeverageCalculatorComponent() {
   const [feePercent, setFeePercent] = useState<string>('0.1');
   const [results, setResults] = useState<CalculationResults | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  
+  // Track which fields have been touched for validation
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
+
+  // Validation helper
+  const isValidNumericInput = (value: string): boolean => {
+    if (value === '') return false;
+    const num = parseFloat(value);
+    return !isNaN(num) && num >= 0;
+  };
+
+  // Input validation helper
+  const sanitizeNumericInput = (value: string): string => {
+    // Allow only digits, decimal point, and handle multiple decimal points
+    const sanitized = value.replace(/[^0-9.]/g, '');
+    const parts = sanitized.split('.');
+    if (parts.length > 2) {
+      return parts[0] + '.' + parts.slice(1).join('');
+    }
+    return sanitized;
+  };
+
+  // Enhanced onChange handlers with validation
+  const handleEntryPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitized = sanitizeNumericInput(e.target.value);
+    setEntryPrice(sanitized);
+    setTouchedFields(prev => new Set(prev).add('entryPrice'));
+  };
+
+  const handleExitPriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitized = sanitizeNumericInput(e.target.value);
+    setExitPrice(sanitized);
+    setTouchedFields(prev => new Set(prev).add('exitPrice'));
+  };
+
+  const handlePositionSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitized = sanitizeNumericInput(e.target.value);
+    setPositionSize(sanitized);
+    setTouchedFields(prev => new Set(prev).add('positionSize'));
+  };
+
+  const handleFeePercentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitized = sanitizeNumericInput(e.target.value);
+    setFeePercent(sanitized);
+    setTouchedFields(prev => new Set(prev).add('feePercent'));
+  };
+
+  // Get input class with validation styling
+  const getInputClassName = (fieldName: string, value: string): string => {
+    const baseClass = "bg-background/50";
+    const isTouched = touchedFields.has(fieldName);
+    const isValid = isValidNumericInput(value);
+    
+    if (isTouched && !isValid) {
+      return `${baseClass} border-red-500 focus-visible:ring-red-500`;
+    }
+    return baseClass;
+  };
 
   // Smooth transitions for result values
   const grossPLTransition = useSmoothValueTransition(results?.grossPL || 0);
@@ -120,10 +178,11 @@ export function LeverageCalculatorComponent() {
                 <Input
                   id="entryPrice"
                   type="number"
+                  inputMode="decimal"
                   placeholder="0.00"
                   value={entryPrice}
-                  onChange={(e) => setEntryPrice(e.target.value)}
-                  className="bg-background/50"
+                  onChange={handleEntryPriceChange}
+                  className={getInputClassName('entryPrice', entryPrice)}
                 />
               </div>
 
@@ -142,10 +201,11 @@ export function LeverageCalculatorComponent() {
                 <Input
                   id="exitPrice"
                   type="number"
+                  inputMode="decimal"
                   placeholder="0.00"
                   value={exitPrice}
-                  onChange={(e) => setExitPrice(e.target.value)}
-                  className="bg-background/50"
+                  onChange={handleExitPriceChange}
+                  className={getInputClassName('exitPrice', exitPrice)}
                 />
               </div>
             </div>
@@ -165,10 +225,11 @@ export function LeverageCalculatorComponent() {
               <Input
                 id="positionSize"
                 type="number"
+                inputMode="decimal"
                 placeholder="1000"
                 value={positionSize}
-                onChange={(e) => setPositionSize(e.target.value)}
-                className="bg-background/50"
+                onChange={handlePositionSizeChange}
+                className={getInputClassName('positionSize', positionSize)}
               />
             </div>
 
@@ -228,11 +289,12 @@ export function LeverageCalculatorComponent() {
               <Input
                 id="feePercent"
                 type="number"
+                inputMode="decimal"
                 step="0.01"
                 placeholder="0.1"
                 value={feePercent}
-                onChange={(e) => setFeePercent(e.target.value)}
-                className="bg-background/50"
+                onChange={handleFeePercentChange}
+                className={getInputClassName('feePercent', feePercent)}
               />
             </div>
           </CardContent>
