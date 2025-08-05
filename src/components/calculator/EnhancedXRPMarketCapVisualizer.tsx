@@ -17,6 +17,12 @@ import { FundingRatePanel } from './FundingRatePanel';
 import { TestModePanel } from './TestModePanel';
 import { InfoIcon, TrendingUpIcon, DollarSignIcon, TargetIcon, AlertTriangleIcon, ZapIcon } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { 
+  CALCULATOR_DEFAULTS, 
+  SLIDER_CONFIGS, 
+  FORMATTING, 
+  MARKET_DATA 
+} from '@/config/constants';
 
 // Remove old interfaces since we're using the new realistic simulator
 
@@ -24,17 +30,17 @@ export function EnhancedXRPMarketCapVisualizer() {
   const { xrpData, loading, refreshing, derivativesEnabled, setDerivativesEnabled } = useXRPMarketData();
   
   // State for simulation parameters
-  const [xrpFloat, setXrpFloat] = useState(8000000000); // 8B XRP default
-  const [buyOrderSize, setBuyOrderSize] = useState(100000000); // 100M XRP
-  const [leverageAmplifier, setLeverageAmplifier] = useState(2.0);
-  const [updateFrequency, setUpdateFrequency] = useState(300); // 5 minutes
-  const [dataSource, setDataSource] = useState('coinglass');
-  const [manualFloatOverride, setManualFloatOverride] = useState(false);
-  const [isTestMode, setIsTestMode] = useState(false);
+  const [xrpFloat, setXrpFloat] = useState<number>(CALCULATOR_DEFAULTS.XRP_FLOAT);
+  const [buyOrderSize, setBuyOrderSize] = useState<number>(CALCULATOR_DEFAULTS.BUY_ORDER_SIZE);
+  const [leverageAmplifier, setLeverageAmplifier] = useState<number>(CALCULATOR_DEFAULTS.LEVERAGE_AMPLIFIER);
+  const [updateFrequency, setUpdateFrequency] = useState<number>(CALCULATOR_DEFAULTS.UPDATE_FREQUENCY);
+  const [dataSource, setDataSource] = useState<string>(CALCULATOR_DEFAULTS.DATA_SOURCE);
+  const [manualFloatOverride, setManualFloatOverride] = useState<boolean>(CALCULATOR_DEFAULTS.MANUAL_FLOAT_OVERRIDE);
+  const [isTestMode, setIsTestMode] = useState<boolean>(CALCULATOR_DEFAULTS.TEST_MODE);
   const [testSnapshot, setTestSnapshot] = useState<any>(null);
 
   // Get current XRP price and derivatives data
-  const currentPrice = xrpData?.price || 3.0;
+  const currentPrice = xrpData?.price || MARKET_DATA.DEFAULT_XRP_PRICE_ENHANCED;
   const derivativesData = xrpData?.derivatives;
 
   // Calculate dynamic exchange float based on derivatives data
@@ -48,10 +54,11 @@ export function EnhancedXRPMarketCapVisualizer() {
 
   // Dynamic step calculation for smooth slider interaction
   const getDynamicStep = (value: number): number => {
-    if (value < 10000000) return 1000000; // 1M steps for < 10M
-    if (value < 100000000) return 5000000; // 5M steps for < 100M
-    if (value < 1000000000) return 10000000; // 10M steps for < 1B
-    return 50000000; // 50M steps for > 1B
+    const { DYNAMIC_STEPS } = SLIDER_CONFIGS.XRP_FLOAT;
+    if (value < 10000000) return DYNAMIC_STEPS.SMALL;
+    if (value < 100000000) return DYNAMIC_STEPS.MEDIUM;
+    if (value < 1000000000) return DYNAMIC_STEPS.LARGE;
+    return DYNAMIC_STEPS.EXTRA_LARGE;
   };
 
   const handleBuyOrderChange = (value: number[]) => {
@@ -64,7 +71,7 @@ export function EnhancedXRPMarketCapVisualizer() {
     currentPrice,
     buyOrderSize,
     availableFloat: calculatedFloat,
-    marketCap: xrpData?.marketCap || (currentPrice * 100000000000),
+    marketCap: xrpData?.marketCap || (currentPrice * MARKET_DATA.XRP_TOTAL_SUPPLY),
     derivativesData
   });
 
@@ -77,31 +84,31 @@ export function EnhancedXRPMarketCapVisualizer() {
   // Formatting functions with null/undefined safety
   const formatCurrency = (amount: number | undefined | null): string => {
     if (amount == null || isNaN(amount)) return '$0.00';
-    if (amount >= 1e12) return `$${(amount / 1e12).toFixed(2)}T`;
-    if (amount >= 1e9) return `$${(amount / 1e9).toFixed(2)}B`;
-    if (amount >= 1e6) return `$${(amount / 1e6).toFixed(2)}M`;
-    if (amount >= 1e3) return `$${(amount / 1e3).toFixed(2)}K`;
+    if (amount >= FORMATTING.CURRENCY.TRILLION) return `$${(amount / FORMATTING.CURRENCY.TRILLION).toFixed(2)}T`;
+    if (amount >= FORMATTING.CURRENCY.BILLION) return `$${(amount / FORMATTING.CURRENCY.BILLION).toFixed(2)}B`;
+    if (amount >= FORMATTING.CURRENCY.MILLION) return `$${(amount / FORMATTING.CURRENCY.MILLION).toFixed(2)}M`;
+    if (amount >= FORMATTING.CURRENCY.THOUSAND) return `$${(amount / FORMATTING.CURRENCY.THOUSAND).toFixed(2)}K`;
     return `$${amount.toFixed(2)}`;
   };
 
   const formatPrice = (price: number | undefined | null): string => {
     if (price == null || isNaN(price)) return '$0.0000';
-    return `$${price.toFixed(4)}`;
+    return `$${price.toFixed(FORMATTING.PRICE_DECIMALS)}`;
   };
   
   const formatXRPValue = (amount: number | undefined | null): string => {
     if (amount == null || isNaN(amount)) return '0 XRP';
-    if (amount >= 1e9) return `${(amount / 1e9).toFixed(2)}B XRP`;
-    if (amount >= 1e6) return `${(amount / 1e6).toFixed(2)}M XRP`;
-    if (amount >= 1e3) return `${(amount / 1e3).toFixed(2)}K XRP`;
+    if (amount >= FORMATTING.XRP_VALUE.BILLION) return `${(amount / FORMATTING.XRP_VALUE.BILLION).toFixed(2)}B XRP`;
+    if (amount >= FORMATTING.XRP_VALUE.MILLION) return `${(amount / FORMATTING.XRP_VALUE.MILLION).toFixed(2)}M XRP`;
+    if (amount >= FORMATTING.XRP_VALUE.THOUSAND) return `${(amount / FORMATTING.XRP_VALUE.THOUSAND).toFixed(2)}K XRP`;
     return `${amount.toFixed(0)} XRP`;
   };
 
   const formatSliderValue = (value: number | undefined | null): string => {
     if (value == null || isNaN(value)) return '0';
-    if (value >= 1e9) return `${(value / 1e9).toFixed(1)}B`;
-    if (value >= 1e6) return `${(value / 1e6).toFixed(0)}M`;
-    return `${(value / 1e3).toFixed(0)}K`;
+    if (value >= FORMATTING.CURRENCY.BILLION) return `${(value / FORMATTING.CURRENCY.BILLION).toFixed(1)}B`;
+    if (value >= FORMATTING.CURRENCY.MILLION) return `${(value / FORMATTING.CURRENCY.MILLION).toFixed(0)}M`;
+    return `${(value / FORMATTING.CURRENCY.THOUSAND).toFixed(0)}K`;
   };
 
   if (loading && !xrpData) {
@@ -217,9 +224,9 @@ export function EnhancedXRPMarketCapVisualizer() {
               </div>
               <Slider
                 id="xrp-float"
-                min={1000000000}
-                max={20000000000}
-                step={100000000}
+                min={SLIDER_CONFIGS.XRP_FLOAT.MIN}
+                max={SLIDER_CONFIGS.XRP_FLOAT.MAX}
+                step={SLIDER_CONFIGS.XRP_FLOAT.STEP}
                 value={[calculatedFloat]}
                 onValueChange={(value) => {
                   setXrpFloat(value[0]);
@@ -250,8 +257,8 @@ export function EnhancedXRPMarketCapVisualizer() {
               <Label htmlFor="buy-order">Buy Order Size</Label>
               <Slider
                 id="buy-order"
-                min={1000000}
-                max={2000000000}
+                min={SLIDER_CONFIGS.BUY_ORDER_ENHANCED.MIN}
+                max={SLIDER_CONFIGS.BUY_ORDER_ENHANCED.MAX}
                 step={getDynamicStep(buyOrderSize)}
                 value={[buyOrderSize]}
                 onValueChange={handleBuyOrderChange}

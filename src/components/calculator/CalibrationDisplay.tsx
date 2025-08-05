@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { TrendingUpIcon, CheckCircleIcon, AlertCircleIcon } from 'lucide-react';
+import { CALIBRATION, FORMATTING } from '@/config/constants';
 
 interface CalibrationDisplayProps {
   effectiveMultiplier: number;
@@ -17,26 +18,26 @@ export function CalibrationDisplay({
   marketCapIncrease
 }: CalibrationDisplayProps) {
   
-  // Coinglass reference: $40M → $20.9B market cap movement (522x multiplier)
-  const coinglassOrderSize = 40000000; // $40M
-  const coinglassMarketCapIncrease = 20900000000; // $20.9B
-  const coinglassMultiplier = 522;
+  // Coinglass reference data
+  const coinglassOrderSize = CALIBRATION.COINGLASS.ORDER_SIZE;
+  const coinglassMarketCapIncrease = CALIBRATION.COINGLASS.MARKET_CAP_INCREASE;
+  const coinglassMultiplier = CALIBRATION.COINGLASS.MULTIPLIER;
   
   const formatCurrency = (amount: number): string => {
-    if (amount >= 1e12) return `$${(amount / 1e12).toFixed(2)}T`;
-    if (amount >= 1e9) return `$${(amount / 1e9).toFixed(2)}B`;
-    if (amount >= 1e6) return `$${(amount / 1e6).toFixed(2)}M`;
-    return `$${(amount / 1e3).toFixed(2)}K`;
+    if (amount >= FORMATTING.CURRENCY.TRILLION) return `$${(amount / FORMATTING.CURRENCY.TRILLION).toFixed(2)}T`;
+    if (amount >= FORMATTING.CURRENCY.BILLION) return `$${(amount / FORMATTING.CURRENCY.BILLION).toFixed(2)}B`;
+    if (amount >= FORMATTING.CURRENCY.MILLION) return `$${(amount / FORMATTING.CURRENCY.MILLION).toFixed(2)}M`;
+    return `$${(amount / FORMATTING.CURRENCY.THOUSAND).toFixed(2)}K`;
   };
 
   // Calculate how close we are to Coinglass example
   const orderSizeRatio = orderValueUSD / coinglassOrderSize;
-  const expectedMultiplierFromCoinglass = coinglassMultiplier * Math.pow(orderSizeRatio, 0.8); // Scaling factor
+  const expectedMultiplierFromCoinglass = coinglassMultiplier * Math.pow(orderSizeRatio, CALIBRATION.COINGLASS.SCALING_FACTOR);
   const multiplierAccuracy = Math.abs(effectiveMultiplier - expectedMultiplierFromCoinglass) / expectedMultiplierFromCoinglass;
   
   const getAccuracyLevel = () => {
-    if (multiplierAccuracy < 0.2) return { level: "Excellent", color: "green", icon: CheckCircleIcon };
-    if (multiplierAccuracy < 0.5) return { level: "Good", color: "blue", icon: CheckCircleIcon };
+    if (multiplierAccuracy < CALIBRATION.ACCURACY.EXCELLENT_THRESHOLD) return { level: "Excellent", color: "green", icon: CheckCircleIcon };
+    if (multiplierAccuracy < CALIBRATION.ACCURACY.GOOD_THRESHOLD) return { level: "Good", color: "blue", icon: CheckCircleIcon };
     return { level: "Needs Calibration", color: "orange", icon: AlertCircleIcon };
   };
 
