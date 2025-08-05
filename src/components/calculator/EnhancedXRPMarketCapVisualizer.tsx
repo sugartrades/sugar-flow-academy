@@ -136,7 +136,7 @@ export function EnhancedXRPMarketCapVisualizer() {
   }
 
   return (
-    <div className={`space-y-6 ${refreshing ? 'refreshing-pulse' : ''}`}>
+    <div className="space-y-6">
       {/* Settings Panel */}
       <MarketCapSettings
         derivativesEnabled={derivativesEnabled}
@@ -298,8 +298,8 @@ export function EnhancedXRPMarketCapVisualizer() {
             <TrendingUpIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold text-green-600 value-transition ${priceImpactTransition.transitionClasses}`}>
-              +{priceImpactTransition.displayValue.toFixed(2)}%
+            <div className="text-2xl font-bold text-green-600">
+              +{simulationResults.priceImpact.toFixed(2)}%
             </div>
             <p className="text-xs text-muted-foreground">
               {formatPrice(currentPrice)} → {formatPrice(simulationResults.finalPrice)}
@@ -318,8 +318,8 @@ export function EnhancedXRPMarketCapVisualizer() {
             <DollarSignIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold text-blue-600 value-transition ${marketCapIncreaseTransition.transitionClasses}`}>
-              {formatCurrency(marketCapIncreaseTransition.displayValue)}
+            <div className="text-2xl font-bold text-blue-600">
+              {formatCurrency(simulationResults.marketCapIncrease)}
             </div>
             <p className="text-xs text-muted-foreground">
               {derivativesEnabled ? "Total adjusted cap" : "Increase from current"}
@@ -340,8 +340,8 @@ export function EnhancedXRPMarketCapVisualizer() {
             <TargetIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold text-purple-600 value-transition ${effectiveMultiplierTransition.transitionClasses}`}>
-              {effectiveMultiplierTransition.displayValue.toFixed(2)}x
+            <div className="text-2xl font-bold text-purple-600">
+              {simulationResults.effectiveMultiplier.toFixed(2)}x
             </div>
             <p className="text-xs text-muted-foreground">
               {derivativesEnabled ? "Including leverage effects" : "Standard multiplier"}
@@ -365,8 +365,8 @@ export function EnhancedXRPMarketCapVisualizer() {
             <AlertTriangleIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold text-orange-600 value-transition ${slippageTransition.transitionClasses}`}>
-              {slippageTransition.displayValue.toFixed(2)}%
+            <div className="text-2xl font-bold text-orange-600">
+              {simulationResults.slippagePercentage.toFixed(2)}%
             </div>
             <p className="text-xs text-muted-foreground">
               Slippage

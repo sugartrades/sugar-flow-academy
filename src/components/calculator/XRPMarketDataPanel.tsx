@@ -83,7 +83,7 @@ export function XRPMarketDataPanel() {
   }
 
   return (
-    <Card className={`calculator-card ${refreshing ? 'refreshing-pulse' : ''}`}>
+    <Card className="calculator-card">
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
@@ -92,11 +92,11 @@ export function XRPMarketDataPanel() {
               <h3 className="font-semibold text-lg">XRP Live Price</h3>
             </div>
             <div className="flex items-center gap-3">
-              <span className={`text-3xl font-bold value-transition ${priceTransition.transitionClasses}`}>
-                {formatPrice(priceTransition.displayValue)}
+              <span className="text-3xl font-bold">
+                {formatPrice(xrpData?.price || 0)}
               </span>
-              <div className={`flex items-center gap-1 value-transition ${getChangeColor(changeTransition.displayValue)} ${changeTransition.transitionClasses}`}>
-                {getChangeIcon(changeTransition.displayValue)}
+              <div className={`flex items-center gap-1 ${getChangeColor(xrpData?.change24h || 0)}`}>
+                {getChangeIcon(xrpData?.change24h || 0)}
                 <span className="font-medium">
                   {changeTransition.displayValue !== undefined 
                     ? `${changeTransition.displayValue > 0 ? '+' : ''}${changeTransition.displayValue.toFixed(2)}%`
@@ -109,8 +109,8 @@ export function XRPMarketDataPanel() {
 
           <div className="text-right space-y-1">
             <div className="text-sm text-muted-foreground">Market Cap</div>
-            <div className={`font-semibold value-transition ${marketCapTransition.transitionClasses}`}>
-              {marketCapTransition.displayValue ? formatMarketCap(marketCapTransition.displayValue) : 'N/A'}
+            <div className="font-semibold">
+              {xrpData?.marketCap ? formatMarketCap(xrpData.marketCap) : 'N/A'}
             </div>
             <Badge variant={getSentimentBadgeVariant(xrpData?.sentiment || 'neutral')}>
               {xrpData?.sentiment || 'neutral'}

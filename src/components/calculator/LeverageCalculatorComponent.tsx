@@ -279,7 +279,7 @@ export function LeverageCalculatorComponent() {
 
                   <div className="space-y-2">
                     <Label className="text-sm text-muted-foreground">Result</Label>
-                    <div className={`text-xl font-semibold value-transition ${results?.isWin ? 'text-green-500' : 'text-red-500'}`}>
+                    <div className={`text-xl font-semibold ${results?.isWin ? 'text-green-500' : 'text-red-500'}`}>
                       {results?.isWin ? 'WIN' : 'LOSS'}
                     </div>
                   </div>
