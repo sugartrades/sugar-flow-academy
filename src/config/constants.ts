@@ -118,10 +118,10 @@ export const SLIDER_CONFIGS = {
 // ============================================================================
 
 export const MARKET_SIMULATOR = {
-  // Market Microstructure percentages
-  IMMEDIATE_DEPTH_PERCENT: 0.08, // 8% of float immediately available
-  MARKET_MAKER_RESPONSE_PERCENT: 0.15, // 15% from algorithmic MM
-  CROSS_EXCHANGE_ARB_PERCENT: 0.20, // 20% from arbitrage flows
+  // Market Microstructure percentages - increased to better reflect real market depth
+  IMMEDIATE_DEPTH_PERCENT: 0.15, // 15% of float immediately available
+  MARKET_MAKER_RESPONSE_PERCENT: 0.25, // 25% from algorithmic MM
+  CROSS_EXCHANGE_ARB_PERCENT: 0.35, // 35% from arbitrage flows
   
   // Derivatives impact factors
   DERIVATIVES_FLOAT_MULTIPLIER: 0.7, // Conservative derivatives impact
