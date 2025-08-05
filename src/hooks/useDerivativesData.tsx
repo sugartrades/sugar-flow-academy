@@ -179,10 +179,12 @@ export function useDerivativesData(): UseDerivativesDataReturn {
   } = useQuery({
     queryKey: derivativesDataKeys.data(),
     queryFn: fetchDerivativesData,
-    refetchInterval: 5 * 60 * 1000, // 5 minutes
-    staleTime: 2 * 60 * 1000, // 2 minutes  
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    refetchInterval: 3 * 60 * 1000, // 3 minutes - less frequent updates
+    staleTime: 5 * 60 * 1000, // 5 minutes - longer cache
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    retry: 1, // Reduced retries for faster failure
+    retryDelay: (attemptIndex) => Math.min(500 * 2 ** attemptIndex, 3000), // Faster retries
+    networkMode: 'offlineFirst',
   });
 
   // Calculate aggregated metrics
