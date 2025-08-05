@@ -119,7 +119,7 @@ export function MarketCapSettings({
                   </TooltipProvider>
                 </div>
                 <Select 
-                  value={leverageAmplifier.toString()} 
+                  value={leverageAmplifier.toFixed(1)} 
                   onValueChange={(value) => onLeverageAmplifierChange(Number(value))}
                 >
                   <SelectTrigger>
