@@ -71,122 +71,67 @@ export function EnhancedXRPMarketCapVisualizer() {
     setBuyOrderSize(value[0]);
   };
 
-  // Generate realistic order book with proper market depth simulation
+  // Generate simplified order book with dramatic price impact (like original calculator)
   const orderBook = useMemo((): OrderBookLevel[] => {
-    console.log('📚 orderBook useMemo triggered with:', { 
-      currentPrice, 
-      calculatedFloat, 
-      derivativesEnabled 
-    });
+    if (!currentPrice || currentPrice <= 0) return [];
     
     const levels: OrderBookLevel[] = [];
-    let cumulative = 0;
+    let cumulativeXRP = 0;
     
-    // REALISTIC market parameters - based on actual crypto orderbooks
-    const totalLevels = 200;
+    // SIMPLIFIED order book - designed for educational multiplier effect
+    const totalLevels = 100;
     
-    // Real XRP orderbooks - use Live Exchange Float Estimator data
-    const estimatedExchangeFloat = derivativesEnabled && derivativesData?.estimatedFloat 
-      ? derivativesData.estimatedFloat 
-      : calculatedFloat;
+    // Use much larger liquidity amounts for dramatic effect (like original calculator)
+    // This represents the total available liquidity across all major exchanges
+    const totalLiquidity = calculatedFloat * 0.15; // 15% of float available in orderbooks
     
-    // Realistic percentage of exchange float available in orderbooks (typically 1-5%)
-    const orderBookPercentage = 0.02; // 2% of exchange float in orderbooks
-    const realisticTotalLiquidity = estimatedExchangeFloat * orderBookPercentage;
-    
-    console.log('💧 Using Live Exchange Float data:', {
-      estimatedExchangeFloat: estimatedExchangeFloat,
-      orderBookPercentage: `${orderBookPercentage * 100}%`,
-      realisticTotalLiquidity: realisticTotalLiquidity
+    console.log('📊 Simplified order book generation:', {
+      calculatedFloat: calculatedFloat,
+      totalLiquidity: totalLiquidity,
+      currentPrice: currentPrice
     });
     
     for (let i = 0; i < totalLevels; i++) {
-      // AGGRESSIVE price progression - each level should meaningfully increase price
-      // Start with tight spread, then exponential growth
-      let priceIncrease;
-      if (i < 10) {
-        // Very tight spread for first 10 levels (0.1% - 1%)
-        priceIncrease = (i + 1) * 0.001;
-      } else if (i < 50) {
-        // Moderate spread for next 40 levels (1% - 10%)
-        const levelRatio = (i - 10) / 40;
-        priceIncrease = 0.01 + (levelRatio * levelRatio * 0.09);
-      } else {
-        // Exponential growth for deeper levels (10% - 500%)
-        const levelRatio = (i - 50) / 150;
-        priceIncrease = 0.1 + Math.pow(levelRatio, 2) * 4.9; // Up to 500% increase
-      }
+      // DRAMATIC price progression - steeper curve for educational effect
+      const priceMultiplier = 1 + Math.pow(i / 20, 1.8) * 0.01; // Exponential price increase
+      const price = currentPrice * priceMultiplier;
       
-      const price = currentPrice * (1 + priceIncrease);
+      // Front-load liquidity at current price, then rapidly decrease
+      const sizeMultiplier = Math.exp(-i * 0.08); // Faster decay for dramatic effect
+      const baseSize = (totalLiquidity / 20) * sizeMultiplier; // Concentrate liquidity in first 20 levels
       
-      // REALISTIC liquidity distribution with steep decay
-      let liquidityAtLevel;
-      if (i < 5) {
-        // Best levels: decent liquidity
-        liquidityAtLevel = realisticTotalLiquidity * 0.15 * Math.exp(-i * 0.3);
-      } else if (i < 20) {
-        // Good levels: moderate liquidity  
-        liquidityAtLevel = realisticTotalLiquidity * 0.08 * Math.exp(-(i - 5) * 0.2);
-      } else {
-        // Deep levels: very little liquidity
-        liquidityAtLevel = realisticTotalLiquidity * 0.02 * Math.exp(-(i - 20) * 0.1);
-      }
+      // Ensure minimum meaningful sizes
+      const size = Math.max(baseSize, totalLiquidity * 0.001); // Min 0.1% of total liquidity
       
-      // Apply minimal derivatives influence (keep it realistic)
-      const derivativesInfluence = derivativesEnabled && derivativesData 
-        ? Math.max(0.5, Math.min(1.5, 1 + (derivativesData.avgFundingRate * 20)))
-        : 1.0;
-      
-      const size = Math.max(50, liquidityAtLevel * derivativesInfluence); // Minimum 50 XRP per level
-      cumulative += size;
+      cumulativeXRP += size;
       
       levels.push({
-        price,
-        size,
-        cumulative
+        price: price,
+        size: size,
+        cumulative: cumulativeXRP
       });
-      
-      console.log(`Level ${i}: price=$${price.toFixed(4)} (+${(priceIncrease*100).toFixed(2)}%), size=${size.toFixed(0)} XRP`);
-      
-      // Stop if we've used up our liquidity budget
-      if (cumulative >= realisticTotalLiquidity) {
-        console.log(`💧 Liquidity cap reached at level ${i}`);
-        break;
-      }
     }
     
-    console.log('📊 Order book stats:', { 
-      totalLevels: levels.length, 
-      totalLiquidity: cumulative, 
-      maxPrice: levels[levels.length - 1]?.price,
-      priceRange: `$${currentPrice.toFixed(4)} - $${levels[levels.length - 1]?.price.toFixed(4)}`,
-      maxPriceIncrease: levels.length > 0 ? `${(((levels[levels.length - 1].price / currentPrice) - 1) * 100).toFixed(1)}%` : '0%'
+    console.log('📈 Order book created:', {
+      levels: levels.length,
+      totalLiquidity: cumulativeXRP,
+      priceRange: `$${currentPrice.toFixed(3)} - $${levels[levels.length - 1].price.toFixed(3)}`,
+      firstLevelSize: levels[0].size,
+      liquidityConcentration: `${((levels.slice(0, 10).reduce((sum, level) => sum + level.size, 0) / cumulativeXRP) * 100).toFixed(1)}% in first 10 levels`
     });
     
     return levels;
-  }, [currentPrice, calculatedFloat, derivativesEnabled, derivativesData]);
+  }, [calculatedFloat, currentPrice]);
 
   // Calculate total available liquidity in order book
   const totalAvailableLiquidity = useMemo(() => {
     return orderBook.reduce((total, level) => total + level.size, 0);
   }, [orderBook]);
 
-  // Calculate simulation results with enhanced safety checks
+  // Calculate simulation results with simplified logic (like original calculator)
   const simulationResults = useMemo((): SimulationResults => {
-    console.log('🔄 simulationResults useMemo triggered');
-    console.log('📊 Simulation Parameters:', { 
-      buyOrderSize, 
-      currentPrice, 
-      orderBookLength: orderBook.length,
-      totalAvailableLiquidity,
-      derivativesEnabled,
-      leverageAmplifier,
-      marketCap: xrpData?.marketCap
-    });
-    
     // Safety check: validate inputs
     if (!buyOrderSize || buyOrderSize <= 0 || !currentPrice || currentPrice <= 0) {
-      console.warn('⚠️ Invalid simulation parameters, returning defaults');
       return {
         finalPrice: currentPrice,
         priceImpact: 0,
@@ -201,81 +146,50 @@ export function EnhancedXRPMarketCapVisualizer() {
       };
     }
     
-    // Check if buy order exceeds available liquidity
-    if (buyOrderSize > totalAvailableLiquidity) {
-      console.warn('⚠️ Buy order exceeds total available liquidity');
-    }
-    
     let totalCost = 0;
     let finalPrice = currentPrice;
     let liquidityConsumed = 0;
+    let remainingAmount = buyOrderSize;
     
-    // Calculate synthetic buy pressure from derivatives
-    let syntheticBuyPressure = 0;
-    if (derivativesEnabled && derivativesData) {
-      const longShortImbalance = Math.max(-1, Math.min(1, derivativesData.avgLongShortRatio - 1)); // Clamp to reasonable range
-      const fundingPressure = Math.max(0, Math.abs(derivativesData.avgFundingRate) * 1000); // Ensure positive
-      syntheticBuyPressure = Math.max(0, (longShortImbalance + fundingPressure) * buyOrderSize * 0.1);
-    }
-    
-    // Calculate effective order size including synthetic pressure
-    const effectiveOrderSize = buyOrderSize + syntheticBuyPressure;
-    let remainingEffectiveAmount = effectiveOrderSize;
-    
-    // Execute through order book with safety checks
+    // Simple order book execution - just walk through levels
     for (const level of orderBook) {
-      if (remainingEffectiveAmount <= 0) break;
+      if (remainingAmount <= 0) break;
       
-      // Safety check for level data
-      if (!level.size || level.size <= 0 || !level.price || level.price <= 0) {
-        console.warn('⚠️ Invalid order book level:', level);
-        continue;
-      }
-      
-      const amountToTake = Math.min(remainingEffectiveAmount, level.size);
+      const amountToTake = Math.min(remainingAmount, level.size);
       totalCost += amountToTake * level.price;
       liquidityConsumed += amountToTake;
-      remainingEffectiveAmount -= amountToTake;
+      remainingAmount -= amountToTake;
       finalPrice = level.price;
     }
     
-    // Safety checks for calculated values
-    const executedAmount = Math.min(buyOrderSize, liquidityConsumed);
+    // Calculate basic results
+    const executedAmount = buyOrderSize - remainingAmount;
     const averageExecutionPrice = liquidityConsumed > 0 ? totalCost / liquidityConsumed : currentPrice;
+    const priceImpact = ((finalPrice - currentPrice) / currentPrice) * 100;
+    const slippagePercentage = ((averageExecutionPrice - currentPrice) / currentPrice) * 100;
     
-    // Prevent division by zero and invalid percentages
-    const priceImpact = currentPrice > 0 ? ((finalPrice - currentPrice) / currentPrice) * 100 : 0;
-    const slippagePercentage = currentPrice > 0 ? ((averageExecutionPrice - currentPrice) / currentPrice) * 100 : 0;
-    
-    // Calculate market cap changes with safety checks
+    // Calculate market cap impact (simple multiplier effect)
     const currentMarketCap = xrpData?.marketCap || (currentPrice * 100000000000); // 100B total supply
-    const newMarketCap = currentPrice > 0 ? (currentMarketCap / currentPrice) * finalPrice : currentMarketCap;
+    const newMarketCap = (currentMarketCap / currentPrice) * finalPrice;
     const marketCapIncrease = newMarketCap - currentMarketCap;
-    
-    // Calculate leverage-adjusted market cap
-    const leverageMultiplier = derivativesEnabled && derivativesData 
-      ? Math.max(0.1, derivativesData.leverageMultiplier * leverageAmplifier) // Prevent zero or negative multipliers
-      : 1.0;
-    
-    const leverageAdjustedMarketCap = currentMarketCap + (marketCapIncrease * leverageMultiplier);
-    const effectiveMultiplier = currentMarketCap > 0 ? leverageAdjustedMarketCap / currentMarketCap : 1;
+    const effectiveMultiplier = newMarketCap / currentMarketCap;
     
     const results = {
-      finalPrice: Math.max(currentPrice, finalPrice), // Ensure price never goes below current
-      priceImpact: Math.max(0, priceImpact), // Price impact should be positive for buy orders
+      finalPrice,
+      priceImpact,
       marketCapIncrease,
-      leverageAdjustedMarketCap,
-      effectiveMultiplier: Math.max(1, effectiveMultiplier), // Multiplier should be at least 1
+      leverageAdjustedMarketCap: newMarketCap,
+      effectiveMultiplier,
       executedAmount,
-      averageExecutionPrice: Math.max(currentPrice, averageExecutionPrice), // Execution price should be at least current price
-      slippagePercentage: Math.max(0, slippagePercentage), // Slippage should be positive
+      averageExecutionPrice,
+      slippagePercentage,
       liquidityConsumed,
-      syntheticBuyPressure
+      syntheticBuyPressure: 0 // Simplified - no derivatives pressure
     };
     
-    console.log('✅ Simulation results:', results);
+    console.log('✅ Simplified simulation results:', results);
     return results;
-  }, [buyOrderSize, orderBook, currentPrice, totalAvailableLiquidity, xrpData?.marketCap, derivativesEnabled, derivativesData, leverageAmplifier]);
+  }, [buyOrderSize, orderBook, currentPrice, xrpData?.marketCap]);
 
   // Formatting functions
   const formatCurrency = (amount: number): string => {
