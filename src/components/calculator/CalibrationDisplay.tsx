@@ -8,12 +8,16 @@ import { CALIBRATION, FORMATTING } from '@/config/constants';
 
 interface CalibrationDisplayProps {
   effectiveMultiplier: number;
+  traditionalMultiplier: number;
+  investmentEfficiency: number;
   orderValueUSD: number;
   marketCapIncrease: number;
 }
 
 export function CalibrationDisplay({
   effectiveMultiplier,
+  traditionalMultiplier,
+  investmentEfficiency,
   orderValueUSD,
   marketCapIncrease
 }: CalibrationDisplayProps) {
@@ -91,8 +95,9 @@ export function CalibrationDisplay({
               <div className="font-mono text-green-800">{formatCurrency(marketCapIncrease)}</div>
             </div>
             <div>
-              <div className="text-green-600 font-medium">Your Multiplier</div>
-              <div className="font-mono text-green-800">{effectiveMultiplier.toFixed(1)}x</div>
+              <div className="text-green-600 font-medium">Traditional Multiplier</div>
+              <div className="font-mono text-green-800">{traditionalMultiplier.toFixed(1)}x</div>
+              <div className="text-xs text-green-600 mt-1">Investment Efficiency: {investmentEfficiency.toFixed(1)}x</div>
             </div>
           </div>
         </div>

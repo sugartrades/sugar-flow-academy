@@ -379,18 +379,37 @@ export function EnhancedXRPMarketCapVisualizer() {
 
         <Card className="calculator-card">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              {derivativesEnabled ? "Effective Multiplier" : "Market Cap Multiplier"}
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Traditional Multiplier</CardTitle>
             <TargetIcon className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              {simulationResults.effectiveMultiplier.toFixed(2)}x
+              {simulationResults.traditionalMultiplier.toFixed(2)}x
             </div>
             <p className="text-xs text-muted-foreground">
-              {derivativesEnabled ? "Including leverage effects" : "Standard multiplier"}
+              Market cap increase per XRP order value
             </p>
+            <div className="text-xs text-gray-500 mt-1">
+              How much market cap increases for each $1 of order size
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="calculator-card">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Investment Efficiency</CardTitle>
+            <TrendingUpIcon className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">
+              {simulationResults.investmentEfficiency.toFixed(2)}x
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Market cap increase per dollar spent
+            </p>
+            <div className="text-xs text-gray-500 mt-1">
+              Accounts for slippage - decreases with larger orders
+            </div>
             {derivativesEnabled && derivativesData && (
               <div className="space-y-1 mt-2">
                 <p className="text-xs text-muted-foreground">
@@ -427,6 +446,43 @@ export function EnhancedXRPMarketCapVisualizer() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Multiplier Explanation */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <InfoIcon className="h-5 w-5" />
+            Understanding the Two Multipliers
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <h4 className="font-semibold text-purple-600">Traditional Multiplier</h4>
+              <p className="text-sm text-muted-foreground">
+                Measures how much market cap increases relative to the order size (at current market price). 
+                This multiplier <strong>increases</strong> with larger orders as price moves accelerate.
+              </p>
+              <div className="bg-purple-50 p-3 rounded text-sm">
+                <strong>Formula:</strong> Market Cap Increase ÷ (Order Size × Current Price)<br/>
+                <strong>Why it increases:</strong> Larger orders create exponentially bigger price movements
+              </div>
+            </div>
+            
+            <div className="space-y-3">
+              <h4 className="font-semibold text-green-600">Investment Efficiency</h4>
+              <p className="text-sm text-muted-foreground">
+                Measures how much market cap increase you get per dollar actually spent. 
+                This efficiency <strong>decreases</strong> with larger orders due to slippage.
+              </p>
+              <div className="bg-green-50 p-3 rounded text-sm">
+                <strong>Formula:</strong> Market Cap Increase ÷ (Order Size × Average Execution Price)<br/>
+                <strong>Why it decreases:</strong> Slippage makes each additional dollar less effective
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Derivatives Insights */}
       {derivativesEnabled && derivativesData && (
@@ -486,6 +542,8 @@ export function EnhancedXRPMarketCapVisualizer() {
         <TabsContent value="calibration">
           <CalibrationDisplay
             effectiveMultiplier={simulationResults.effectiveMultiplier}
+            traditionalMultiplier={simulationResults.traditionalMultiplier}
+            investmentEfficiency={simulationResults.investmentEfficiency}
             orderValueUSD={buyOrderSize * currentPrice}
             marketCapIncrease={simulationResults.marketCapIncrease}
           />

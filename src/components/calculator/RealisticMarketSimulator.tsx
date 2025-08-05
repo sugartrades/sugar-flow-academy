@@ -30,6 +30,8 @@ interface SimulationResults {
   priceImpact: number;
   marketCapIncrease: number;
   effectiveMultiplier: number;
+  traditionalMultiplier: number;
+  investmentEfficiency: number;
   executedAmount: number;
   averageExecutionPrice: number;
   slippagePercentage: number;
@@ -307,16 +309,25 @@ export function useRealisticMarketSimulator({
     const newMarketCap = totalSupply * finalPrice;
     const marketCapIncrease = newMarketCap - marketCap;
     
-    // Calculate effective multiplier as investment efficiency (old formula)
-    // This shows how much market cap increase you get per dollar invested
+    // Calculate traditional multiplier: market cap increase per XRP order size
+    // This shows how much market cap increase results from each XRP token bought
+    const traditionalMultiplier = buyOrderSize > 0 ? marketCapIncrease / (buyOrderSize * currentPrice) : 0;
+    
+    // Calculate investment efficiency: market cap increase per dollar spent
+    // This shows how efficiently your investment dollars are converted to market cap
     const investmentAmount = buyOrderSize * averageExecutionPrice;
-    const effectiveMultiplier = investmentAmount > 0 ? marketCapIncrease / investmentAmount : 0;
+    const investmentEfficiency = investmentAmount > 0 ? marketCapIncrease / investmentAmount : 0;
+    
+    // Keep legacy effectiveMultiplier as investmentEfficiency for backwards compatibility
+    const effectiveMultiplier = investmentEfficiency;
 
     return {
       finalPrice,
       priceImpact,
       marketCapIncrease,
       effectiveMultiplier,
+      traditionalMultiplier,
+      investmentEfficiency,
       executedAmount: liquidityConsumed,
       averageExecutionPrice,
       slippagePercentage,
