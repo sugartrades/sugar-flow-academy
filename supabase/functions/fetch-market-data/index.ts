@@ -51,7 +51,7 @@ const supabase = createClient(
 // Simple in-memory cache
 let cachedData: any = null;
 let cacheTimestamp: number = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache
+const CACHE_DURATION = 2 * 60 * 1000; // 2 minutes cache (reduced for faster updates)
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -61,6 +61,13 @@ serve(async (req) => {
 
   try {
     const now = Date.now();
+    
+    // Force cache clear for new data source - remove this after first deployment
+    if (cachedData && cachedData.dataSource && !cachedData.dataSource.includes('binance')) {
+      console.log('Clearing old CoinGecko cache to switch to Binance data source');
+      cachedData = null;
+      cacheTimestamp = 0;
+    }
     
     // Check if we have valid cached data
     if (cachedData && (now - cacheTimestamp) < CACHE_DURATION) {
