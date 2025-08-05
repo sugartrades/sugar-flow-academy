@@ -63,10 +63,10 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
         throw new Error(`Failed to fetch market data: ${fetchError.message}`);
       }
 
-      // Check if the response indicates an API error
+      // Handle fallback data gracefully without showing errors to users
       if (data?.error || data?.usingFallback) {
-        console.warn('API returned fallback data:', data.error);
-        setError(`API Error: ${data.error || 'Using fallback data'}`);
+        console.info('Using cached or fallback market data');
+        // Don't set error state for fallback data - it's a normal fallback behavior
       }
 
       // Check if we have valid data
@@ -91,10 +91,8 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
           setLastUpdated(new Date());
           setDataSource(data.dataSource || 'coingecko');
           
-          // Clear error if we successfully got data (only for live data)
-          if (!data?.error && !data?.usingFallback) {
-            setError(null);
-          }
+          // Always clear error state when we get valid data structure
+          setError(null);
           return; // Successfully set data, exit early
         } else {
           throw new Error('XRP data not found in market response');
