@@ -41,8 +41,6 @@ export function LeverageCalculatorComponent() {
 
     if (!entry || !exit || !size || !lev) return;
 
-    setIsCalculating(true);
-
     const capitalRequired = size / lev;
     const feeAmount = size * fee * 2; // Entry + Exit fees
     
@@ -66,17 +64,13 @@ export function LeverageCalculatorComponent() {
       liquidationPrice = entry * (1 + (liquidationBuffer / lev));
     }
 
-    // Small delay to show transition
-    setTimeout(() => {
-      setResults({
-        grossPL,
-        netProfit,
-        roi,
-        liquidationPrice,
-        isWin: netProfit > 0
-      });
-      setIsCalculating(false);
-    }, 100);
+    setResults({
+      grossPL,
+      netProfit,
+      roi,
+      liquidationPrice,
+      isWin: netProfit > 0
+    });
   };
 
   useEffect(() => {
@@ -245,7 +239,7 @@ export function LeverageCalculatorComponent() {
         </Card>
 
         {/* Results Section */}
-        <Card className={`border-primary/20 bg-card/50 backdrop-blur calculator-card ${isCalculating ? 'refreshing-pulse' : ''}`}>
+        <Card className="border-primary/20 bg-card/50 backdrop-blur calculator-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {results?.isWin ? (
@@ -262,15 +256,15 @@ export function LeverageCalculatorComponent() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-sm text-muted-foreground">Gross P/L</Label>
-                    <div className={`text-2xl font-bold value-transition ${grossPLTransition.transitionClasses} ${grossPLTransition.displayValue >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {formatCurrency(grossPLTransition.displayValue)}
+                    <div className={`text-2xl font-bold ${results.grossPL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {formatCurrency(results.grossPL)}
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label className="text-sm text-muted-foreground">Net Profit</Label>
-                    <div className={`text-2xl font-bold value-transition ${netProfitTransition.transitionClasses} ${netProfitTransition.displayValue >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {formatCurrency(netProfitTransition.displayValue)}
+                    <div className={`text-2xl font-bold ${results.netProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {formatCurrency(results.netProfit)}
                     </div>
                   </div>
                 </div>
@@ -278,8 +272,8 @@ export function LeverageCalculatorComponent() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-sm text-muted-foreground">ROI</Label>
-                    <div className={`text-xl font-semibold value-transition ${roiTransition.transitionClasses} ${roiTransition.displayValue >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {formatPercentage(roiTransition.displayValue)}
+                    <div className={`text-xl font-semibold ${results.roi >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {formatPercentage(results.roi)}
                     </div>
                   </div>
 
@@ -293,8 +287,8 @@ export function LeverageCalculatorComponent() {
 
                 <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">Liquidation Price</Label>
-                  <div className={`text-xl font-semibold text-orange-500 value-transition ${liquidationPriceTransition.transitionClasses}`}>
-                    {formatCurrency(liquidationPriceTransition.displayValue)}
+                  <div className="text-xl font-semibold text-orange-500">
+                    {formatCurrency(results.liquidationPrice)}
                   </div>
                 </div>
 
