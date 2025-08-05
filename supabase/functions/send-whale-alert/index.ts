@@ -165,7 +165,8 @@ serve(async (req) => {
     const explorerLinks = {
       xrpscan: `https://xrpscan.com/tx/${whaleAlert.transaction_hash}`,
       xrplorer: `https://xrplorer.com/transaction/${whaleAlert.transaction_hash}`,
-      bithomp: `https://bithomp.com/explorer/${whaleAlert.transaction_hash}`
+      bithomp: `https://bithomp.com/explorer/${whaleAlert.transaction_hash}`,
+      xpmarket: `https://xpmarket.com/tx/${whaleAlert.transaction_hash}`
     };
 
     // Determine alert category specific formatting
@@ -209,6 +210,7 @@ serve(async (req) => {
 • <a href="${explorerLinks.xrpscan}">XRPScan</a>
 • <a href="${explorerLinks.xrplorer}">XRPlorer</a>  
 • <a href="${explorerLinks.bithomp}">Bithomp</a>
+• <a href="${explorerLinks.xpmarket}">XPMarket</a>
 
 🌊 Powered by Sugar Whale Pro - Real-time XRP monitoring`;
 
