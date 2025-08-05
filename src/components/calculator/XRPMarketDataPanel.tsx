@@ -125,6 +125,7 @@ export function XRPMarketDataPanel() {
                 onClick={refetch}
                 disabled={loading || refreshing}
                 className="h-10 w-10 p-0"
+                aria-label="Refresh market data"
               >
                 <RefreshCw className={`h-4 w-4 ${loading || refreshing ? 'animate-spin' : ''}`} />
               </Button>

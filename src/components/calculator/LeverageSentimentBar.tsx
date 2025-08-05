@@ -133,7 +133,16 @@ export function LeverageSentimentBar({ derivativesData, loading }: LeverageSenti
             <span>Long Heavy</span>
           </div>
           
-          <div className="relative h-3 bg-gradient-to-r from-red-200 via-gray-200 to-green-200 rounded-full overflow-hidden">
+          <div 
+            className="relative h-3 bg-gradient-to-r from-red-200 via-gray-200 to-green-200 rounded-full overflow-hidden"
+            role="progressbar"
+            aria-valuenow={Math.round(barPosition)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Long/Short sentiment ratio: ${longShortRatio.toFixed(2)}, ${longShortRatio > 1 ? 
+              `${((longShortRatio - 1) * 100).toFixed(0)}% more longs` :
+              `${((1 - longShortRatio) * 100).toFixed(0)}% more shorts`}`}
+          >
             {/* Center line */}
             <div className="absolute top-0 left-1/2 w-0.5 h-full bg-gray-400 transform -translate-x-0.5" />
             
@@ -169,7 +178,14 @@ export function LeverageSentimentBar({ derivativesData, loading }: LeverageSenti
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Market Mood Score</span>
           <div className="flex items-center gap-2">
-            <div className="w-20 h-2 bg-muted rounded-full overflow-hidden">
+            <div 
+              className="w-20 h-2 bg-muted rounded-full overflow-hidden"
+              role="progressbar"
+              aria-valuenow={Math.round(derivativesData.marketMoodScore * 100)}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`Market mood score: ${(derivativesData.marketMoodScore * 100).toFixed(0)} out of 100`}
+            >
               <div 
                 className={`h-full transition-all duration-300 ${
                   derivativesData.marketMoodScore > 0.7 ? 'bg-green-500' :
