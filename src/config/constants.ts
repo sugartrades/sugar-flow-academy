@@ -78,19 +78,30 @@ export const SLIDER_CONFIGS = {
   
   // Buy Order Size slider (Enhanced Calculator)
   BUY_ORDER_ENHANCED: {
-    MIN: 1000000, // $1M
-    MAX: 50000000000, // $50B
-    STEP: 1000000, // $1M default step
+    MIN: 100000, // 100K XRP minimum
+    MAX: 50000000000, // 50B XRP maximum (will be dynamically limited)
+    STEP: 100000, // 100K XRP default step
     DYNAMIC_THRESHOLDS: {
-      TIER_1: 100000000, // $100M
-      TIER_2: 1000000000, // $1B  
-      TIER_3: 10000000000 // $10B
+      MICRO: 1000000, // 1M XRP
+      SMALL: 10000000, // 10M XRP
+      MEDIUM: 100000000, // 100M XRP
+      LARGE: 1000000000, // 1B XRP
+      XLARGE: 10000000000 // 10B XRP
     },
     DYNAMIC_STEPS: {
-      TIER_1_STEP: 1000000, // $1M steps up to $100M
-      TIER_2_STEP: 10000000, // $10M steps from $100M to $1B
-      TIER_3_STEP: 100000000, // $100M steps from $1B to $10B
-      TIER_4_STEP: 1000000000 // $1B steps above $10B
+      MICRO_STEP: 10000, // 10K steps below 1M
+      SMALL_STEP: 100000, // 100K steps 1M-10M
+      MEDIUM_STEP: 1000000, // 1M steps 10M-100M
+      LARGE_STEP: 10000000, // 10M steps 100M-1B
+      XLARGE_STEP: 100000000, // 100M steps 1B-10B
+      HUGE_STEP: 1000000000 // 1B steps above 10B
+    },
+    // Float consumption warning thresholds
+    WARNING_THRESHOLDS: {
+      CAUTION: 0.25, // 25% of float consumed
+      WARNING: 0.5, // 50% of float consumed
+      DANGER: 0.75, // 75% of float consumed
+      EXTREME: 1.0 // 100% of float consumed
     }
   },
   

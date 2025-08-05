@@ -52,13 +52,40 @@ export function EnhancedXRPMarketCapVisualizer() {
     return xrpFloat; // Use manual setting
   }, [derivativesEnabled, derivativesData, manualFloatOverride, xrpFloat]);
 
-  // Dynamic step calculation for smooth slider interaction (memoized)
+  // Dynamic step calculation for granular control (memoized)
   const getDynamicStep = useCallback((value: number): number => {
-    const { DYNAMIC_STEPS } = SLIDER_CONFIGS.XRP_FLOAT;
-    if (value < 10000000) return DYNAMIC_STEPS.SMALL;
-    if (value < 100000000) return DYNAMIC_STEPS.MEDIUM;
-    if (value < 1000000000) return DYNAMIC_STEPS.LARGE;
-    return DYNAMIC_STEPS.EXTRA_LARGE;
+    const { DYNAMIC_THRESHOLDS, DYNAMIC_STEPS } = SLIDER_CONFIGS.BUY_ORDER_ENHANCED;
+    
+    if (value < DYNAMIC_THRESHOLDS.MICRO) return DYNAMIC_STEPS.MICRO_STEP;
+    if (value < DYNAMIC_THRESHOLDS.SMALL) return DYNAMIC_STEPS.SMALL_STEP;
+    if (value < DYNAMIC_THRESHOLDS.MEDIUM) return DYNAMIC_STEPS.MEDIUM_STEP;
+    if (value < DYNAMIC_THRESHOLDS.LARGE) return DYNAMIC_STEPS.LARGE_STEP;
+    if (value < DYNAMIC_THRESHOLDS.XLARGE) return DYNAMIC_STEPS.XLARGE_STEP;
+    return DYNAMIC_STEPS.HUGE_STEP;
+  }, []);
+
+  // Dynamic max value based on exchange float with safety buffer
+  const getDynamicMaxOrder = useCallback((exchangeFloat: number): number => {
+    const SAFETY_BUFFER = 1.5; // Allow 50% above exchange float for stress testing
+    const dynamicMax = Math.min(
+      exchangeFloat * SAFETY_BUFFER,
+      SLIDER_CONFIGS.BUY_ORDER_ENHANCED.MAX
+    );
+    return Math.max(dynamicMax, SLIDER_CONFIGS.BUY_ORDER_ENHANCED.MIN * 10); // Minimum useful range
+  }, []);
+
+  // Calculate float consumption percentage and warning level
+  const getFloatConsumption = useCallback((orderSize: number, exchangeFloat: number) => {
+    const percentage = orderSize / exchangeFloat;
+    const { WARNING_THRESHOLDS } = SLIDER_CONFIGS.BUY_ORDER_ENHANCED;
+    
+    let level: 'safe' | 'caution' | 'warning' | 'danger' | 'extreme' = 'safe';
+    if (percentage >= WARNING_THRESHOLDS.EXTREME) level = 'extreme';
+    else if (percentage >= WARNING_THRESHOLDS.DANGER) level = 'danger';
+    else if (percentage >= WARNING_THRESHOLDS.WARNING) level = 'warning';
+    else if (percentage >= WARNING_THRESHOLDS.CAUTION) level = 'caution';
+    
+    return { percentage, level };
   }, []);
 
   // Memoized callback for buy order changes
@@ -296,29 +323,88 @@ export function EnhancedXRPMarketCapVisualizer() {
               <Slider
                 id="buy-order"
                 min={SLIDER_CONFIGS.BUY_ORDER_ENHANCED.MIN}
-                max={SLIDER_CONFIGS.BUY_ORDER_ENHANCED.MAX}
+                max={getDynamicMaxOrder(calculatedFloat)}
                 step={getDynamicStep(buyOrderSize)}
                 value={[buyOrderSize]}
                 onValueChange={handleBuyOrderChange}
                 className="w-full"
               />
               <div className="flex justify-between text-sm text-muted-foreground">
-                <span>1M XRP</span>
+                <span>{formatXRPValue(SLIDER_CONFIGS.BUY_ORDER_ENHANCED.MIN)}</span>
                 <span className="font-medium">{formatXRPValue(buyOrderSize)}</span>
-                <span>2B XRP</span>
+                <span>{formatXRPValue(getDynamicMaxOrder(calculatedFloat))}</span>
               </div>
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">
-                  Market value: {formatCurrency(buyOrderSize * currentPrice)}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  Available liquidity: {formatXRPValue(calculatedFloat)}
-                </div>
-                {buyOrderSize > calculatedFloat && (
-                  <div className="text-xs text-orange-600 font-medium">
-                    ⚠️ Order exceeds available float
-                  </div>
-                )}
+              
+              {/* Enhanced Float Consumption Display */}
+              <div className="space-y-2">
+                {(() => {
+                  const floatConsumption = getFloatConsumption(buyOrderSize, calculatedFloat);
+                  const consumptionColor = {
+                    safe: 'text-green-600',
+                    caution: 'text-yellow-600',
+                    warning: 'text-orange-600',
+                    danger: 'text-red-600',
+                    extreme: 'text-red-800 font-bold'
+                  }[floatConsumption.level];
+                  
+                  const consumptionIcon = {
+                    safe: '✅',
+                    caution: '⚠️',
+                    warning: '🔸',
+                    danger: '🔺',
+                    extreme: '🚨'
+                  }[floatConsumption.level];
+
+                  return (
+                    <>
+                      <div className="text-xs text-muted-foreground">
+                        Market value: {formatCurrency(buyOrderSize * currentPrice)}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Available liquidity: {formatXRPValue(calculatedFloat)}
+                      </div>
+                      <div className={`text-xs ${consumptionColor} flex items-center gap-1`}>
+                        <span>{consumptionIcon}</span>
+                        <span>
+                          {(floatConsumption.percentage * 100).toFixed(1)}% of exchange float
+                        </span>
+                      </div>
+                      
+                      {/* Visual consumption bar */}
+                      <div className="relative h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div 
+                          className={`absolute h-full transition-all duration-300 rounded-full ${
+                            floatConsumption.level === 'safe' ? 'bg-green-500' :
+                            floatConsumption.level === 'caution' ? 'bg-yellow-500' :
+                            floatConsumption.level === 'warning' ? 'bg-orange-500' :
+                            floatConsumption.level === 'danger' ? 'bg-red-500' :
+                            'bg-red-700'
+                          }`}
+                          style={{ 
+                            width: `${Math.min(floatConsumption.percentage * 100, 100)}%` 
+                          }}
+                        />
+                      </div>
+                      
+                      {/* Warning messages */}
+                      {floatConsumption.level === 'extreme' && (
+                        <div className="text-xs text-red-800 font-medium bg-red-50 p-2 rounded border">
+                          🚨 Order exceeds exchange float - extreme slippage expected
+                        </div>
+                      )}
+                      {floatConsumption.level === 'danger' && (
+                        <div className="text-xs text-red-600 font-medium">
+                          ⚠️ High float consumption - significant price impact
+                        </div>
+                      )}
+                      {floatConsumption.level === 'warning' && (
+                        <div className="text-xs text-orange-600">
+                          📈 Moderate slippage expected
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </div>
           </CardContent>
