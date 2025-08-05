@@ -8,6 +8,7 @@ import { FeaturesSection } from '@/components/landing/FeaturesSection';
 import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
 import { PricingSection } from '@/components/landing/PricingSection';
 import { CTASection } from '@/components/landing/CTASection';
+import { XRPMarketDataPanel } from '@/components/calculator/XRPMarketDataPanel';
 import { Button } from '@/components/ui/button';
 import { Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,6 +32,14 @@ export default function Landing() {
     <div className="min-h-screen bg-background">
       <Header isAuthenticated={isAuthenticated} />
       <HeroSection />
+      
+      {/* XRP Live Price Section */}
+      <section className="container py-12">
+        <div className="max-w-2xl mx-auto">
+          <XRPMarketDataPanel />
+        </div>
+      </section>
+      
       <FeaturesSection />
       <HowItWorksSection />
       <PricingSection />
