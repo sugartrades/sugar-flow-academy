@@ -6,10 +6,16 @@ import { Badge } from '@/components/ui/badge';
 import { useXRPMarketData } from '@/hooks/useXRPMarketData';
 import { useUserRole } from '@/hooks/useUserRole';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useSmoothValueTransition } from '@/hooks/useSmoothValueTransition';
 
 export function XRPMarketDataPanel() {
-  const { xrpData, loading, error, lastUpdated, refetch, dataSource } = useXRPMarketData();
+  const { xrpData, loading, refreshing, error, lastUpdated, refetch, dataSource } = useXRPMarketData();
   const { isAdmin, loading: roleLoading } = useUserRole();
+  
+  // Smooth transitions for price and change values
+  const priceTransition = useSmoothValueTransition(xrpData?.price || 0);
+  const changeTransition = useSmoothValueTransition(xrpData?.change24h || 0);
+  const marketCapTransition = useSmoothValueTransition(xrpData?.marketCap || 0);
   
   // Show refresh button for admins or when data source is not Coinglass
   const showRefreshButton = isAdmin || dataSource !== 'coinglass';
@@ -58,18 +64,18 @@ export function XRPMarketDataPanel() {
 
   if (loading && !xrpData) {
     return (
-      <Card>
+      <Card className="calculator-card">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="space-y-2">
-              <Skeleton className="h-4 w-16" />
-              <Skeleton className="h-8 w-24" />
+              <Skeleton className="h-4 w-16 loading-fade" />
+              <Skeleton className="h-8 w-24 loading-fade" />
             </div>
             <div className="space-y-2">
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-6 w-16" />
+              <Skeleton className="h-4 w-20 loading-fade" />
+              <Skeleton className="h-6 w-16 loading-fade" />
             </div>
-            <Skeleton className="h-10 w-10 rounded-md" />
+            <Skeleton className="h-10 w-10 rounded-md loading-fade" />
           </div>
         </CardContent>
       </Card>
@@ -77,7 +83,7 @@ export function XRPMarketDataPanel() {
   }
 
   return (
-    <Card>
+    <Card className={`calculator-card ${refreshing ? 'refreshing-pulse' : ''}`}>
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
@@ -86,14 +92,14 @@ export function XRPMarketDataPanel() {
               <h3 className="font-semibold text-lg">XRP Live Price</h3>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-3xl font-bold">
-                {xrpData ? formatPrice(xrpData.price) : '$0.60'}
+              <span className={`text-3xl font-bold value-transition ${priceTransition.transitionClasses}`}>
+                {formatPrice(priceTransition.displayValue)}
               </span>
-              <div className={`flex items-center gap-1 ${getChangeColor(xrpData?.change24h || 0)}`}>
-                {getChangeIcon(xrpData?.change24h || 0)}
+              <div className={`flex items-center gap-1 value-transition ${getChangeColor(changeTransition.displayValue)} ${changeTransition.transitionClasses}`}>
+                {getChangeIcon(changeTransition.displayValue)}
                 <span className="font-medium">
-                  {xrpData?.change24h !== undefined 
-                    ? `${xrpData.change24h > 0 ? '+' : ''}${xrpData.change24h.toFixed(2)}%`
+                  {changeTransition.displayValue !== undefined 
+                    ? `${changeTransition.displayValue > 0 ? '+' : ''}${changeTransition.displayValue.toFixed(2)}%`
                     : '0.00%'
                   }
                 </span>
@@ -103,8 +109,8 @@ export function XRPMarketDataPanel() {
 
           <div className="text-right space-y-1">
             <div className="text-sm text-muted-foreground">Market Cap</div>
-            <div className="font-semibold">
-              {xrpData?.marketCap ? formatMarketCap(xrpData.marketCap) : 'N/A'}
+            <div className={`font-semibold value-transition ${marketCapTransition.transitionClasses}`}>
+              {marketCapTransition.displayValue ? formatMarketCap(marketCapTransition.displayValue) : 'N/A'}
             </div>
             <Badge variant={getSentimentBadgeVariant(xrpData?.sentiment || 'neutral')}>
               {xrpData?.sentiment || 'neutral'}
@@ -117,10 +123,10 @@ export function XRPMarketDataPanel() {
                 variant="outline"
                 size="sm"
                 onClick={refetch}
-                disabled={loading}
+                disabled={loading || refreshing}
                 className="h-10 w-10 p-0"
               >
-                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-4 w-4 ${loading || refreshing ? 'animate-spin' : ''}`} />
               </Button>
             )}
             <div className="text-xs text-muted-foreground">

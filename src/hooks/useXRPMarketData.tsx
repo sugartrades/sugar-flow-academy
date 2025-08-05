@@ -25,6 +25,7 @@ interface EnhancedXRPMarketData extends XRPMarketData {
 interface UseXRPMarketDataReturn {
   xrpData: EnhancedXRPMarketData | null;
   loading: boolean;
+  refreshing: boolean;
   error: string | null;
   lastUpdated: Date | null;
   refetch: () => Promise<void>;
@@ -36,6 +37,7 @@ interface UseXRPMarketDataReturn {
 export function useXRPMarketData(): UseXRPMarketDataReturn {
   const [xrpData, setXrpData] = useState<EnhancedXRPMarketData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [derivativesEnabled, setDerivativesEnabled] = useState(true);
@@ -45,7 +47,12 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
 
   const fetchXRPData = useCallback(async () => {
     try {
-      setLoading(true);
+      // Use refreshing state when we already have data
+      if (xrpData) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       setError(null);
       
       const { data, error: fetchError } = await supabase.functions.invoke('fetch-market-data');
@@ -123,8 +130,9 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
       setLastUpdated(new Date());
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
-  }, []); // Remove xrpData dependency to prevent infinite loops
+  }, [derivativesEnabled, derivativesData]);
 
   useEffect(() => {
     fetchXRPData();
@@ -138,6 +146,7 @@ export function useXRPMarketData(): UseXRPMarketDataReturn {
   return {
     xrpData,
     loading: loading || derivativesLoading,
+    refreshing,
     error,
     lastUpdated,
     refetch: fetchXRPData,

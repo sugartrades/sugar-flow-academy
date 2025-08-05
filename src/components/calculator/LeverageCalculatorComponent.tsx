@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useSmoothValueTransition } from '@/hooks/useSmoothValueTransition';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,13 @@ export function LeverageCalculatorComponent() {
   const [direction, setDirection] = useState<string>('long');
   const [feePercent, setFeePercent] = useState<string>('0.1');
   const [results, setResults] = useState<CalculationResults | null>(null);
+  const [isCalculating, setIsCalculating] = useState(false);
+
+  // Smooth transitions for result values
+  const grossPLTransition = useSmoothValueTransition(results?.grossPL || 0);
+  const netProfitTransition = useSmoothValueTransition(results?.netProfit || 0);
+  const roiTransition = useSmoothValueTransition(results?.roi || 0);
+  const liquidationPriceTransition = useSmoothValueTransition(results?.liquidationPrice || 0);
 
   const calculateResults = () => {
     const entry = parseFloat(entryPrice);
@@ -32,6 +40,8 @@ export function LeverageCalculatorComponent() {
     const fee = parseFloat(feePercent) / 100;
 
     if (!entry || !exit || !size || !lev) return;
+
+    setIsCalculating(true);
 
     const capitalRequired = size / lev;
     const feeAmount = size * fee * 2; // Entry + Exit fees
@@ -56,13 +66,17 @@ export function LeverageCalculatorComponent() {
       liquidationPrice = entry * (1 + (liquidationBuffer / lev));
     }
 
-    setResults({
-      grossPL,
-      netProfit,
-      roi,
-      liquidationPrice,
-      isWin: netProfit > 0
-    });
+    // Small delay to show transition
+    setTimeout(() => {
+      setResults({
+        grossPL,
+        netProfit,
+        roi,
+        liquidationPrice,
+        isWin: netProfit > 0
+      });
+      setIsCalculating(false);
+    }, 100);
   };
 
   useEffect(() => {
@@ -88,7 +102,7 @@ export function LeverageCalculatorComponent() {
     <TooltipProvider>
       <div className="grid lg:grid-cols-2 gap-8 mb-8">
         {/* Input Section */}
-        <Card className="border-primary/20 bg-card/50 backdrop-blur">
+        <Card className="border-primary/20 bg-card/50 backdrop-blur calculator-card">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calculator className="w-5 h-5 text-primary" />
@@ -231,7 +245,7 @@ export function LeverageCalculatorComponent() {
         </Card>
 
         {/* Results Section */}
-        <Card className="border-primary/20 bg-card/50 backdrop-blur">
+        <Card className={`border-primary/20 bg-card/50 backdrop-blur calculator-card ${isCalculating ? 'refreshing-pulse' : ''}`}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {results?.isWin ? (
@@ -248,15 +262,15 @@ export function LeverageCalculatorComponent() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-sm text-muted-foreground">Gross P/L</Label>
-                    <div className={`text-2xl font-bold ${results.grossPL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {formatCurrency(results.grossPL)}
+                    <div className={`text-2xl font-bold value-transition ${grossPLTransition.transitionClasses} ${grossPLTransition.displayValue >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {formatCurrency(grossPLTransition.displayValue)}
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label className="text-sm text-muted-foreground">Net Profit</Label>
-                    <div className={`text-2xl font-bold ${results.netProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {formatCurrency(results.netProfit)}
+                    <div className={`text-2xl font-bold value-transition ${netProfitTransition.transitionClasses} ${netProfitTransition.displayValue >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {formatCurrency(netProfitTransition.displayValue)}
                     </div>
                   </div>
                 </div>
@@ -264,23 +278,23 @@ export function LeverageCalculatorComponent() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-sm text-muted-foreground">ROI</Label>
-                    <div className={`text-xl font-semibold ${results.roi >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {formatPercentage(results.roi)}
+                    <div className={`text-xl font-semibold value-transition ${roiTransition.transitionClasses} ${roiTransition.displayValue >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {formatPercentage(roiTransition.displayValue)}
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label className="text-sm text-muted-foreground">Result</Label>
-                    <div className={`text-xl font-semibold ${results.isWin ? 'text-green-500' : 'text-red-500'}`}>
-                      {results.isWin ? 'WIN' : 'LOSS'}
+                    <div className={`text-xl font-semibold value-transition ${results?.isWin ? 'text-green-500' : 'text-red-500'}`}>
+                      {results?.isWin ? 'WIN' : 'LOSS'}
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label className="text-sm text-muted-foreground">Liquidation Price</Label>
-                  <div className="text-xl font-semibold text-orange-500">
-                    {formatCurrency(results.liquidationPrice)}
+                  <div className={`text-xl font-semibold text-orange-500 value-transition ${liquidationPriceTransition.transitionClasses}`}>
+                    {formatCurrency(liquidationPriceTransition.displayValue)}
                   </div>
                 </div>
 
