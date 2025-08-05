@@ -67,8 +67,9 @@ export function EnhancedXRPMarketCapVisualizer() {
     derivativesData
   });
 
-  // Formatting functions
-  const formatCurrency = (amount: number): string => {
+  // Formatting functions with null/undefined safety
+  const formatCurrency = (amount: number | undefined | null): string => {
+    if (amount == null || isNaN(amount)) return '$0.00';
     if (amount >= 1e12) return `$${(amount / 1e12).toFixed(2)}T`;
     if (amount >= 1e9) return `$${(amount / 1e9).toFixed(2)}B`;
     if (amount >= 1e6) return `$${(amount / 1e6).toFixed(2)}M`;
@@ -76,16 +77,21 @@ export function EnhancedXRPMarketCapVisualizer() {
     return `$${amount.toFixed(2)}`;
   };
 
-  const formatPrice = (price: number): string => `$${price.toFixed(4)}`;
+  const formatPrice = (price: number | undefined | null): string => {
+    if (price == null || isNaN(price)) return '$0.0000';
+    return `$${price.toFixed(4)}`;
+  };
   
-  const formatXRPValue = (amount: number): string => {
+  const formatXRPValue = (amount: number | undefined | null): string => {
+    if (amount == null || isNaN(amount)) return '0 XRP';
     if (amount >= 1e9) return `${(amount / 1e9).toFixed(2)}B XRP`;
     if (amount >= 1e6) return `${(amount / 1e6).toFixed(2)}M XRP`;
     if (amount >= 1e3) return `${(amount / 1e3).toFixed(2)}K XRP`;
     return `${amount.toFixed(0)} XRP`;
   };
 
-  const formatSliderValue = (value: number): string => {
+  const formatSliderValue = (value: number | undefined | null): string => {
+    if (value == null || isNaN(value)) return '0';
     if (value >= 1e9) return `${(value / 1e9).toFixed(1)}B`;
     if (value >= 1e6) return `${(value / 1e6).toFixed(0)}M`;
     return `${(value / 1e3).toFixed(0)}K`;
