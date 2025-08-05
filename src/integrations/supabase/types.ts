@@ -152,6 +152,75 @@ export type Database = {
         }
         Relationships: []
       }
+      model_calibration_data: {
+        Row: {
+          actual_multiplier: number | null
+          confidence_score: number | null
+          created_at: string
+          created_by: string | null
+          data_quality: string | null
+          event_date: string
+          event_name: string
+          expected_multiplier: number
+          id: string
+          is_active: boolean | null
+          market_cap_increase_usd: number | null
+          market_cap_usd: number
+          metadata: Json | null
+          notes: string | null
+          order_source: string
+          order_type: string
+          order_value_usd: number
+          time_to_peak_minutes: number | null
+          updated_at: string
+          xrp_price_usd: number
+        }
+        Insert: {
+          actual_multiplier?: number | null
+          confidence_score?: number | null
+          created_at?: string
+          created_by?: string | null
+          data_quality?: string | null
+          event_date: string
+          event_name: string
+          expected_multiplier: number
+          id?: string
+          is_active?: boolean | null
+          market_cap_increase_usd?: number | null
+          market_cap_usd: number
+          metadata?: Json | null
+          notes?: string | null
+          order_source: string
+          order_type: string
+          order_value_usd: number
+          time_to_peak_minutes?: number | null
+          updated_at?: string
+          xrp_price_usd: number
+        }
+        Update: {
+          actual_multiplier?: number | null
+          confidence_score?: number | null
+          created_at?: string
+          created_by?: string | null
+          data_quality?: string | null
+          event_date?: string
+          event_name?: string
+          expected_multiplier?: number
+          id?: string
+          is_active?: boolean | null
+          market_cap_increase_usd?: number | null
+          market_cap_usd?: number
+          metadata?: Json | null
+          notes?: string | null
+          order_source?: string
+          order_type?: string
+          order_value_usd?: number
+          time_to_peak_minutes?: number | null
+          updated_at?: string
+          xrp_price_usd?: number
+        }
+        Relationships: []
+      }
       monitoring_health: {
         Row: {
           created_at: string
@@ -775,6 +844,14 @@ export type Database = {
       get_user_membership_tier: {
         Args: { user_id: string }
         Returns: Database["public"]["Enums"]["membership_tier"]
+      }
+      get_weighted_calibration_metrics: {
+        Args: {
+          p_order_value_usd?: number
+          p_order_type?: string
+          p_confidence_threshold?: number
+        }
+        Returns: Json
       }
       has_role: {
         Args: {

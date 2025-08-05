@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Shield, Users, Settings, Crown, Activity, TestTube, AlertTriangle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { XRPLMonitoringDashboard } from '@/components/admin/XRPLMonitoringDashboard';
+import { ModelCalibrationManager } from '@/components/admin/ModelCalibrationManager';
 import { XRPLTestSuite } from '@/components/admin/XRPLTestSuite';
 import { EmailTestSuite } from '@/components/admin/EmailTestSuite';
 import DestinationTagTestSuite from '@/components/admin/DestinationTagTestSuite';
@@ -416,6 +417,7 @@ export default function Admin() {
             <TabsTrigger value="memberships">Memberships</TabsTrigger>
             <TabsTrigger value="monitoring">XRPL Monitoring</TabsTrigger>
             <TabsTrigger value="testing">Test Suite</TabsTrigger>
+            <TabsTrigger value="calibration">Model Calibration</TabsTrigger>
           </TabsList>
 
           <TabsContent value="roles">
@@ -533,6 +535,10 @@ export default function Admin() {
               <XRPLTestSuite />
               <DestinationTagTestSuite />
             </div>
+          </TabsContent>
+
+          <TabsContent value="calibration">
+            <ModelCalibrationManager />
           </TabsContent>
         </Tabs>
       </div>
