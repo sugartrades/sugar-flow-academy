@@ -123,7 +123,7 @@ export function MarketCapSettings({
                   onValueChange={(value) => onLeverageAmplifierChange(Number(value))}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder={`${leverageAmplifier}x`} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="1.0">1.0x (Conservative)</SelectItem>
