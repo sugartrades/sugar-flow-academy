@@ -52,54 +52,54 @@ export function useRealisticMarketSimulator({
 }: RealisticMarketSimulatorProps): SimulationResults {
   
   return useMemo(() => {
-    // PHASE 1: Realistic Market Microstructure with Exponential Liquidity Exhaustion
+    // PHASE 1: Realistic Market Microstructure
     const microstructure: MarketMicrostructure = {
-      // Reduced immediate depth - more realistic for major order impact
-      immediateDepth: availableFloat * 0.05, // Only 5% immediately available
+      // Much more conservative immediate depth (5-10% of float at tight spreads)
+      immediateDepth: availableFloat * 0.08, // 8% immediately available
       
-      // Market maker response - more limited at extreme orders
-      marketMakerResponse: availableFloat * 0.08, // 8% from algorithmic MM
+      // Market maker response (provides additional 15% of float)
+      marketMakerResponse: availableFloat * 0.15, // 15% from algorithmic MM
       
-      // Cross-exchange arbitrage - limited capacity
-      crossExchangeArb: availableFloat * 0.12, // 12% from arb flows
+      // Cross-exchange arbitrage (another 20% from major exchanges)
+      crossExchangeArb: availableFloat * 0.20, // 20% from arb flows
       
-      // Derivatives-driven float reduction - more aggressive impact
+      // Derivatives-driven float reduction (much more conservative)
       derivativesFloat: derivativesData ? 
-        Math.max(availableFloat * 0.4, availableFloat * (1 - (derivativesData.totalOpenInterest / (marketCap * 3)))) :
-        availableFloat * 0.85, // Assume 15% reduction from derivatives even without data
+        Math.max(availableFloat * 0.7, availableFloat * (1 - (derivativesData.totalOpenInterest / (marketCap * 10)))) :
+        availableFloat,
       
-      // Enhanced leverage multiplier - no caps for extreme scenarios
+      // Much more conservative leverage multiplier
       leverageMultiplier: derivativesData ? 
-        1 + Math.max(0.5, (derivativesData.weightedFundingRate * 20) + 
-        (derivativesData.avgLongShortRatio > 0.6 ? (derivativesData.avgLongShortRatio - 0.5) * 2 : 0)) :
-        1.3 // Higher base amplification
+        1 + Math.min(0.3, (derivativesData.weightedFundingRate * 10) + 
+        (derivativesData.avgLongShortRatio > 0.6 ? (derivativesData.avgLongShortRatio - 0.5) * 0.5 : 0)) :
+        1.05 // Very modest 5% base amplification
     };
 
-    // PHASE 2: Enhanced derivatives amplification - remove caps for extreme scenarios
+    // PHASE 2: Much more conservative derivatives amplification
     const syntheticDemandMultiplier = derivativesData ? 
-      1 + Math.max(0.5, Math.log10(Math.max(1, derivativesData.totalOpenInterest / 5000000000)) * 0.3) : 1.5;
+      1 + Math.min(0.2, Math.log10(Math.max(1, derivativesData.totalOpenInterest / 10000000000)) * 0.1) : 1.1;
     
     const effectiveFloat = microstructure.derivativesFloat * 
-      (1 - Math.min(0.6, syntheticDemandMultiplier * 0.15)); // More aggressive float reduction
+      (1 - Math.min(0.2, syntheticDemandMultiplier * 0.05));
 
-    // PHASE 3: Realistic Market Psychology - remove caps for extreme scenarios
+    // PHASE 3: Market Psychology Simulation
     const orderValueUSD = buyOrderSize * currentPrice;
     const psychology: MarketPsychology = {
-      // Enhanced momentum factor - exponential growth for large orders
-      momentumFactor: orderValueUSD > 20000000 ? // > $20M triggers momentum
-        1 + Math.pow(Math.log10(orderValueUSD / 20000000), 1.5) * 0.3 : 1,
+      // Much more conservative momentum factor
+      momentumFactor: orderValueUSD > 50000000 ? // > $50M triggers momentum
+        1 + Math.min(0.15, Math.log10(orderValueUSD / 50000000) * 0.05) : 1,
       
-      // Liquidity panic - more severe at lower thresholds
-      liquidityPanic: orderValueUSD > 50000000 ? // > $50M causes panic
-        0.6 + Math.exp(-orderValueUSD / 200000000) * 0.4 : 1,
+      // Conservative liquidity panic
+      liquidityPanic: orderValueUSD > 200000000 ? // > $200M causes panic
+        0.8 + Math.exp(-orderValueUSD / 500000000) * 0.2 : 1,
       
-      // FOMO buying - exponential for whale orders
-      fomoBuying: orderValueUSD > 30000000 ? 
-        1 + Math.pow(orderValueUSD / 100000000, 1.2) * 0.5 : 1,
+      // Very conservative FOMO buying
+      fomoBuying: orderValueUSD > 100000000 ? 
+        Math.min(1.2, 1 + (orderValueUSD / 500000000) * 0.1) : 1,
       
-      // Whale alert multiplier - stronger effects
-      whaleAlert: orderValueUSD > 25000000 ? 
-        1 + Math.log(orderValueUSD / 25000000) * 0.15 : 1
+      // Conservative whale alert multiplier
+      whaleAlert: orderValueUSD > 50000000 ? 
+        1 + Math.min(0.1, Math.log(orderValueUSD / 50000000) * 0.02) : 1
     };
 
     // PHASE 4: Realistic Simulation Execution
@@ -108,84 +108,70 @@ export function useRealisticMarketSimulator({
     let currentPriceLevel = currentPrice;
     let liquidityConsumed = 0;
 
-    // Phase 4.1: Immediate impact (consume immediate depth) - exponential for large orders
+    // Phase 4.1: Immediate impact (consume immediate depth)
     const immediateExecution = Math.min(remainingOrder, microstructure.immediateDepth);
     if (immediateExecution > 0) {
-      const depthRatio = immediateExecution / microstructure.immediateDepth;
-      const immediateImpact = Math.pow(depthRatio, 1.5) * 0.002; // More aggressive immediate impact
-      const executionPrice = currentPriceLevel * (1 + immediateImpact);
-      totalCost += immediateExecution * (currentPriceLevel + executionPrice) / 2;
+      const executionPrice = currentPriceLevel * (1 + (immediateExecution / microstructure.immediateDepth) * 0.0005);
+      totalCost += immediateExecution * executionPrice;
       liquidityConsumed += immediateExecution;
       remainingOrder -= immediateExecution;
       currentPriceLevel = executionPrice;
     }
 
-    // Phase 4.2: Market maker response - steeper price curves
+    // Phase 4.2: Market maker response
     if (remainingOrder > 0) {
       const mmExecution = Math.min(remainingOrder, microstructure.marketMakerResponse);
       if (mmExecution > 0) {
-        // MMs provide liquidity but at exponentially higher prices
-        const mmRatio = mmExecution / microstructure.marketMakerResponse;
-        const mmPriceImpact = Math.pow(mmRatio, 1.3) * 0.008; // More aggressive MM pricing
+        // MMs provide liquidity but at progressively higher prices
+        const mmPriceImpact = (mmExecution / microstructure.marketMakerResponse) * 0.003;
         const executionPrice = currentPriceLevel * (1 + mmPriceImpact);
-        totalCost += mmExecution * (currentPriceLevel + executionPrice) / 2;
+        totalCost += mmExecution * (currentPriceLevel + executionPrice) / 2; // Average price across the range
         liquidityConsumed += mmExecution;
         remainingOrder -= mmExecution;
         currentPriceLevel = executionPrice;
       }
     }
 
-    // Phase 4.3: Cross-exchange arbitrage - even steeper curves as liquidity thins
+    // Phase 4.3: Cross-exchange arbitrage kicks in
     if (remainingOrder > 0) {
       const arbExecution = Math.min(remainingOrder, microstructure.crossExchangeArb);
       if (arbExecution > 0) {
-        // Arb provides liquidity but with exponential price discovery
-        const arbRatio = arbExecution / microstructure.crossExchangeArb;
-        const arbPriceImpact = Math.pow(arbRatio, 1.5) * 0.025; // Much steeper arbitrage impact
+        // Arb provides more liquidity but prices move more significantly
+        const arbPriceImpact = (arbExecution / microstructure.crossExchangeArb) * 0.008;
         const executionPrice = currentPriceLevel * (1 + arbPriceImpact);
-        totalCost += arbExecution * (currentPriceLevel + executionPrice) / 2;
+        totalCost += arbExecution * (currentPriceLevel + executionPrice) / 2; // Average price across the range
         liquidityConsumed += arbExecution;
         remainingOrder -= arbExecution;
         currentPriceLevel = executionPrice;
       }
     }
 
-    // Phase 4.4: Liquidity exhaustion zone - extreme exponential impacts
+    // Phase 4.4: Exhausted traditional liquidity - exponential impact zone
     if (remainingOrder > 0) {
-      const remainingFloat = Math.max(effectiveFloat * 0.05, effectiveFloat - liquidityConsumed);
+      const remainingFloat = Math.max(effectiveFloat * 0.1, effectiveFloat - liquidityConsumed);
       const exhaustionRatio = Math.min(remainingOrder / remainingFloat, 1);
       
-      // Extreme exponential price impact - this is where multipliers explode
-      let exhaustionImpact;
-      if (exhaustionRatio > 0.8) {
-        // Liquidity cliff - price discovery breaks down
-        exhaustionImpact = Math.pow(exhaustionRatio, 3) * 0.5; // Up to 50% impact for full exhaustion
-      } else if (exhaustionRatio > 0.5) {
-        // Steep but manageable
-        exhaustionImpact = Math.pow(exhaustionRatio, 2.5) * 0.25;
-      } else {
-        // Normal exponential scaling
-        exhaustionImpact = Math.pow(exhaustionRatio, 2) * 0.1;
-      }
-      
+      // Exponential price impact when exhausting float
+      const exhaustionImpact = Math.pow(exhaustionRatio, 1.2) * 0.05; // Much more conservative
       const executionPrice = currentPriceLevel * (1 + exhaustionImpact);
+      
+      // Cost increases dramatically as we exhaust liquidity
       totalCost += remainingOrder * (currentPriceLevel + executionPrice) / 2;
       liquidityConsumed += remainingOrder;
       currentPriceLevel = executionPrice;
       remainingOrder = 0;
     }
 
-    // Apply amplification effects - no caps for extreme scenarios
-    const derivativesAmplification = microstructure.leverageMultiplier * syntheticDemandMultiplier;
+    // Apply amplification effects much more conservatively
+    const derivativesAmplification = Math.min(1.5, microstructure.leverageMultiplier * syntheticDemandMultiplier);
     currentPriceLevel *= derivativesAmplification;
 
-    // Apply psychology factors - remove caps for realistic whale impact
-    const psychologyMultiplier = psychology.momentumFactor * psychology.fomoBuying * psychology.whaleAlert;
-    currentPriceLevel *= psychologyMultiplier;
+    // Apply psychology factors conservatively
+    currentPriceLevel *= Math.min(1.3, psychology.momentumFactor * psychology.fomoBuying * psychology.whaleAlert);
     
-    // Liquidity panic creates feedback loops
+    // Adjust for liquidity panic more conservatively
     if (psychology.liquidityPanic < 1) {
-      const panicAmplification = 1 + (1 - psychology.liquidityPanic) * 0.8; // Stronger panic effects
+      const panicAmplification = 1 + (1 - psychology.liquidityPanic) * 0.1; // Much smaller effect
       currentPriceLevel *= panicAmplification;
     }
 
@@ -204,8 +190,7 @@ export function useRealisticMarketSimulator({
     const totalSupply = marketCap / currentPrice; // Derive total supply
     const newMarketCap = totalSupply * finalPrice;
     const marketCapIncrease = newMarketCap - marketCap;
-    // FIX: Correct effective multiplier calculation - should be market cap increase divided by order value
-    const effectiveMultiplier = marketCapIncrease / orderValueUSD;
+    const effectiveMultiplier = newMarketCap / marketCap;
 
     return {
       finalPrice,
