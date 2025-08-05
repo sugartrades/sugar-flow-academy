@@ -137,7 +137,8 @@ export function useRealisticMarketSimulator({
       marketMakerResponse: microstructure.marketMakerResponse,
       crossExchangeArb: microstructure.crossExchangeArb,
       totalLowImpactLiquidity: microstructure.immediateDepth + microstructure.marketMakerResponse + microstructure.crossExchangeArb,
-      orderSize: buyOrderSize
+      orderSize: buyOrderSize,
+      orderSizeVsImmediateDepth: `${((buyOrderSize / microstructure.immediateDepth) * 100).toFixed(1)}%`
     });
 
     // ===================================================================
