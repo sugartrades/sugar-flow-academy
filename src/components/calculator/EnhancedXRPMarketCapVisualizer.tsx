@@ -71,7 +71,7 @@ export function EnhancedXRPMarketCapVisualizer() {
     setBuyOrderSize(value[0]);
   };
 
-  // Generate realistic order book with enhanced depth and liquidity validation
+  // Generate realistic order book with proper market depth simulation
   const orderBook = useMemo((): OrderBookLevel[] => {
     console.log('📚 orderBook useMemo triggered with:', { 
       currentPrice, 
@@ -79,40 +79,46 @@ export function EnhancedXRPMarketCapVisualizer() {
       derivativesEnabled 
     });
     
-    const baseDepthMultiplier = derivativesEnabled && derivativesData 
-      ? derivativesData.leverageMultiplier 
-      : 1.0;
-    
     const levels: OrderBookLevel[] = [];
     let cumulative = 0;
     
-    // Create 1000 levels for much deeper liquidity
-    const totalLevels = 1000;
-    const maxPriceIncrease = 2.0; // Allow up to 100% price increase
+    // Realistic market parameters
+    const totalLevels = 500;
+    const maxPriceIncrease = 10.0; // Allow up to 1000% price increase for large orders
+    
+    // Base liquidity should be much lower - real XRP books have ~10-50M XRP total
+    const baseLiquidityFactor = derivativesEnabled && derivativesData 
+      ? Math.min(2.0, derivativesData.leverageMultiplier * 0.5) 
+      : 1.0;
+    
+    // Realistic total liquidity cap (much lower than before)
+    const maxTotalLiquidity = calculatedFloat * 0.05 * baseLiquidityFactor; // 5% of float max
     
     for (let i = 0; i < totalLevels; i++) {
-      // Use a more gradual price progression for better liquidity distribution
-      const priceMultiplier = 1 + ((i / totalLevels) * maxPriceIncrease * 0.01); // More gradual increase
+      // Exponential price progression - realistic slippage curve
+      const levelRatio = i / totalLevels;
+      const priceMultiplier = 1 + Math.pow(levelRatio, 1.5) * maxPriceIncrease;
       const price = currentPrice * priceMultiplier;
       
-      // Improved liquidity curve: slower decay for larger orders
+      // Realistic liquidity distribution with steep decay
       let baseSize;
-      if (i < 100) {
-        // High liquidity for first 100 levels
-        baseSize = (calculatedFloat * 0.002) / Math.pow(1.2, i / 20);
-      } else if (i < 500) {
-        // Medium liquidity for next 400 levels
-        baseSize = (calculatedFloat * 0.001) / Math.pow(1.3, (i - 100) / 30);
+      if (i < 20) {
+        // Very tight spread with decent liquidity (first 20 levels)
+        baseSize = maxTotalLiquidity * 0.4 * Math.exp(-i * 0.15);
+      } else if (i < 100) {
+        // Medium levels with exponential decay
+        baseSize = maxTotalLiquidity * 0.3 * Math.exp(-(i - 20) * 0.08);
       } else {
-        // Lower but still significant liquidity for deeper levels
-        baseSize = (calculatedFloat * 0.0005) / Math.pow(1.4, (i - 500) / 40);
+        // Deep levels with very little liquidity
+        baseSize = maxTotalLiquidity * 0.1 * Math.exp(-(i - 100) * 0.05);
       }
       
+      // Apply derivatives influence (but keep it reasonable)
       const derivativesInfluence = derivativesEnabled && derivativesData 
-        ? Math.max(0.5, 1 + (derivativesData.avgFundingRate * 100)) // Prevent negative influence
+        ? Math.max(0.3, Math.min(2.0, 1 + (derivativesData.avgFundingRate * 50)))
         : 1.0;
       
-      const size = Math.max(1000, baseSize * baseDepthMultiplier * derivativesInfluence); // Minimum 1000 XRP per level
+      const size = Math.max(100, baseSize * derivativesInfluence); // Minimum 100 XRP per level
       cumulative += size;
       
       levels.push({
@@ -120,12 +126,18 @@ export function EnhancedXRPMarketCapVisualizer() {
         size,
         cumulative
       });
+      
+      // Stop if we've reached our liquidity cap
+      if (cumulative >= maxTotalLiquidity) {
+        break;
+      }
     }
     
     console.log('📊 Order book stats:', { 
       totalLevels: levels.length, 
       totalLiquidity: cumulative, 
-      maxPrice: levels[levels.length - 1]?.price 
+      maxPrice: levels[levels.length - 1]?.price,
+      maxTotalLiquidity 
     });
     
     return levels;
