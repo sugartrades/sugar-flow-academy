@@ -76,6 +76,12 @@ export function Header({ showAuth = true, isAuthenticated = false }: HeaderProps
             How It Works
           </button>
           <a 
+            href="/blog"
+            className="text-sm font-medium hover:text-primary transition-colors"
+          >
+            Blog
+          </a>
+          <a 
             href="/leverage-calculator"
             className="text-sm font-medium hover:text-primary transition-colors"
           >
@@ -140,6 +146,13 @@ export function Header({ showAuth = true, isAuthenticated = false }: HeaderProps
                 >
                   How It Works
                 </button>
+                <a 
+                  href="/blog"
+                  className="text-left text-sm font-medium hover:text-primary transition-colors p-2 rounded-md hover:bg-muted"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Blog
+                </a>
                 <a 
                   href="/leverage-calculator"
                   className="text-left text-sm font-medium hover:text-primary transition-colors p-2 rounded-md hover:bg-muted"
